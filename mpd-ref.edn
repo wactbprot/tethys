@@ -1,0 +1,227 @@
+;; Reference measurement program definition
+{:_id "mpd-ref",
+ :_rev "6-b4475e103286fba67eb4ad849270841d",
+ :Mp
+ {
+  :Date [{:Type "created", :Value "2020-01-11"}],
+  :Name "wait",
+  :Description "Simple measurement programm definition (mpd) which serves as a reference for documentation  and testing.",
+  :Standard "NN"
+  ;; Endpoint for exchanging data and information.
+  ;; Internal and external use is intendet. 
+  :Exchange {
+             ;; one level deep nested values ..
+             :A {:Type "ref" :Unit "Pa", :Value 100.0 }
+             ;; .. or flat values are valid
+             :B "token"
+             ;; 
+             :Target_pressure {:Selected 1
+                               :Select [
+                                        {
+                                         :value 10.0
+                                         },
+                                        {
+                                         :value 100.0
+                                         },
+                                        {
+                                         :value 1000.0
+                                         }]
+                               :Unit "Pa"}
+             :Ref_gas {
+                       :Selected "N2"
+                       :Select [
+                                {
+                                 :value "N2",
+                                 :display "Stickstoff"
+                                 }
+                                {
+                                 :value "Ar",
+                                 :display "Argon"
+                                 },
+                                {
+                                 :value "Ne",
+                                 :display "Neon"
+                                 },
+                                {
+                                 :value "Kr",
+                                 :display "Krypton"
+                                 },
+                                {
+                                 :value "Xe",
+                                 :display "Xenon"
+                                 },
+                                {
+                                 :value "He",
+                                 :display "Helium"
+                                 },
+                                {
+                                 :value "H2",
+                                 :display "Wasserstoff"
+                                 }
+                                ]
+                       :Ready false}
+    
+             }
+  ;; -------------------------------------------------------
+  ;; container section
+  ;; -------------------------------------------------------
+  :Container
+  [
+   ;; Containers are fixed sequences of things to do. 
+   ;; In opposit to definitions containers have no conditions structure.
+   ;; First container:
+   {:Description "Container just waits parallel and sequential.",
+    ;; The ctrl endpoint of the first container.
+    ;; All values are ok. The values start, stop and mon will start stop and mon.
+    ;; mon ... relaunch the container if all tasks are executed
+    ;; void ... just some value (as good as foo or bar), causes no action.
+    :Ctrl "void",
+    :Title "multiple wait tasks",
+    ;; Element is inteded for filtering the exchange interface:
+    ;; which elements should be vissible at a gui of this
+    ;; container
+    :Element ["A"],
+    ;; The defilition of what schould happen after what.
+    ;; The "array of arrays"-structure controlls what happens 
+    ;; parallel and what sequential.
+    :Definition
+    [;; First: start a wait task with 1000 ms waittime.
+     ;; At the same time start a wait task with 2000 ms waittime.
+     [{:TaskName "Common-wait", :Replace {:%waittime 1000}}
+      {:TaskName "Common-wait", :Replace {:%waittime 2000}}]
+     ;; After first step is executed: start 4 wait tasks 
+     ;; with 100 ms waittime, step is executed within 1000ms
+     [{:TaskName "Common-wait", :Replace {:%waittime 1000}}
+      {:TaskName "Common-wait", :Replace {:%waittime 1000}}
+      {:TaskName "Common-wait", :Replace {:%waittime 1000}}
+      {:TaskName "Common-wait", :Replace {:%waittime 1000}}]
+     ;; After the second step is executed: wait 2000ms
+     [{:TaskName "Common-wait", :Replace {:%waittime 2000}}]
+     ;; all together should take less than 1s
+     ]}
+   ;; second container
+   {:Description "Container with one task only",
+    :Ctrl "void",
+    :Title "container with single task",
+    :Element [ "Target_pressure"],
+    :Definition
+    [[{:TaskName "Common-wait", :Replace {:%waittime 1000}}]]}
+   ;; third container
+   {:Description "Show case select feature",
+    :Ctrl "void",
+    :Title "choose definition, run it",
+    :Element []
+    :Definition
+    [[{:TaskName "Common-select_definition",
+       :Replace {:%definitionclass "wait"}}]]}
+   ;; 4. container
+   {:Description "Run a mpd (first container of ref).",
+    :Ctrl "void",
+    :Title "run 1st container",
+    :Element ["Ref_gas"]
+    :Definition
+    [[{:TaskName "Common-run_mp",
+       :Replace {:%conttitle "multiple wait tasks"
+                 :%mpdef "mpd-ref" }}]]}
+   ;; 5. container
+   {:Description "Test read_exchange action."
+    :Ctrl "void"
+    :Title "read exchange."
+    :Element []
+    :Definition [[{:TaskName "Common-simple_read_element"
+                   :Replace {:%docpath "Measurement.Values.Pressure"
+                             :%exchpath "A"}}]]}
+   ;; 6. container
+   {:Description "Test anselm request."
+    :Ctrl "void"
+    :Title "anselm."
+    :Element []
+    :Definition [
+                 [{:TaskName "Common-anselm_get_dut_max"}]]}
+   ;; 7. container
+   {:Description "Test date and time and the ability to parallel write to database docs."
+    :Ctrl "void"
+    :Title "date & time"
+    :Element []
+    :Definition [[{:TaskName "Common-get_date"
+                   :Replace {:%docpath "Calibration.Measurement.Date"
+                             :%type "cmp-test"}}
+                  {:TaskName "Common-get_time"
+                   :Replace {:%docpath "Calibration.Measurement.AuxValues.Time"
+                             :%type "cmp-test"}}]]}
+
+   ;; 8. container
+   {:Description "Message test."
+    :Ctrl "void"
+    :Title "message"
+    :Element []
+    :Definition [[{:TaskName "Common-message"
+                   :Replace {:%message "Lorem ipsum dolor sit amet,
+                 consetetur sadipscing elitr, sed diam nonumy eirmod
+                 tempor invidunt ut labore et dolore magna aliquyam
+                 erat, sed diam voluptua. At vero eos et accusam et
+                 justo duo dolores et ea rebum. Stet clita kasd
+                 gubergren, no sea takimata sanctus est Lorem ipsum
+                 dolor sit amet. Lorem ipsum dolor sit amet,
+                 consetetur sadipscing elitr, sed diam nonumy eirmod
+                 tempor invidunt ut labore et dolore magna aliquyam
+                 erat, sed diam voluptua. At vero eos et accusam et
+                 justo duo dolores et ea rebum. Stet clita kasd
+                 gubergren, no sea takimata sanctus est Lorem ipsum
+                 dolor sit amet."}}]]}
+
+   ;; 9. container
+   {:Description "Add and remove documents."
+    :Ctrl "void"
+    :Title "add & rm docs."
+    :Element []
+    :Definition [
+                 [{:TaskName "Common-gen_state_doc"}]
+                 [{:TaskName "Common-rm_db_docs"}]]}
+   ] ;;
+
+  ;; -------------------------------------------------------
+  ;; Definitions section 
+  ;; -------------------------------------------------------
+  :Definitions
+  [;; Several definitions with the same
+   ;; class (here wait) are possible.
+   ;; At Runtime: the first of  matching 
+   ;; (see condition section) definition is started.
+
+   ;; 1st wait definition
+   {:DefinitionClass "wait",
+    :ShortDescr "waits 0.1 and 0.2s\n",
+    ;; condition for the exec. of the first
+    ;; definition for the class wait
+    :Condition
+    [{:ExchangePath "A.Unit", :Methode "eq", :Value "Pa"}
+     {:ExchangePath "A.Value", :Methode "gt", :Value 133}],
+    :Definition
+    [[{:TaskName "Common-wait", :Replace {:%waittime 100}}
+      {:TaskName "Common-wait", :Replace {:%waittime 200}}]]}
+
+   ;; 2nd wait definition
+   ;; The conditions of this match the predefined
+   ;; exchange values (see :Exchange section above)
+   {:DefinitionClass "wait",
+    :ShortDescr "waits 0.3 and 0.4s\n",
+    :Condition
+    [{:ExchangePath "A.Unit", :Methode "eq", :Value "Pa"}
+     {:ExchangePath "A.Value", :Methode "lt", :Value 133}],
+    ;; The definition structure under definitions section 
+    ;; works the same as under container
+    :Definition
+    [[{:TaskName "Common-wait", :Replace {:%waittime 300}}
+      {:TaskName "Common-wait", :Replace {:%waittime 400}}]]}
+
+   ;; 3rd wait definition
+   {:DefinitionClass "wait",
+    :ShortDescr "waits 0.4 and 0.5s\n",
+    :Condition
+    [{:ExchangePath "A.Unit", :Methode "eq", :Value "Pa"}
+     {:ExchangePath "A.Value", :Methode "lt", :Value 13}],
+    :Definition
+    [[{:TaskName "Common-wait", :Replace {:%waittime 400}}
+      {:TaskName "Common-wait", :Replace {:%waittime 500}}]]}],
+}}
