@@ -58,6 +58,9 @@
         m (range)))
 
 
+(defn agents-down [[id group-agents]]
+  (run! #(send % (fn [_] {})) group-agents))
+
 ;; The first `if` clause (the happy path) contains the central idea:
 ;; the request is send to
 ;; an [agent](https://clojure.org/reference/agents) `a`. This queues
@@ -87,20 +90,26 @@
 
 (defmethod ig/init-key :model/cont [_ {:keys [mpds ids ini group-kw]}]
   (reduce
-   (fn [res [id mpd]] (assoc res id (agents-up id group-kw (:Container mpd) )))
+   (fn [res [id {:keys [Container]}]]
+     (assoc res id (agents-up id group-kw Container)))
   ini mpds))
 
+
+
+;; ## System down multimethods
+;; The `halt-keys!` methods **read in the implementation** and shut down
+;; this implementation in a contolled way. This is a pure side effect.
+(defmethod ig/halt-key! :log/mulog [_ logger]
+  (logger))
+
+(defmethod ig/halt-key! :model/cont [_ groups-agents]
+  (run! #(agents-down %) groups-agents))
 
 ;; ## Start, stop and restart The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
 (defn start []
   (keys (reset! system (ig/init (config ["mpd-ppc-gas_dosing"
                                          "mpd-se3-calib"])))))
-
-
-(defmethod ig/halt-key! :log/mulog [_ logger]
-  (logger))
-
 (defn stop []
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
@@ -108,7 +117,7 @@
 
 (defn restart []
   (stop)
-  (Thread/sleep 1000)
+  (Thread/sleep 500)
   (start))
 
 (defn mpds [] (keys (:model/cont @system)))

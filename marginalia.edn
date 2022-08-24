@@ -1,0 +1,4 @@
+{;; configuration map for marginalia
+ :name "tethys"
+ :version "0.0.1"
+ :description "next iteration, next level"}
