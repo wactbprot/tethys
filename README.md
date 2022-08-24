@@ -1,4 +1,4 @@
-<img src="tethys.webp" alt="tethys" id="logo">
+<img src="tethys.webp" alt="tethys" id="logo" width="600px">
 
 # design ideas
 
