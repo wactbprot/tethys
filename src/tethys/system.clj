@@ -7,7 +7,7 @@
   (:gen-class))
 
 
-(defn config [ids]
+(defn config [id-set]
   {:log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
                              :facility (or (System/getenv "DEVPROXY_FACILITY")
@@ -19,6 +19,11 @@
                             :publish-delay 1000
                             :data-stream  "vl-log-stream"
                             :name-mangling false}]}
+   :mpd/id-set {:id-set id-set
+                :id-sets {:gas-dosing ["mpd-ppc-gas_dosing"]
+                          :se3        ["mpd-se3-calib"
+                                       "mpd-se3-state"
+                                       "mpd-se3-servo"]}}
    :db/couch {:prot "http",
               :host "localhost",
               :port 5984,
@@ -26,10 +31,9 @@
               :pwd (System/getenv "CAL_PWD")
               :name "vl_db_work"}
    :db/mpds {:db (ig/ref :db/couch)
-             :ids ids
+             :id-set (ig/ref :mpd/id-set) 
              :ini {}}
    :model/cont {:mpds (ig/ref :db/mpds)
-                :ids ids
                 :group-kw :cont
                 :ini {}}})
 
@@ -82,11 +86,13 @@
 (defmethod ig/init-key :db/couch [_ opts]
   (db-config opts))
 
+(defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
+  (get id-sets id-set))
 ;; 
-(defmethod ig/init-key :db/mpds [_ {:keys [db ids ini]}]
+(defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini]}]
   (reduce
    (fn [res id] (assoc res (keyword id) (:Mp (get-doc id db))))
-   ini ids))
+   ini id-set))
 
 (defmethod ig/init-key :model/cont [_ {:keys [mpds ids ini group-kw]}]
   (reduce
@@ -107,9 +113,9 @@
 
 ;; ## Start, stop and restart The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
-(defn start []
-  (keys (reset! system (ig/init (config ["mpd-ppc-gas_dosing"
-                                         "mpd-se3-calib"])))))
+(defn start [id-set]
+  (keys (reset! system (ig/init (config id-set)))))
+
 (defn stop []
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
