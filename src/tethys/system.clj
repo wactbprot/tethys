@@ -1,11 +1,10 @@
 (ns tethys.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [libcdb.core :as db]
-            [libcdb.configure :as cf]
+  (:require [tethys.db :as db]
+            [tethys.model :as model]
             [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig])
   (:gen-class))
-
 
 (defn config [id-set]
   {:log/mulog {:type :multi
@@ -37,33 +36,6 @@
                 :group-kw :cont
                 :ini {}}})
 
-;; # Database io functions
-;; The three functions used here are simply passed through from
-;; library [libcdb](https://gitlab1.ptb.de/vaclab/vl-db)
-(defn db-config [opts] (cf/config opts))
-(defn get-doc [id db] (db/get-doc id db))
-(defn put-doc [doc db] (db/put-doc doc db))
-
-(defn flattenv [v] (into [] (flatten v)))
-
-(defn agents-up [id group-kw m]
-  (mapv (fn [{:keys [Ctrl Definition]} ndx]
-          (agent {:ctrl (or (keyword Ctrl) :ready)
-                  :state (flattenv
-                          (mapv (fn [s sdx] 
-                                  (mapv (fn [t pdx] 
-                                          {:id id
-                                           :group group-kw
-                                           :ndx ndx :sdx sdx :pdx pdx
-                                           :is :ready
-                                           :task t})
-                                        s (range)))
-                                Definition (range)))})) 
-        m (range)))
-
-
-(defn agents-down [[id group-agents]]
-  (run! #(send % (fn [_] {})) group-agents))
 
 ;; The first `if` clause (the happy path) contains the central idea:
 ;; the request is send to
@@ -82,25 +54,23 @@
 (defmethod ig/init-key :log/mulog [_ opts]  
   (µ/set-global-context! (:log-context opts))
   (µ/start-publisher! opts))
- 
+
 (defmethod ig/init-key :db/couch [_ opts]
-  (db-config opts))
+  (db/config opts))
 
 (defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
   (get id-sets id-set))
 ;; 
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini]}]
   (reduce
-   (fn [res id] (assoc res (keyword id) (:Mp (get-doc id db))))
+   (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
    ini id-set))
 
 (defmethod ig/init-key :model/cont [_ {:keys [mpds ids ini group-kw]}]
   (reduce
    (fn [res [id {:keys [Container]}]]
-     (assoc res id (agents-up id group-kw Container)))
-  ini mpds))
-
-
+     (assoc res id (model/agents-up id group-kw Container)))
+   ini mpds))
 
 ;; ## System down multimethods
 ;; The `halt-keys!` methods **read in the implementation** and shut down
@@ -109,7 +79,7 @@
   (logger))
 
 (defmethod ig/halt-key! :model/cont [_ groups-agents]
-  (run! #(agents-down %) groups-agents))
+  (run! #(model/agents-down %) groups-agents))
 
 ;; ## Start, stop and restart The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
