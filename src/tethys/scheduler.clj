@@ -1,9 +1,9 @@
-;; The tethys scheduler is organized by means of **whatch** functions.
 (ns tethys.scheduler
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]))
 
-
+;; ## Scheduler
+;; The *Tethys* scheduler is organized by means of **whatch** functions.
 (defn whatch-up [group-agents]
   (mapv
    (fn [a]

@@ -81,7 +81,6 @@
      (assoc res id (sched/whatch-up agts)))
    ini conts))
   
-
 ;; ## System down multimethods
 ;; The `halt-keys!` methods **read in the implementation** and shut down
 ;; this implementation in a contolled way. This is a pure side effect.
