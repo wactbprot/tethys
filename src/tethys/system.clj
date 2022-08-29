@@ -2,6 +2,7 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.db :as db]
             [tethys.model :as model]
+            [tethys.scheduler :as sched] 
             [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig])
   (:gen-class))
@@ -13,10 +14,10 @@
                                            (System/getenv "DEVHUB_FACILITY")
                                            (System/getenv "METIS_FACILITY"))}
                :publishers[{:type :elasticsearch
-                            :url  "http://a75438:9200/"
-                            :els-version  :v7.x
+                            :url "http://a75438:9200/"
+                            :els-version :v7.x
                             :publish-delay 1000
-                            :data-stream  "vl-log-stream"
+                            :data-stream "vl-log-stream"
                             :name-mangling false}]}
    :mpd/id-set {:id-set id-set
                 :id-sets {:gas-dosing ["mpd-ppc-gas_dosing"]
@@ -34,8 +35,10 @@
              :ini {}}
    :model/cont {:mpds (ig/ref :db/mpds)
                 :group-kw :cont
-                :ini {}}})
-
+                :ini {}}
+   :scheduler/cont {:conts (ig/ref :model/cont)
+                    :group-kw :cont
+                    :ini {}}})
 
 ;; The first `if` clause (the happy path) contains the central idea:
 ;; the request is send to
@@ -60,17 +63,24 @@
 
 (defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
   (get id-sets id-set))
-;; 
+
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini]}]
   (reduce
    (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
    ini id-set))
 
-(defmethod ig/init-key :model/cont [_ {:keys [mpds ids ini group-kw]}]
+(defmethod ig/init-key :model/cont [_ {:keys [mpds ini group-kw]}]
   (reduce
    (fn [res [id {:keys [Container]}]]
      (assoc res id (model/agents-up id group-kw Container)))
    ini mpds))
+
+(defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
+  (reduce
+   (fn [res [id agts]]
+     (assoc res id (sched/whatch-up agts)))
+   ini conts))
+  
 
 ;; ## System down multimethods
 ;; The `halt-keys!` methods **read in the implementation** and shut down
@@ -80,6 +90,9 @@
 
 (defmethod ig/halt-key! :model/cont [_ groups-agents]
   (run! #(model/agents-down %) groups-agents))
+
+(defmethod ig/halt-key! :scheduler/cont [_ groups-agents]
+  (run! #(sched/whatch-down %) groups-agents))
 
 ;; ## Start, stop and restart The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.

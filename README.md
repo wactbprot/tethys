@@ -68,3 +68,8 @@ nice option to understand the system during runtime.
 * worker completed: `(state/executed loc)` which schould be `(send  (image/state loc) :executed)` where `(image/state loc)` is an agent
   
   
+# generate documentation
+
+```shell
+clojure -M:docs
+```
