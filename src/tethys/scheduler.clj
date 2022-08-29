@@ -4,13 +4,16 @@
   (:require [com.brunobonacci.mulog :as µ]))
 
 
-(defn whatch-up [agts]
+(defn whatch-up [group-agents]
   (mapv
-   (fn [a] (prn a))
-   agts))
+   (fn [a]
+     (add-watch a :sched (fn [key agt old-state new-state]
+                           (prn new-state))))
+     group-agents))
 
-(defn whatch-down [agts]
+(defn whatch-down [[id group-agents]]
   (mapv
-   (fn [a] (prn a))
-   agts))
+   (fn [a]
+     (remove-watch a :sched))
+   group-agents))
 
