@@ -2,6 +2,8 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
     (:require [clojure.string :as str]))
 
+
+
 (defn- flattenv [v] (into [] (flatten v)))
 
 (defstruct state :id :group :ndx :sdx :pdx :is :task)

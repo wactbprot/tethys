@@ -50,7 +50,7 @@
 ;; following `init-key` multimethods and shut down by `halt-key!`
 ;; multimethods.
 ;; ### System up multimethods
-(defonce system (atom nil))
+(defonce system  (atom nil))
 
 ;; The `init-key`s methods **read a configuration** and **return an
 ;; implementation**.
@@ -94,19 +94,15 @@
 (defmethod ig/halt-key! :scheduler/cont [_ groups-agents]
   (run! #(sched/whatch-down %) groups-agents))
 
-;; ## Start, stop and restart The following functions are intended
-;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
-(defn start [id-set]
-  (keys (reset! system (ig/init (config id-set)))))
-
-(defn stop []
+(defn init [id-set] (reset! system (ig/init (config id-set))))
+  
+(defn stop []  
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
   (reset! system {}))
 
-(defn restart []
-  (stop)
-  (Thread/sleep 500)
-  (start))
+;; ## helper functions
 
-(defn mpds [] (keys (:model/cont @system)))
+;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
+;; keyword.
+(defn cont-agent [mpd ndx] (-> @system :model/cont mpd (nth ndx)))
