@@ -2,6 +2,7 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
     (:require [clojure.string :as str]))
 
+
 ;; ## Model
 ;; The model `ns` transforms the *mpd*s as received from the databas
 ;; into a a structure where different threads can work on. For the
