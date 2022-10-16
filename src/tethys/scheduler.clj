@@ -14,11 +14,12 @@
 (defn whatch-fn! [key agt old-state new-state]
   (let [ctrl (:ctrl new-state)
         state (:state new-state)]
-    (prn ".")
     (cond
-      (error? state) (do
-                       (µ/log ::whatch-fn! :error "state error")
-                       (send agt (fn [m] (assoc m :ctrl :error)))))))
+      (and
+       (not (= :error ctrl)
+            (error? state)) (do
+                              (µ/log ::whatch-fn! :error "state error")
+                              (send agt (fn [m] (assoc m :ctrl :error)))))))
 
 ;; ## Scheduler
 ;; The *Tethys* scheduler is organized by means of **whatch** functions.
