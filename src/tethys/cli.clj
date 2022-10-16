@@ -4,21 +4,17 @@
 ;; ## Start, stop and restart
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
-(defn sys-start [id-set] (keys (sys/init id-set)))
+(defn start [id-set] (keys (sys/init id-set)))
 
-(defn sys-stop [] (sys/stop))
-
-(defn sys-restart []
-  (stop)
-  (Thread/sleep 500)
-  (start))
+(defn stop [] (sys/stop))
 
 ;; In order to get an overview of the active mpds use `(mpds)`.
 (defn mpds [] (keys (:model/cont @sys/system)))
 
 ;; ## Start, stop container
+(defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
 
-(defn cont-run [mpd ndx]
-  (let [a (sys/cont-agent mpd ndx)  
-        f (fn [m] (assoc m :ctrl :run))]
-    (send a f)))
+;; Run `cont`ainer `ndx` of `mpd`
+(defn run-cont [mpd ndx] (ctrl (sys/cont-agent mpd ndx) :run))
+(defn mon-cont [mpd ndx] (ctrl (sys/cont-agent mpd ndx) :mon))
+(defn stop-cont [mpd ndx] (ctrl (sys/cont-agent mpd ndx) :stop))
