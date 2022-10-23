@@ -51,3 +51,19 @@
   (testing "nil"
     (is (false? (all-exec? [nil])))
     (is (false? (all-exec? [{:is nil}])))))
+
+
+(deftest predec-exec?-test-i
+  (testing "basics"
+    (is (false? (predec-exec? 1 [{:is :executed :sdx 0}
+                                 {:is :ready :sdx 0}
+                                 {:is :ready :sdx 0}])))
+    (is (true? (predec-exec? 1 [{:is :executed :sdx 0}
+                                {:is :executed :sdx 0}
+                                {:is :executed :sdx 1}])))
+    (is (true? (predec-exec? 2 [{:is :executed :sdx 0}
+                                {:is :executed :sdx 0}
+                                {:is :executed :sdx 1}])))
+    (is (false? (predec-exec? 2 [{:is :executed :sdx 0}
+                                {:is :working :sdx 0}
+                                 {:is :executed :sdx 1}])))))
