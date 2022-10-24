@@ -1,4 +1,4 @@
-<img src="logo" alt="tethys" id="logo" width="300px">
+<img src="logo.png" alt="tethys" id="logo" width="300px">
 
 # design ideas
 
