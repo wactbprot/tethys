@@ -1,26 +1,15 @@
-
 (ns tethys.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [tethys.db :as db]
+  (:require [com.brunobonacci.mulog :as µ]
+            [integrant.core :as ig]
+            [tethys.db :as db]
             [tethys.model :as model]
-            [tethys.scheduler :as sched] 
-            [com.brunobonacci.mulog :as µ]
-            [integrant.core :as ig])
+            [tethys.scheduler :as sched]
+            [tethys.worker :as work])
   (:gen-class))
 
 (defn config [id-set]
-  {:log/mulog {:type :multi
-               :log-context {:app-name "vl-db-agent"
-                             :facility (or (System/getenv "DEVPROXY_FACILITY")
-                                           (System/getenv "DEVHUB_FACILITY")
-                                           (System/getenv "METIS_FACILITY"))}
-               :publishers[{:type :elasticsearch
-                            :url "http://a75438:9200/"
-                            :els-version :v7.x
-                            :publish-delay 1000
-                            :data-stream "vl-log-stream"
-                            :name-mangling false}]}
-   :mpd/id-set {:id-set id-set
+  {:mpd/id-set {:id-set id-set
                 :id-sets {:ppc ["mpd-ppc-gas_dosing"]
                           :se3 ["mpd-se3-calib"
                                 "mpd-se3-state"
@@ -39,22 +28,32 @@
                 :ini {}}
    :scheduler/cont {:conts (ig/ref :model/cont)
                     :group-kw :cont
-                    :ini {}}})
+                    :ini {}}
+   :worker/cont {:conts (ig/ref :model/cont)
+                    :group-kw :cont
+                    :ini {}}
+   :log/mulog {:type :multi
+               :log-context {:app-name "vl-db-agent"
+                             :facility (or (System/getenv "DEVPROXY_FACILITY")
+                                           (System/getenv "DEVHUB_FACILITY")
+                                           (System/getenv "METIS_FACILITY"))}
+               :publishers[{:type :elasticsearch
+                            :url "http://a75438:9200/"
+                            :els-version :v7.x
+                            :publish-delay 1000
+                            :data-stream "vl-log-stream"
+                            :name-mangling false}]}})
 
-;; The first `if` clause (the happy path) contains the central idea:
-;; the request is send to
-;; an [agent](https://clojure.org/reference/agents) `a`. This queues
-;; up the write requests and avoids *write conflicts*
-
-;; # System
-;; The entire system is stored in an `atom` that is build up by the
-;; following `init-key` multimethods and shut down by `halt-key!`
-;; multimethods.
-;; ### System up multimethods
+;; # System The entire system is stored in an `atom` in the
+;; `tethys.system` (this) namespace.
 (defonce system  (atom nil))
 
-;; The `init-key`s methods **read a configuration** and **return an
-;; implementation**.
+;; The system is build **up** by the following `init-key`
+;; multimethods.
+;;
+;; ### System up multimethods
+;; The `init-key`s methods **read a
+;; configuration** and **return an implementation**.
 (defmethod ig/init-key :log/mulog [_ opts]  
   (µ/set-global-context! (:log-context opts))
   (µ/start-publisher! opts))
@@ -78,30 +77,42 @@
 
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
   (reduce
-   (fn [res [id agts]]
-     (assoc res id (sched/whatch-up agts)))
+   (fn [res [id as]]
+     (assoc res id (sched/whatch-up as)))
    ini conts))
-  
+
+(defmethod ig/init-key :worker/cont [_ {:keys [conts ini]}]
+  (reduce
+   (fn [res [id as]]
+     (assoc res id (work/whatch-up as)))
+   ini conts))
+
 ;; ## System down multimethods
-;; The `halt-keys!` methods **read in the implementation** and shut down
-;; this implementation in a contolled way. This is a pure side effect.
+;; The system may be **shut down** by
+;; `halt-key!` multimethods.  The `halt-keys!` methods **read in the
+;; implementation** and shut down in a contolled way. This is a pure
+;; side effect.
 (defmethod ig/halt-key! :log/mulog [_ logger]
   (logger))
 
-(defmethod ig/halt-key! :model/cont [_ groups-agents]
-  (run! #(model/agents-down %) groups-agents))
+(defmethod ig/halt-key! :model/cont [_ as]
+  (run! #(model/agents-down %) as))
 
-(defmethod ig/halt-key! :scheduler/cont [_ groups-agents]
-  (run! #(sched/whatch-down %) groups-agents))
+(defmethod ig/halt-key! :scheduler/cont [_ as]
+  (run! #(sched/whatch-down %) as))
+
+(defmethod ig/halt-key! :worker/cont [_ as]
+  (run! #(work/whatch-down %) as))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))
-  
+
+;; Todo: difference (in meaning) between `halt` and `stop`?
 (defn stop []  
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
   (reset! system {}))
 
-;; ## helper functions
+;; ## Helper functions
 
 ;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
 ;; keyword.
