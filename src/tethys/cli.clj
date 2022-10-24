@@ -54,34 +54,36 @@
      :is :executed
      :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
 
-;; Run `cont`ainer `ndx` of `mpd`
-(defn run-cont [mpd ndx] (ctrl (cont-agent mpd ndx) :run))
-(defn mon-cont [mpd ndx] (ctrl (cont-agent mpd ndx) :mon))
-(defn stop-cont [mpd ndx] (ctrl (cont-agent mpd ndx) :stop))
-
+;; ## Ctrl-interface setting Run, stop or mon a `cont`ainer `ndx` of
+;; `mpd` with this functions.
+(defn cont-run [mpd ndx] (ctrl (cont-agent mpd ndx) :run))
+(defn cont-mon [mpd ndx] (ctrl (cont-agent mpd ndx) :mon))
+(defn cont-stop [mpd ndx] (ctrl (cont-agent mpd ndx) :stop))
 
 ;; ## Set container state
-(defn state! [a sdx pdx op]
-  (send a
-        (fn [m] (assoc m
-                      :state
-                      (mapv (fn [{s :sdx p :pdx :as m}]
-                              (if (and (= s sdx)
-                                       (= p pdx))
-                                (assoc m :is op)
-                                m))
-                            (:state m))))))
 
+;; The function `set-all-pos-ready` allows the direct setting of `:is`
+;; verbs for a given state.
+(defn- set-at-pos [state sdx pdx op]
+  (mapv (fn [{s :sdx p :pdx :as m}]
+          (if (and (= s sdx) (= p pdx))
+            (assoc m :is op)
+            m))
+        state))
+
+(defn- state! [a sdx pdx op]
+  (send a (fn [{:keys [state] :as m}]
+            (assoc m :state (set-at-pos state sdx pdx op)))))
 
 ;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd` 
-(defn ready-state [mpd ndx sdx pdx]
+(defn state-ready [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :ready))
 
-(defn exec-state  [mpd ndx sdx pdx]
+(defn state-exec  [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :executed))
 
-(defn work-state [mpd ndx sdx pdx]
+(defn state-work [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :working))
 
-(defn error-state [mpd ndx sdx pdx]
+(defn state-error [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :error))

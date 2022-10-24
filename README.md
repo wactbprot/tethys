@@ -1,4 +1,4 @@
-<img src="tethys.webp" alt="tethys" id="logo" width="600px">
+<img src="logo" alt="tethys" id="logo" width="300px">
 
 # design ideas
 
@@ -13,23 +13,27 @@ data mining, alarm system, bots, ki) is wishful thinking. so why all
 the `map->key`, `key->map` time loss.
 
 Part of metis debuging was related to a redis gui with all it pros and
-cons. The _dxrt_ system should be inspectable in total with the clojure REPL.
+cons. The _tethys_ system should be inspectable in total with the clojure REPL.
 
 Furthermore, [portal](https://github.com/djblue/portal) is a realy
 nice option to understand the system during runtime.
 
 * no use of an (in-mem)-database at the first place
-* state, exchange, model **can be pulled into an inmutable (clock ordered) database system snapshots
+* state, exchange, model **can be pulled into an inmutable (clock
+  ordered) database system snapshots
 * a loop recur makes the progress (turn based) which simplifies a lot
 
 ## system
 
-* the system is a collection of `mpd`s modeled as an image in a certain way
-* the system maintained  by [integrant](https://github.com/weavejester/integrant)
+* the system is a collection of `mpd`s modeled as an image in a
+  certain way
+* the system maintained by
+  [integrant](https://github.com/weavejester/integrant)
 
 ## loc param (location map)
 
-* `loc` is a map describing the location of a mutable piece of information in the system
+* `loc` is a map describing the location of a mutable piece of
+  information in the system
 * keys of this map are at least:
   * `id`
   * `group`
@@ -37,8 +41,10 @@ nice option to understand the system during runtime.
 
 ## task ns
 
-* task building in a namespace with (read only) access to database (CouchDB, or also clock ordered ?)
-* no state: get task always fresh from db and build it up on the fly like in previous system(s)
+* task building in a namespace with (read only) access to database
+  (CouchDB, or also clock ordered ?)
+* no state: get task always fresh from db and build it up on the fly
+  like in previous system(s)
 * task ns should be rewritten
 
 ## state ns
@@ -52,7 +58,8 @@ nice option to understand the system during runtime.
 
 * exchange is an agent since it is mutated async uncoord
 * exchange is an agent `(assoc-in @image [:mpd-ref :exchange] (agent {:GetDefaultsFromMPD :all})`
-* worker got data for exchange: `(exchange/to data loc config)` which schould be `(send (image/exchange loc) data)`
+* worker got data for exchange: `(exchange/to data loc config)` which
+  schould be `(send (image/exchange loc) data)`
 
 ## document ns
 
