@@ -21,10 +21,10 @@
                             :data-stream "vl-log-stream"
                             :name-mangling false}]}
    :mpd/id-set {:id-set id-set
-                :id-sets {:gas-dosing ["mpd-ppc-gas_dosing"]
-                          :se3        ["mpd-se3-calib"
-                                       "mpd-se3-state"
-                                       "mpd-se3-servo"]}}
+                :id-sets {:ppc ["mpd-ppc-gas_dosing"]
+                          :se3 ["mpd-se3-calib"
+                                "mpd-se3-state"
+                                "mpd-se3-servo"]}}
    :db/couch {:prot "http",
               :host "localhost",
               :port 5984,

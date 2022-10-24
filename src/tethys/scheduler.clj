@@ -1,7 +1,10 @@
 (ns tethys.scheduler
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [com.brunobonacci.mulog :as µ]))
+  (:require [com.brunobonacci.mulog :as µ]
+            [clojure.string :as string]))
 
+(defn map->pos-str [{:keys [id group ndx sdx pdx]}]
+  (string/join "/" [id group ndx sdx pdx]))
 ;; ## Scheduler
 ;;
 ;; The *Tethys* scheduler is driven by means
@@ -28,29 +31,30 @@
   (µ/log ::ctrl-error! :error "state error")
   (send a (fn [m] (assoc m :ctrl :error))))
 
-(defn all-ready! [a]
+(defn all-ready! [a]  
   (µ/log ::all-ready! :message "set all states to :ready")
   (send a (fn [m] (assoc m :state (reset (:state m))))))
 
 ;; Start next if the [[next-ready]] is first or all predecessors are
 ;; executed.
 (defn start-next! [a v]
-  (prn (when-let [{sdx :sdx :as m} (next-ready v)]
-         (cond
-           (zero? sdx) m
-           (predec-exec? sdx v) m))))
+  (let [m (when-let [{sdx :sdx :as m} (next-ready v)]
+            (cond
+              (zero? sdx) m
+              (predec-exec? sdx v) m))]
+    (µ/log ::start-next! :message (str "start task at: " (map->pos-str m)))))
 
   (defn whatch-fn! [key a os ns]
   (let [ctrl (:ctrl ns)
         state (:state ns)]
     (cond
       (and
-       (not (= :error ctrl)
-            (error? state)))  (ctrl-error! a)
+       (not (= :error ctrl))
+            (error? state))  (ctrl-error! a)
+      (all-exec? state) (all-ready! a)
       (or 
        (= :run ctrl)
        (= :mon ctrl)) (start-next! a state)
-      (all-exec? state) (all-ready! a)
       :nothing-todo-here true)))
 
 (defn whatch-up [group-agents]
