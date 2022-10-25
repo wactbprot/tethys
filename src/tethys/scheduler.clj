@@ -47,9 +47,17 @@
                 (predec-exec? sdx v))
         m))))
 
+(defn set-at-pos-op [{:keys [state] :as n} {:keys [sdx pdx]} op]
+  (assoc n :state (mapv (fn [{s :sdx p :pdx :as m}]
+                          (if (and (= s sdx) (= p pdx))
+                            (assoc m :is op)
+                            m))
+                        state)))
+
 (defn start-next! [a m]
   (when (seq m)
-    (send a (fn [n] (assoc n :start m)))))
+    (send a (fn [n]
+              (set-at-pos-op (update-in n [:task] conj m) m :working)))))
 
 (defn whatch-fn! [_ a _ {:keys [ctrl state]}]
   (cond

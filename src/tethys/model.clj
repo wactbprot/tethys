@@ -8,13 +8,15 @@
 ;; into a a structure where different threads can work on. For the
 ;; moving parts, agents are used.
 
-(defn- flattenv [v] (into [] (flatten v)))
+(defn- flattenv [v] (-> v flatten vec))
 
 (defstruct state :id :group :ndx :sdx :pdx :is :task)
 
 (defn agents-up [id group-kw m]
   (mapv (fn [{:keys [Ctrl Definition]} ndx]
-          (agent {:ctrl (or (keyword Ctrl) :ready)
+          (agent {:task []
+                  :work []
+                  :ctrl (or (keyword Ctrl) :ready)
                   :state (flattenv
                           (mapv (fn [s sdx] 
                                   (mapv (fn [t pdx]

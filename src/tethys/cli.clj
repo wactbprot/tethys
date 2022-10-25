@@ -54,6 +54,9 @@
      :is :executed
      :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
 
+;; Get the `agent` of a mpd by `(exch-agent mpd)`
+(defn exch-agent [mpd] (sys/exch-agent mpd))
+
 ;; ## Ctrl-interface setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
 (defn cont-run [mpd ndx] (ctrl (cont-agent mpd ndx) :run))
@@ -61,7 +64,6 @@
 (defn cont-stop [mpd ndx] (ctrl (cont-agent mpd ndx) :stop))
 
 ;; ## Set container state
-
 ;; The function `set-all-pos-ready` allows the direct setting of `:is`
 ;; verbs for a given state.
 (defn- set-at-pos [state sdx pdx op]
@@ -70,6 +72,7 @@
             (assoc m :is op)
             m))
         state))
+
 
 (defn- state! [a sdx pdx op]
   (send a (fn [{:keys [state] :as m}]

@@ -3,8 +3,10 @@
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
             [tethys.db :as db]
+            [tethys.exchange :as exch]
             [tethys.model :as model]
             [tethys.scheduler :as sched]
+            [tethys.task :as task]
             [tethys.worker :as work])
   (:gen-class))
 
@@ -26,11 +28,13 @@
    :model/cont {:mpds (ig/ref :db/mpds)
                 :group-kw :cont
                 :ini {}}
-   :scheduler/cont {:conts (ig/ref :model/cont)
-                    :group-kw :cont
-                    :ini {}}
-   :worker/cont {:conts (ig/ref :model/cont)
-                    :group-kw :cont
+   :model/exch {:mpds (ig/ref :db/mpds)
+                :ini {}}
+   :task/cont {:conts (ig/ref :model/cont)
+               :ini {}}
+   :worker/cont {:conts (ig/ref :task/cont)
+                 :ini {}}
+   :scheduler/cont {:conts (ig/ref :worker/cont)
                     :ini {}}
    :log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
@@ -75,16 +79,28 @@
      (assoc res id (model/agents-up id group-kw Container)))
    ini mpds))
 
-(defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
+(defmethod ig/init-key :model/exch [_ {:keys [mpds ini]}]
   (reduce
-   (fn [res [id as]]
-     (assoc res id (sched/whatch-up as)))
-   ini conts))
+   (fn [res [id {:keys [Exchange]}]]
+     (assoc res id (exch/agent-up id Exchange)))
+   ini mpds))
 
 (defmethod ig/init-key :worker/cont [_ {:keys [conts ini]}]
   (reduce
    (fn [res [id as]]
-     (assoc res id (work/whatch-up as)))
+     (assoc res id (work/up as)))
+   ini conts))
+
+(defmethod ig/init-key :task/cont [_ {:keys [conts ini]}]
+  (reduce
+   (fn [res [id as]]
+     (assoc res id (task/up as)))
+   ini conts))
+
+(defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
+  (reduce
+   (fn [res [id as]]
+     (assoc res id (sched/whatch-up as)))
    ini conts))
 
 ;; ## System down multimethods
@@ -98,11 +114,17 @@
 (defmethod ig/halt-key! :model/cont [_ as]
   (run! #(model/agents-down %) as))
 
+(defmethod ig/halt-key! :model/exch [_ a]
+  (exch/agent-down a))
+
 (defmethod ig/halt-key! :scheduler/cont [_ as]
   (run! #(sched/whatch-down %) as))
 
 (defmethod ig/halt-key! :worker/cont [_ as]
-  (run! #(work/whatch-down %) as))
+  (run! #(work/down %) as))
+
+(defmethod ig/halt-key! :task/cont [_ as]
+  (run! #(task/down %) as))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))
 
@@ -117,3 +139,5 @@
 ;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
 ;; keyword.
 (defn cont-agent [mpd ndx] (-> @system :model/cont mpd (nth ndx)))
+
+(defn exch-agent [mpd] (-> @system :model/exch mpd))
