@@ -30,11 +30,14 @@
                 :ini {}}
    :model/exch {:mpds (ig/ref :db/mpds)
                 :ini {}}
-   :task/cont {:conts (ig/ref :model/cont)
-               :ini {}}
-   :worker/cont {:conts (ig/ref :task/cont)
+   :task/all {:db (ig/ref :db/couch)
+              :view "tasks"
+              :design "dbmp"
+              :conts (ig/ref :model/cont)
+              :ini {}}
+   :worker/all {:conts (ig/ref :task/all)
                  :ini {}}
-   :scheduler/cont {:conts (ig/ref :worker/cont)
+   :scheduler/cont {:conts (ig/ref :worker/all)
                     :ini {}}
    :log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
@@ -85,16 +88,16 @@
      (assoc res id (exch/agent-up id Exchange)))
    ini mpds))
 
-(defmethod ig/init-key :worker/cont [_ {:keys [conts ini]}]
+(defmethod ig/init-key :worker/all [_ {:keys [conts ini]}]
   (reduce
    (fn [res [id as]]
      (assoc res id (work/up as)))
    ini conts))
 
-(defmethod ig/init-key :task/cont [_ {:keys [conts ini]}]
+(defmethod ig/init-key :task/all [_ {:keys [db view design conts ini]}]
   (reduce
    (fn [res [id as]]
-     (assoc res id (task/up as)))
+     (assoc res id (task/up (assoc db :view view :design design) conts)))
    ini conts))
 
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
@@ -120,10 +123,10 @@
 (defmethod ig/halt-key! :scheduler/cont [_ as]
   (run! #(sched/whatch-down %) as))
 
-(defmethod ig/halt-key! :worker/cont [_ as]
+(defmethod ig/halt-key! :worker/all [_ as]
   (run! #(work/down %) as))
 
-(defmethod ig/halt-key! :task/cont [_ as]
+(defmethod ig/halt-key! :task/all [_ as]
   (run! #(task/down %) as))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))

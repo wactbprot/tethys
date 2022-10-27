@@ -1,8 +1,21 @@
-(ns tethys.task)
+(ns tethys.task
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
+  (:require [com.brunobonacci.mulog :as µ]
+            [tethys.db :as db]))
 
-(defn whatch-fn! [_ a _ {:keys [task]}]
-  (when (seq task)
-    (prn task)))
 
-(defn up [as] (mapv #(add-watch % :task whatch-fn!) as))
+;; The `whatch-fn!` checks if the task vector contains any
+;; elements. Returns m (the agent) if not. If `:task` is not empty it
+;; should contain a map like this:
+(comment
+  )
+
+(defn up [db as]
+  (let [f (db/task-fn db)
+        w (fn [_ a _ {:keys [task]}]
+            (when (seq task)
+              (prn (f (-> task first :TaskName)))))]
+    (mapv #(add-watch % :task w) as)))
+  
 (defn down [[_ as]] (mapv #(remove-watch % :task) as))
+

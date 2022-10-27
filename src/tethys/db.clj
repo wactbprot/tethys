@@ -7,4 +7,13 @@
 ;; The database functions used here are simply passed through from
 ;; library [libcdb](https://gitlab1.ptb.de/vaclab/vl-db)
 (defn config [opts] (cf/config opts))
+
 (defn get-doc [id db] (db/get-doc id db))
+
+(defn task-fn [{:keys [db]}]
+  (fn [taskname]
+    (-> db
+        (assoc :key taskname)
+        db/get-view
+        first 
+        :value)))
