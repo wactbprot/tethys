@@ -11,10 +11,11 @@
   )
 
 (defn up [db as]
+  (prn db)
   (let [f (db/task-fn db)
         w (fn [_ a _ {:keys [task]}]
             (when (seq task)
-              (prn (f (-> task first :TaskName)))))]
+              (prn (f (-> task first :task :TaskName)))))]
     (mapv #(add-watch % :task w) as)))
   
 (defn down [[_ as]] (mapv #(remove-watch % :task) as))

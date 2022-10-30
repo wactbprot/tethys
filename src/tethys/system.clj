@@ -97,7 +97,7 @@
 (defmethod ig/init-key :task/all [_ {:keys [db view design conts ini]}]
   (reduce
    (fn [res [id as]]
-     (assoc res id (task/up (assoc db :view view :design design) conts)))
+     (assoc res id (task/up (assoc db :view view :design design) as)))
    ini conts))
 
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
