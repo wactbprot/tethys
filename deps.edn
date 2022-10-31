@@ -20,6 +20,7 @@
                                djblue/portal {:mvn/version "0.28.0"}
                                cheshire/cheshire {:mvn/version "5.10.0"}
                                integrant/integrant {:mvn/version "0.8.0"}
-                               clj-time/clj-time  {:mvn/version "0.15.0"}
+                               clojure.java-time/clojure.java-time {:mvn/version "1.1.0"}
+                               org.clojure/data.json {:mvn/version "2.4.0"}
                                com.brunobonacci/mulog  {:mvn/version "0.6.0"}
                                com.brunobonacci/mulog-elasticsearch {:mvn/version "0.6.0"}}}}}

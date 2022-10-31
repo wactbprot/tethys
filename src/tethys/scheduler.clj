@@ -57,7 +57,7 @@
 (defn start-next! [a m]
   (when (seq m)
     (send a (fn [n]
-              (set-at-pos-op (update-in n [:task] conj m) m :working)))))
+              (set-at-pos-op (update-in n [:task-queue] conj m) m :working)))))
 
 (defn whatch-fn! [_ a _ {:keys [ctrl state]}]
   (cond

@@ -14,8 +14,8 @@
 
 (defn agents-up [id group-kw m]
   (mapv (fn [{:keys [Ctrl Definition]} ndx]
-          (agent {:task []
-                  :work []
+          (agent {:task-queue []
+                  :work-queue []
                   :ctrl (or (keyword Ctrl) :ready)
                   :state (flattenv
                           (mapv (fn [s sdx] 
