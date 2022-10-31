@@ -10,7 +10,7 @@
 
 (defn get-doc [id db] (db/get-doc id db))
 
-(defn task-fn [{:keys [db]}]
+(defn task-fn [db]
   (fn [taskname]
     (-> db
         (assoc :key taskname)

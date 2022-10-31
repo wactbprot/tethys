@@ -10,7 +10,7 @@
 
 (defn- flattenv [v] (-> v flatten vec))
 
-(defstruct state :id :group :ndx :sdx :pdx :is :task)
+(defstruct state :id :group :ndx :sdx :pdx :is)
 
 (defn agents-up [id group-kw m]
   (mapv (fn [{:keys [Ctrl Definition]} ndx]
@@ -20,8 +20,8 @@
                   :state (flattenv
                           (mapv (fn [s sdx] 
                                   (mapv (fn [t pdx]
-                                          (struct state
-                                                  id group-kw ndx sdx pdx :ready t))
+                                          (merge t (struct state
+                                                           id group-kw ndx sdx pdx :ready)))
                                         s (range)))
                                 Definition (range)))})) 
         m (range)))
