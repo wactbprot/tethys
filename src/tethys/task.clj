@@ -43,17 +43,14 @@
  )
 
 (defn assemble [task Replace Use Defaults FromExchange]
-  (let [str-task (json/write-str (dissoc task
-                                         :Replace
-                                         :Use
-                                         :Defaults
-                                         :FromExchange))]
-    (prn (-> str-task
-             (replace-map (kw-map->str-map Replace))
-             (replace-map (globals))
-             (replace-map (kw-map->str-map Defaults))))
-  task))
-      
+  (->  task
+       (dissoc  :Replace :Use :Defaults :FromExchange)
+       json/write-str
+       (replace-map (kw-map->str-map Replace))
+       (replace-map (globals))
+       (replace-map (kw-map->str-map Defaults))
+       json/read-str))
+
 ;; The `up` checks if the `task-queue` (a vector) contains any
 ;; elements. Returns `m` (the agent) if not. If `:task-queue` is not empty it
 ;; should contain a map like this:
@@ -65,17 +62,22 @@
    :sdx 3,
    :pdx 0,
    :is :ready})
-;; This map will be [[assemble]]d and pushed into the `work-queue`. 
-(defn up [db]
+
+;; This map will be [[assemble]]d and pushed into the work-queue `wa`. 
+(defn up [db wa]
+  (µ/log ::up :message "start up task agent queqe")
   (let [f (db/task-fn db)
         a (agent [])
-        w (fn [_ a _ task-queue]
-            (when (seq task-queue)
-              (let [{:keys [TaskName Use Replace] :as task} (first task-queue)
+        w (fn [_ ta _ v]
+            (when (seq v)
+              (let [{:keys [TaskName Use Replace] :as task} (first v)
                     {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
                     task (assemble task Replace Use Defaults FromExchange)]
-              (send a (fn [v] (prn v))))))]
-    (add-watch a :task w)))
-
-(defn down [[_ a]] (prn a))
+                (send wa (fn [v] (conj v task)))
+                (send ta (fn [v] (-> v rest vec))))))]
+    (add-watch a :queqe w)))
+ 
+(defn down [[_ a]]
+  (µ/log ::down :message "shut down task agent queqe")
+  (send a (fn [_] [])))
 

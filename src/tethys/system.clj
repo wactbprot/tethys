@@ -30,13 +30,15 @@
                 :ini {}}
    ;;:model/exch {:mpds (ig/ref :db/mpds)
    ;;             :ini {}}
+   :worker/all {:mpds (ig/ref :db/mpds)
+                :ini {}}
    :task/all {:db (ig/ref :db/couch)
               :view "tasks"
               :design "dbmp"
               :mpds (ig/ref :db/mpds)
+              :worker-queqes (ig/ref :worker/all)
               :ini {}}
-   ;; :worker/all {:conts (ig/ref :task/all)
-   ;;              :ini {}}
+   
    :scheduler/cont {:conts (ig/ref :model/cont)
                     :task-queqes (ig/ref :task/all)
                     :ini {}}
@@ -91,18 +93,17 @@
        (assoc res id (exch/agent-up id Exchange)))
    ini mpds)))
 
-(comment
-  (defmethod ig/init-key :worker/all [_ {:keys [conts ini]}]
-    (reduce
-     (fn [res [id as]]
-     (assoc res id (work/up as)))
-     ini conts)))
+(defmethod ig/init-key :worker/all [_ {:keys [mpds ini]}]
+  (reduce
+   (fn [res [id _]]
+     (assoc res id (work/up)))
+   ini mpds))
 
-(defmethod ig/init-key :task/all [_ {:keys [db view design mpds ini]}]
+(defmethod ig/init-key :task/all [_ {:keys [db view design mpds worker-queqes ini]}]
   (let [db (db/config (assoc db :view view :design design))]
     (reduce
      (fn [res [id _]]
-       (assoc res id (task/up db)))
+       (assoc res id (task/up db (id worker-queqes))))
      ini mpds)))
 
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts task-queqes ini]}]
@@ -129,10 +130,9 @@
 (defmethod ig/halt-key! :scheduler/cont [_ as]
   (run! #(sched/whatch-down %) as))
 
-(comment
-  (defmethod ig/halt-key! :worker/all [_ as]
-    (run! #(work/down %) as)))
-  
+(defmethod ig/halt-key! :worker/all [_ as]
+  (run! #(work/down %) as))
+
 (defmethod ig/halt-key! :task/all [_ as]
   (run! #(task/down %) as))
 

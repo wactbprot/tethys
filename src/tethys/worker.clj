@@ -1,10 +1,16 @@
-(ns tethys.worker)
+(ns tethys.worker
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
+  (:require [com.brunobonacci.mulog :as µ]))
 
-;; idea: worker registers watch-fn for state agent
-;; watching :start key
-(defn whatch-fn! [_ a _ {:keys [run]}]
-  (when (seq run)
-    (prn run)))
+(defn up []
+  (µ/log ::up :message "start up worker agent queqe")
+  (let [a (agent [])
+        w (fn [_ _ _ v]
+            (when (seq v)
+              (prn v)
+              (-> v rest vec)))]
+    (add-watch a :queqe w)))
 
-(defn up [as] (mapv #(add-watch % :work whatch-fn!) as))
-(defn down [[_ as]] (mapv #(remove-watch % :work) as))
+(defn down [[_ a]]
+  (µ/log ::down :message "shut down worker agent queqe")
+  (send a (fn [_] [])))
