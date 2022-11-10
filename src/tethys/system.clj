@@ -33,12 +33,14 @@
    :task/all {:db (ig/ref :db/couch)
               :view "tasks"
               :design "dbmp"
-              :conts (ig/ref :model/cont)
+              :mpds (ig/ref :db/mpds)
               :ini {}}
    ;; :worker/all {:conts (ig/ref :task/all)
    ;;              :ini {}}
-   :scheduler/cont {:conts (ig/ref :task/all)
+   :scheduler/cont {:conts (ig/ref :model/cont)
+                    :task-queqes (ig/ref :task/all)
                     :ini {}}
+   
    :log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
                              :facility (or (System/getenv "DEVPROXY_FACILITY")
@@ -96,16 +98,17 @@
      (assoc res id (work/up as)))
      ini conts)))
 
-(defmethod ig/init-key :task/all [_ {:keys [db view design conts ini]}]
-  (reduce
-   (fn [res [id as]]
-     (assoc res id (task/up (db/config (assoc db :view view :design design)) as)))
-   ini conts))
+(defmethod ig/init-key :task/all [_ {:keys [db view design mpds ini]}]
+  (let [db (db/config (assoc db :view view :design design))]
+    (reduce
+     (fn [res [id _]]
+       (assoc res id (task/up db)))
+     ini mpds)))
 
-(defmethod ig/init-key :scheduler/cont [_ {:keys [conts ini]}]
+(defmethod ig/init-key :scheduler/cont [_ {:keys [conts task-queqes ini]}]
   (reduce
    (fn [res [id as]]
-     (assoc res id (sched/whatch-up as)))
+     (assoc res id (sched/up as (id task-queqes))))
    ini conts))
 
 ;; ## System down multimethods

@@ -8,12 +8,12 @@
 
 (defn get-time-object [] (jt/local-time))
 (defn get-date-object [] (jt/local-date))
-(defn get-hour  [t] (jt/format "HH" t))
-(defn get-min   [t] (jt/format "mm" t))
-(defn get-sec   [t] (jt/format "ss" t))
-(defn get-day   [d] (jt/format "dd"   d))
+(defn get-hour [t] (jt/format "HH" t))
+(defn get-min [t] (jt/format "mm" t))
+(defn get-sec [t] (jt/format "ss" t))
+(defn get-day [d] (jt/format "dd"   d))
 (defn get-month [d] (jt/format "MM"   d))
-(defn get-year  [d] (jt/format "YYYY" d))
+(defn get-year [d] (jt/format "YYYY" d))
 (defn get-date [] (jt/format "YYYY-MM-dd" (get-date-object)))
 (defn get-time [] (str (jt/to-millis-from-epoch (jt/instant))))
 
@@ -42,7 +42,7 @@
  (def task "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Defaults\":{\"@CR\":\"\\r\",\"@host\":\"e75550\",\"@port\":\"5303\",\"@acc\":\"TCP\",\"%safechannel%\":1},\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}")
  )
 
-(defn assemble [Replace Use Defaults FromExchange]
+(defn assemble [task Replace Use Defaults FromExchange]
   (let [str-task (json/write-str (dissoc task
                                          :Replace
                                          :Use
@@ -54,23 +54,28 @@
              (replace-map (kw-map->str-map Defaults))))
   task))
       
-;; The `up` checks if the task vector contains any
-;; elements. Returns m (the agent) if not. If `:task` is not empty it
+;; The `up` checks if the `task-queue` (a vector) contains any
+;; elements. Returns `m` (the agent) if not. If `:task-queue` is not empty it
 ;; should contain a map like this:
-(defn up [db as]
+(comment
+  {:TaskName "PPC_Faulhaber_Servo-comp_ini",
+   :id :mpd-ppc-gas_dosing,
+   :group :cont,
+   :ndx 0,
+   :sdx 3,
+   :pdx 0,
+   :is :ready})
+;; This map will be [[assemble]]d and pushed into the `work-queue`. 
+(defn up [db]
   (let [f (db/task-fn db)
-        w (fn [_ a _ {:keys [task-queue work-queue] :as m}]
+        a (agent [])
+        w (fn [_ a _ task-queue]
             (when (seq task-queue)
               (let [{:keys [TaskName Use Replace] :as task} (first task-queue)
                     {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-                    task (assemble task Replace Use Defaults)]
-              (send a (fn [m] (assoc m
-                                    :task-queue (-> task-queue
-                                                    rest
-                                                    vec)
-                                    :work-queue (conj work-queue task)))))))
-        ]
-    (mapv #(add-watch % :task w) as)))
+                    task (assemble task Replace Use Defaults FromExchange)]
+              (send a (fn [v] (prn v))))))]
+    (add-watch a :task w)))
 
-(defn down [[_ as]] (mapv #(remove-watch % :task) as))
+(defn down [[_ a]] (prn a))
 

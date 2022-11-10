@@ -54,18 +54,27 @@
                             m))
                         state)))
 
-(defn start-next! [a m]
+;; `start-next!` sets the state agent `sa` to working and `conj` the
+;; task `m` to the task-queqe `ta`
+(defn start-next! [sa ta m]
   (when (seq m)
-    (send a (fn [n]
-              (set-at-pos-op (update-in n [:task-queue] conj m) m :working)))))
+    (send sa (fn [n] (set-at-pos-op n m :working)))
+    (send ta (fn [v] (conj v m)))))
 
-(defn whatch-fn! [_ a _ {:keys [ctrl state]}]
-  (cond
-    (and (not= :error ctrl) (error? state))  (ctrl-error! a)
-    (all-exec? state)                        (all-ready! a)
-    (or (= :run ctrl) (= :mon ctrl))         (start-next! a (find-next state))
-    :nothing-todo-here true))
 
-(defn whatch-up [as] (mapv #(add-watch % :sched whatch-fn!) as))
-(defn whatch-down [[_ as]] (mapv #(remove-watch % :sched) as))
+;; The `up` function is called with two agents: `conts` is a vector of
+;; the container agents of a certain mpd and `ta` is the
+;; related task-queqe agent.
+(defn up [conts ta]
+  (mapv #(add-watch % :sched (fn [_ sa _ {:keys [ctrl state]}]
+                               (cond
+                                 (and (not= :error ctrl)
+                                      (error? state))  (ctrl-error! sa)
+                                 (all-exec? state)     (all-ready! sa)
+                                 (or (= :run ctrl)
+                                     (= :mon ctrl))    (start-next! sa ta (find-next state))
+                                 :nothing-todo-here true)))
+
+        conts))
+(defn down [[_ as]] (mapv #(remove-watch % :sched) as))
 
