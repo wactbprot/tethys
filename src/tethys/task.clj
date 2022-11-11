@@ -33,13 +33,18 @@
 ;; the database view to a "string map".
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
+(defn key->pattern [k v]
+  (re-pattern (if (string? v) k (str "\"" k "\""))))
+
+(defn value->safe-value [v] (if (string? v) v (json/write-str v)))
+
 (defn replace-map [s r]
   (reduce (fn [res [k v]]
-            (string/replace res (re-pattern k) v))
+            (string/replace res (key->pattern k v) (value->safe-value v) ))
           s r))
 (comment
- (def Defaults {"%CR%" "\r", "%host%" "e75551", "%port%" 503})
- (def task "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Defaults\":{\"@CR\":\"\\r\",\"@host\":\"e75550\",\"@port\":\"5303\",\"@acc\":\"TCP\",\"%safechannel%\":1},\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}")
+  (def Defaults {"@CR" "\r", "@host" "e75551", "@port" 503})
+  (def task "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}")
  )
 
 (defn assemble [task Replace Use Defaults FromExchange]
@@ -79,5 +84,6 @@
  
 (defn down [[_ a]]
   (µ/log ::down :message "shut down task agent queqe")
+  (remove-watch a :queqe)
   (send a (fn [_] [])))
 

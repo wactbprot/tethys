@@ -30,8 +30,10 @@
                 :ini {}}
    ;;:model/exch {:mpds (ig/ref :db/mpds)
    ;;             :ini {}}
-   :worker/all {:mpds (ig/ref :db/mpds)
+
+   :worker/all {:conts (ig/ref :model/cont)
                 :ini {}}
+   
    :task/all {:db (ig/ref :db/couch)
               :view "tasks"
               :design "dbmp"
@@ -42,6 +44,7 @@
    :scheduler/cont {:conts (ig/ref :model/cont)
                     :task-queqes (ig/ref :task/all)
                     :ini {}}
+
    
    :log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
@@ -83,21 +86,21 @@
 (defmethod ig/init-key :model/cont [_ {:keys [mpds ini group-kw]}]
   (reduce
    (fn [res [id {:keys [Container]}]]
-     (assoc res id (model/agents-up id group-kw Container)))
+     (assoc res id (model/up id group-kw Container)))
    ini mpds))
 
 (comment
   (defmethod ig/init-key :model/exch [_ {:keys [mpds ini]}]
     (reduce
      (fn [res [id {:keys [Exchange]}]]
-       (assoc res id (exch/agent-up id Exchange)))
+       (assoc res id (exch/up id Exchange)))
    ini mpds)))
 
-(defmethod ig/init-key :worker/all [_ {:keys [mpds ini]}]
+(defmethod ig/init-key :worker/all [_ {:keys [conts ini]}]
   (reduce
    (fn [res [id _]]
-     (assoc res id (work/up)))
-   ini mpds))
+     (assoc res id (work/up conts)))
+   ini conts))
 
 (defmethod ig/init-key :task/all [_ {:keys [db view design mpds worker-queqes ini]}]
   (let [db (db/config (assoc db :view view :design design))]
@@ -118,23 +121,27 @@
 ;; implementation** and shut down in a contolled way. This is a pure
 ;; side effect.
 (defmethod ig/halt-key! :log/mulog [_ logger]
+  (prn "logger")
   (logger))
 
 (defmethod ig/halt-key! :model/cont [_ as]
-  (run! #(model/agents-down %) as))
+  (run! #(model/down %) as))
 
 (comment
 (defmethod ig/halt-key! :model/exch [_ a]
-  (exch/agent-down a)))
+  (exch/down a)))
 
 (defmethod ig/halt-key! :scheduler/cont [_ as]
-  (run! #(sched/whatch-down %) as))
+  (prn "sched")
+  (run! #(sched/down %) as))
 
-(defmethod ig/halt-key! :worker/all [_ as]
-  (run! #(work/down %) as))
+(defmethod ig/halt-key! :worker/all [_ m]
+  (prn "work")
+  (run! #(work/down %) m))
 
-(defmethod ig/halt-key! :task/all [_ as]
-  (run! #(task/down %) as))
+(defmethod ig/halt-key! :task/all [_ m]
+  (prn "task")
+  (run! #(task/down %) m))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))
 

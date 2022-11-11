@@ -73,7 +73,6 @@
             m))
         state))
 
-
 (defn- state! [a sdx pdx op]
   (send a (fn [{:keys [state] :as m}]
             (assoc m :state (set-at-pos state sdx pdx op)))))
@@ -90,3 +89,6 @@
 
 (defn state-error [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :error))
+
+;; Occurring errors are detectaple with the `agent-error` function.
+(defn task-error [mpd] (agent-error (mpd (:task/all @sys/system))))

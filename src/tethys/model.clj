@@ -12,7 +12,7 @@
 
 (defstruct state :id :group :ndx :sdx :pdx :is)
 
-(defn agents-up [id group-kw m]
+(defn up [id group-kw m]
   (mapv (fn [{:keys [Ctrl Definition]} ndx]
           (agent {:ctrl (or (keyword Ctrl) :ready)
                   :state (flattenv
@@ -24,5 +24,4 @@
                                 Definition (range)))})) 
         m (range)))
 
-(defn agents-down [[id group-agents]]
-  (run! #(send % (fn [_] {})) group-agents))
+(defn down [[id conts]] (run! #(send % (fn [_] {})) conts))
