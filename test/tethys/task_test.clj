@@ -31,7 +31,6 @@
 
 (tc/quick-check 10000 replace-map-works))
 
-
 (deftest error?-test-i
   (testing "empty key"
     (is (= "cacbc" (replace-map "ab" {"" "c"})))
@@ -39,3 +38,11 @@
   (testing "empty val"
     (is (= "" (replace-map "d" {"d" ""})))
     (is (= "" (replace-map "" {"" ""})))))
+
+(deftest error?-test-i
+  (testing "single and included work for numbers and boolean"
+    (is (= "{\"Port\": 100}" (replace-map "{\"Port\": \"@port\"}", {"@port" 100})))
+    (is (= "{\"Port\": true}" (replace-map "{\"Port\": \"@port\"}", {"@port" true})))
+    (is (= "{\"Port\":\" 100 \"}" (replace-map "{\"Port\":\" @port \"}", {"@port" 100}))))
+  (testing "single and included work for strings"
+    (is (= "{\"Port\": \"100\"}" (replace-map "{\"Port\": \"@port\"}", {"@port" "100"})))))
