@@ -4,7 +4,6 @@
             [tethys.task :as task]))
 
 ;; ## Start, stop and restart
-
 ;; In order to get an overview of the active mpds use `(mpds)`.
 (defn mpds [] (keys (:model/cont @sys/system)))
 
@@ -59,7 +58,8 @@
 ;; Get the `agent` of a mpd by `(exch-agent mpd)`
 (defn exch-agent [mpd] (sys/exch-agent mpd))
 
-;; ## Ctrl-interface setting Run, stop or mon a `cont`ainer `ndx` of
+;; ## Ctrl-interface
+;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
 (defn cont-run [mpd ndx] (ctrl (cont-agent mpd ndx) :run))
 (defn cont-mon [mpd ndx] (ctrl (cont-agent mpd ndx) :mon))
@@ -92,9 +92,12 @@
 (defn state-error [mpd ndx sdx pdx]
   (state! (cont-agent mpd ndx) sdx pdx :error))
 
+
+;; ## Tasks
 ;; Occurring errors are detectaple with the `agent-error` function.
 (defn task-error [mpd] (agent-error (mpd (:task/all @sys/system))))
 
+(defn task-queqe [mpd] @(mpd (:task/all @sys/system)))
 
 ;; Get a task from the database and resole a `replace-map` by means
 ;; of [[task-resolve]]. An Example would be:

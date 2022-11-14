@@ -1,6 +1,8 @@
 (ns tethys.task-test
   (:require [clojure.test :refer :all]
             [tethys.task :refer :all]
+            [clojure.data.json :as json]
+            [clojure.string :as string]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
@@ -45,4 +47,7 @@
     (is (= "{\"Port\": true}" (replace-map "{\"Port\": \"@port\"}", {"@port" true})))
     (is (= "{\"Port\":\" 100 \"}" (replace-map "{\"Port\":\" @port \"}", {"@port" 100}))))
   (testing "single and included work for strings"
-    (is (= "{\"Port\": \"100\"}" (replace-map "{\"Port\": \"@port\"}", {"@port" "100"})))))
+    (is (= "{\"Port\": \"100\"}" (replace-map "{\"Port\": \"@port\"}", {"@port" "100"})))
+    (is (= "{\"Port\": \"port\n}" (replace-map "{\"Port\": \"port@CR\"}", {"@CR" "\n"})))))
+
+

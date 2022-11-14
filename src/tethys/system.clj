@@ -31,14 +31,15 @@
    :model/cont {:mpds (ig/ref :db/mpds)
                 :group-kw :cont
                 :ini {}}
-   ;;:model/exch {:mpds (ig/ref :db/mpds)
-   ;;             :ini {}}
-
+   :exch/all {:mpds (ig/ref :db/mpds)
+              :ini {}}
+   
    :worker/all {:conts (ig/ref :model/cont)
                 :ini {}}
    
    :task/all {:db (ig/ref :db/task)
               :mpds (ig/ref :db/mpds)
+              :exch-interface (ig/ref :exch/all)
               :worker-queqes (ig/ref :worker/all)
               :ini {}}
    
@@ -94,12 +95,11 @@
      (assoc res id (model/up id group-kw Container)))
    ini mpds))
 
-(comment
-  (defmethod ig/init-key :model/exch [_ {:keys [mpds ini]}]
-    (reduce
-     (fn [res [id {:keys [Exchange]}]]
-       (assoc res id (exch/up id Exchange)))
-   ini mpds)))
+(defmethod ig/init-key :exch/all [_ {:keys [mpds ini]}]
+  (reduce
+   (fn [res [id {:keys [Exchange]}]]
+     (assoc res id (exch/up id Exchange)))
+   ini mpds))
 
 (defmethod ig/init-key :worker/all [_ {:keys [conts ini]}]
   (reduce
@@ -107,10 +107,10 @@
      (assoc res id (work/up conts)))
    ini conts))
 
-(defmethod ig/init-key :task/all [_ {:keys [db mpds worker-queqes ini]}]
+(defmethod ig/init-key :task/all [_ {:keys [db mpds worker-queqes exch-interface ini]}]
     (reduce
      (fn [res [id _]]
-       (assoc res id (task/up db (id worker-queqes))))
+       (assoc res id (task/up db (id worker-queqes) (id exch-interface))))
      ini mpds))
   
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts task-queqes ini]}]
@@ -125,26 +125,25 @@
 ;; implementation** and shut down in a contolled way. This is a pure
 ;; side effect.
 (defmethod ig/halt-key! :log/mulog [_ logger]
-  (prn "logger")
   (logger))
 
 (defmethod ig/halt-key! :model/cont [_ as]
   (run! #(model/down %) as))
 
-(comment
-(defmethod ig/halt-key! :model/exch [_ a]
-  (exch/down a)))
+(defmethod ig/halt-key! :exch/all [_ as]
+  (µ/log ::exch :message "halt system")
+  (run! #(exch/down %) as))
 
 (defmethod ig/halt-key! :scheduler/cont [_ as]
-  (prn "sched")
+  (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
 
 (defmethod ig/halt-key! :worker/all [_ m]
-  (prn "work")
+  (µ/log ::worker :message "halt system")
   (run! #(work/down %) m))
 
 (defmethod ig/halt-key! :task/all [_ m]
-  (prn "task")
+  (µ/log ::task :message "halt system")
   (run! #(task/down %) m))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))

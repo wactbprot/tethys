@@ -24,7 +24,7 @@
      "@minute" (get-min t)
      "@second" (get-sec t)
      "@year" (get-year d)
-     "@month" (get-month d)
+     "@month" (get-month d) 
      "@day" (get-day d)
      "@time" (get-time)}))
  
@@ -33,11 +33,13 @@
 ;; the database view to a "string map".
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
-(defn key->pattern [k] (re-pattern (str "\"?" k "\"?")))
+(defn key->pattern [s] (re-pattern (str "\"?" s "\"?")))
+
+(defn val->safe-val [x] (json/write-str x))
 
 (defn replace-map [s r]
   (reduce (fn [res [k v]]
-            (string/replace res  (key->pattern k) (json/write-str v)))
+            (string/replace res  (key->pattern k) (val->safe-val v)))
           s r))
 
 (defn assemble
@@ -67,7 +69,7 @@
    :is :ready})
 
 ;; This map will be [[assemble]]d and pushed into the work-queue `wa`. 
-(defn up [db wa]
+(defn up [db wa exch]
   (µ/log ::up :message "start up task agent queqe")
   (let [f (db/task-fn db)
         a (agent [])
