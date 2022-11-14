@@ -25,6 +25,9 @@
    :db/mpds {:db (ig/ref :db/couch)
              :id-set (ig/ref :mpd/id-set) 
              :ini {}}
+   :db/task {:db (ig/ref :db/couch)
+              :view "tasks"
+              :design "dbmp"}
    :model/cont {:mpds (ig/ref :db/mpds)
                 :group-kw :cont
                 :ini {}}
@@ -34,9 +37,7 @@
    :worker/all {:conts (ig/ref :model/cont)
                 :ini {}}
    
-   :task/all {:db (ig/ref :db/couch)
-              :view "tasks"
-              :design "dbmp"
+   :task/all {:db (ig/ref :db/task)
               :mpds (ig/ref :db/mpds)
               :worker-queqes (ig/ref :worker/all)
               :ini {}}
@@ -78,6 +79,10 @@
 (defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
   (get id-sets id-set))
 
+
+(defmethod ig/init-key :db/task [_ {:keys [db view design]}]
+  (db/config (assoc db :view view :design design)))
+  
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini]}]
   (reduce
    (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
@@ -102,13 +107,12 @@
      (assoc res id (work/up conts)))
    ini conts))
 
-(defmethod ig/init-key :task/all [_ {:keys [db view design mpds worker-queqes ini]}]
-  (let [db (db/config (assoc db :view view :design design))]
+(defmethod ig/init-key :task/all [_ {:keys [db mpds worker-queqes ini]}]
     (reduce
      (fn [res [id _]]
        (assoc res id (task/up db (id worker-queqes))))
-     ini mpds)))
-
+     ini mpds))
+  
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts task-queqes ini]}]
   (reduce
    (fn [res [id as]]

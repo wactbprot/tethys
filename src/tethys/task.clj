@@ -27,7 +27,7 @@
      "@month" (get-month d)
      "@day" (get-day d)
      "@time" (get-time)}))
-
+ 
 ;; In order to overcome the problem of keywords like `:@foo` the
 ;; function `kw-map->str-map` converts the "keyword map" delivered by
 ;; the database view to a "string map".
@@ -39,19 +39,20 @@
   (reduce (fn [res [k v]]
             (string/replace res  (key->pattern k) (json/write-str v)))
           s r))
-(comment
-  (def Defaults {"@CR" "\r", "@host" "e75551", "@port" 503})
-  (def task "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}")
- )
 
-(defn assemble [task Replace Use Defaults FromExchange]
-  (->  task
-       (dissoc  :Replace :Use :Defaults :FromExchange)
-       json/write-str
-       (replace-map (kw-map->str-map Replace))
-       (replace-map (globals))
-       (replace-map (kw-map->str-map Defaults))
-       json/read-str))
+(defn assemble
+  ([task] (assemble task {} {} {} {}))
+  ([task Replace] (assemble task Replace {} {} {}))
+  ([task Replace Use] (assemble task Replace Use {} {} ))
+  ([task Replace Use Defaults] (assemble task Replace Use Defaults {}))
+  ([task Replace Use Defaults FromExchange]
+   (->  task
+        (dissoc  :Replace :Use :Defaults :FromExchange)
+        json/write-str
+        (replace-map (kw-map->str-map Replace))
+        (replace-map (globals))
+        (replace-map (kw-map->str-map Defaults))
+        json/read-str)))
 
 ;; The `up` checks if the `task-queue` (a vector) contains any
 ;; elements. Returns `m` (the agent) if not. If `:task-queue` is not empty it

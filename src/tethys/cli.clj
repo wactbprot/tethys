@@ -1,5 +1,7 @@
 (ns tethys.cli
-  (:require [tethys.system :as sys]))
+  (:require [tethys.db :as db]
+            [tethys.system :as sys]
+            [tethys.task :as task]))
 
 ;; ## Start, stop and restart
 
@@ -92,3 +94,18 @@
 
 ;; Occurring errors are detectaple with the `agent-error` function.
 (defn task-error [mpd] (agent-error (mpd (:task/all @sys/system))))
+
+
+;; Get a task from the database and resole a `replace-map` by means
+;; of [[task-resolve]]. An Example would be:
+(comment
+  (task-resolve "Common-wait" {"@waittime" 1000})
+  {"Action" "wait",
+   "Comment" "@waitfor  1000 ms",
+   "TaskName" "Common-wait",
+   "WaitTime" 1000})
+
+(defn task-resolve [task-name replace-map]
+  (let [f (db/task-fn (:db/task @sys/system))]
+    (task/assemble (f task-name) replace-map)))
+  
