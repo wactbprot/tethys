@@ -33,13 +33,13 @@
 ;; the database view to a "string map".
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
-(defn key->pattern [s] (re-pattern (str "\"?" s "\"?")))
-
-(defn val->safe-val [x] (json/write-str x))
+(defn key->pattern [s x] (if (string? x) (re-pattern s) (re-pattern (str "\"?" s "\"?"))))
+ 
+(defn val->safe-val [x] x (if (string? x) x (json/write-str x)))
 
 (defn replace-map [s r]
   (reduce (fn [res [k v]]
-            (string/replace res  (key->pattern k) (val->safe-val v)))
+            (string/replace res  (key->pattern k v) (val->safe-val v)))
           s r))
 
 (defn assemble
