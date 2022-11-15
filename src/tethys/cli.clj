@@ -124,3 +124,5 @@
 
 ;; ## Worker
 (defn w-queqe [mpd] @(mpd (:worker/all @sys/system)))
+
+(defn w-error [mpd] (agent-error (mpd (:worker/all @sys/system))))

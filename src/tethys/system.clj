@@ -2,6 +2,8 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [tethys.db :as db]
             [tethys.exchange :as exch]
             [tethys.model :as model]
@@ -16,6 +18,7 @@
                           :se3 ["mpd-se3-calib"
                                 "mpd-se3-state"
                                 "mpd-se3-servo"]}}
+   :mpd/reference {:file-name "mpd-ref.edn"}
    :db/couch {:prot "http",
               :host "localhost",
               :port 5984,
@@ -23,6 +26,7 @@
               :pwd (System/getenv "CAL_PWD")
               :name "vl_db_work"}
    :db/mpds {:db (ig/ref :db/couch)
+             :reference-mpd (ig/ref :mpd/reference)
              :id-set (ig/ref :mpd/id-set) 
              :ini {}}
    :db/task {:db (ig/ref :db/couch)
@@ -42,12 +46,9 @@
               :exch-interface (ig/ref :exch/all)
               :worker-queqes (ig/ref :worker/all)
               :ini {}}
-   
    :scheduler/cont {:conts (ig/ref :model/cont)
                     :task-queqes (ig/ref :task/all)
                     :ini {}}
-
-   
    :log/mulog {:type :multi
                :log-context {:app-name "vl-db-agent"
                              :facility (or (System/getenv "DEVPROXY_FACILITY")
@@ -80,14 +81,19 @@
 (defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
   (get id-sets id-set))
 
+(defmethod ig/init-key :mpd/reference [_ {:keys [file-name]}]
+  (-> (io/file file-name) slurp edn/read-string))
 
 (defmethod ig/init-key :db/task [_ {:keys [db view design]}]
   (db/config (assoc db :view view :design design)))
-  
-(defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini]}]
-  (reduce
-   (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
-   ini id-set))
+
+(defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini reference-mpd]}]
+  (let [{:keys [_id Mp]} reference-mpd]
+    (assoc 
+     (reduce
+      (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
+      ini id-set)
+     (keyword _id) Mp)))
 
 (defmethod ig/init-key :model/cont [_ {:keys [mpds ini group-kw]}]
   (reduce
@@ -108,11 +114,11 @@
    ini conts))
 
 (defmethod ig/init-key :task/all [_ {:keys [db mpds worker-queqes exch-interface ini]}]
-    (reduce
-     (fn [res [id _]]
-       (assoc res id (task/up db (id worker-queqes) (id exch-interface))))
-     ini mpds))
-  
+  (reduce
+   (fn [res [id _]]
+     (assoc res id (task/up db (id worker-queqes) (id exch-interface))))
+   ini mpds))
+
 (defmethod ig/init-key :scheduler/cont [_ {:keys [conts task-queqes ini]}]
   (reduce
    (fn [res [id as]]
