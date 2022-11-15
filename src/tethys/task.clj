@@ -33,7 +33,7 @@
 ;; the database view to a "string map".
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
-(defn key->pattern [s x] (if (string? x) (re-pattern s) (re-pattern (str "\"?" s "\"?"))))
+(defn key->pattern [s x]  (re-pattern (if (string? x) s (str "\"?" s "\"?"))))
  
 (defn val->safe-val [x] x (if (string? x) x (json/write-str x)))
 
@@ -80,10 +80,23 @@
                     task (assemble task Replace Use Defaults FromExchange)]
                 (send wa (fn [v] (conj v task)))
                 (send ta (fn [v] (-> v rest vec))))))]
+
+    (set-error-handler! a (fn [a ex]
+                            (µ/log ::error-handler :error (str "error occured: " ex))
+                            (Thread/sleep 1000)
+                            (restart-agent a @a)))
     (add-watch a :queqe w)))
- 
+
 (defn down [[_ a]]
   (µ/log ::down :message "shut down task agent queqe")
   (remove-watch a :queqe)
   (send a (fn [_] [])))
 
+(comment
+  (defn up []
+    (let [a (agent [])
+          w (fn [_ q _ v]
+              (when (seq q)
+                ;; do stuff with (first q)
+                (send q (fn [v] (-> v rest vec)))))]
+      (add-watch a :queqe w))))

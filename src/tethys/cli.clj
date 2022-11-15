@@ -20,7 +20,7 @@
 
 
 ;; Get the `agent` of a certain container by `(cont-agent mpd ndx)`
-(defn cont-agent [mpd ndx] (sys/cont-agent mpd ndx))
+(defn c-agent [mpd ndx] (sys/cont-agent mpd ndx))
 
 ;; This `agent` looks like this:
 (comment
@@ -55,15 +55,15 @@
      :is :executed
      :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
 
-;; Get the `agent` of a mpd by `(exch-agent mpd)`
-(defn exch-agent [mpd] (sys/exch-agent mpd))
+;; Get the `agent` of a mpd by `(e-agent mpd)`
+(defn e-agent [mpd] (sys/exch-agent mpd))
 
 ;; ## Ctrl-interface
 ;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
-(defn cont-run [mpd ndx] (ctrl (cont-agent mpd ndx) :run))
-(defn cont-mon [mpd ndx] (ctrl (cont-agent mpd ndx) :mon))
-(defn cont-stop [mpd ndx] (ctrl (cont-agent mpd ndx) :stop))
+(defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
+(defn c-mon [mpd ndx] (ctrl (c-agent mpd ndx) :mon))
+(defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
 
 ;; ## Set container state
 ;; The function `set-all-pos-ready` allows the direct setting of `:is`
@@ -80,35 +80,47 @@
             (assoc m :state (set-at-pos state sdx pdx op)))))
 
 ;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd` 
-(defn state-ready [mpd ndx sdx pdx]
-  (state! (cont-agent mpd ndx) sdx pdx :ready))
+(defn s-ready [mpd ndx sdx pdx]
+  (state! (c-agent mpd ndx) sdx pdx :ready))
 
-(defn state-exec  [mpd ndx sdx pdx]
-  (state! (cont-agent mpd ndx) sdx pdx :executed))
+(defn s-exec  [mpd ndx sdx pdx]
+  (state! (c-agent mpd ndx) sdx pdx :executed))
 
-(defn state-work [mpd ndx sdx pdx]
-  (state! (cont-agent mpd ndx) sdx pdx :working))
+(defn s-work [mpd ndx sdx pdx]
+  (state! (c-agent mpd ndx) sdx pdx :working))
 
-(defn state-error [mpd ndx sdx pdx]
-  (state! (cont-agent mpd ndx) sdx pdx :error))
+(defn s-error [mpd ndx sdx pdx]
+  (state! (c-agent mpd ndx) sdx pdx :error))
 
 
 ;; ## Tasks
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn task-error [mpd] (agent-error (mpd (:task/all @sys/system))))
+(defn t-error [mpd] (agent-error (mpd (:task/all @sys/system))))
 
-(defn task-queqe [mpd] @(mpd (:task/all @sys/system)))
+(defn t-queqe [mpd] @(mpd (:task/all @sys/system)))
 
 ;; Get a task from the database and resole a `replace-map` by means
-;; of [[task-resolve]]. An Example would be:
+;; of [[t-resolve]]. An Example would be:
 (comment
-  (task-resolve "Common-wait" {"@waittime" 1000})
+  (t-resolve "Common-wait" {"@waittime" 1000})
   {"Action" "wait",
    "Comment" "@waitfor  1000 ms",
    "TaskName" "Common-wait",
-   "WaitTime" 1000})
+   "WaitTime" 1000}
 
-(defn task-resolve [task-name replace-map]
+  (t-resolve "PPC_MaxiGauge-ini" {"@CR" "\n"})
+  {"TaskName" "PPC_MaxiGauge-ini",
+   "Comment" "Initializes the safe gauge",
+   "Action" "@acc",
+   "Host" "@host",
+   "Port" "@port",
+   "Value" ["UNI,0\n" "" "PR1\n" ""]})
+
+(defn t-resolve [task-name replace-map]
   (let [f (db/task-fn (:db/task @sys/system))]
     (task/assemble (f task-name) replace-map)))
   
+
+
+;; ## Worker
+(defn w-queqe [mpd] @(mpd (:worker/all @sys/system)))

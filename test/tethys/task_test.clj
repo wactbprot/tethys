@@ -8,8 +8,9 @@
             [clojure.test.check.properties :as prop]))
 
 (comment
-  (def Defaults {"@CR" "\r", "@host" "e75551", "@port" 503})
-  (def task "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}"))
+  (def m {"@CR" "\r", "@host" "e75551", "@port" 503})
+  (def s "{\"Port\":\"@port\",\"group\":\"cont\",\"ndx\":0,\"is\":\"ready\",\"TaskName\":\"PPC_DualGauge-ini\",\"Comment\":\"Initializes the safe gauge\",\"pdx\":0,\"sdx\":1,\"id\":\"mpd-ppc-gas_dosing\",\"Action\":\"@acc\",\"Value\":[\"UNI,0@CR\",\"\\u0005\",\"PR1@CR\",\"\\u0005\"],\"Host\":\"@host\"}")
+  (json/read-str (replace-map s m)))
 
 (comment
   ;; https://clojure.org/guides/test_check_beginner
@@ -48,6 +49,6 @@
     (is (= "{\"Port\":\" 100 \"}" (replace-map "{\"Port\":\" @port \"}", {"@port" 100}))))
   (testing "single and included work for strings"
     (is (= "{\"Port\": \"100\"}" (replace-map "{\"Port\": \"@port\"}", {"@port" "100"})))
-    (is (= "{\"Port\": \"port\n}" (replace-map "{\"Port\": \"port@CR\"}", {"@CR" "\n"})))))
+    (is (= "{\"Port\": \"port\n\"}" (replace-map "{\"Port\": \"port@CR\"}", {"@CR" "\n"})))))
 
 
