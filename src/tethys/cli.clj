@@ -1,11 +1,23 @@
 (ns tethys.cli
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.db :as db]
             [tethys.system :as sys]
             [tethys.task :as task]))
 
+;; # cli
+;; This is the tethys **c**ommand **l**ine **i**nterface.
+;; Some abbreviations:
+;;
+;;* `t-`... task
+;;* `w-`... work
+;;* `e-`... exchange
+;;* `s-`... state
+;;* `c-`... container
+
 ;; ## Start, stop and restart system
+;;
 ;; In order to get an overview of the active mpds use `(mpds)`.
-(defn mpds [] (keys (:model/cont @sys/system)))
+(defn mpds [] (keys (:db/mpds @sys/system)))
 
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
@@ -19,7 +31,7 @@
 (defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
 
 
-;; Get the `agent` of a certain container by `(cont-agent mpd ndx)`
+;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
 (defn c-agent [mpd ndx] (sys/cont-agent mpd ndx))
 
 ;; This `agent` looks like this:
@@ -58,7 +70,33 @@
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
 (defn e-agent [mpd] (sys/exch-agent mpd))
 
+;; The derefed e-agent looks like this (keys of the map are
+;; keywords!):
+(comment
+  
+  (deref (e-agent :mpd-ref))
+  {:A {:Type "ref", :Unit "Pa", :Value 100.0},
+   :B "token",
+   :Target_pressure
+   {:Selected 1,
+    :Select [{:value 10.0} {:value 100.0} {:value 1000.0}],
+    :Unit "Pa"},
+   :Ref_gas
+   {:Selected "N2",
+    :Select
+    [{:value "N2", :display "Stickstoff"}
+     {:value "Ar", :display "Argon"}
+     {:value "Ne", :display "Neon"}
+     {:value "Kr", :display "Krypton"}
+     {:value "Xe", :display "Xenon"}
+     {:value "He", :display "Helium"}
+     {:value "H2", :display "Wasserstoff"}],
+    :Ready false},
+   :id :mpd-ref})
+
+
 ;; ## Ctrl-interface
+;;
 ;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
 (defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
@@ -66,6 +104,7 @@
 (defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
 
 ;; ## Set container state
+;;
 ;; The function `set-all-pos-ready` allows the direct setting of `:is`
 ;; verbs for a given state.
 (defn- set-at-pos [state sdx pdx op]
@@ -79,7 +118,7 @@
   (send a (fn [{:keys [state] :as m}]
             (assoc m :state (set-at-pos state sdx pdx op)))))
 
-;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd` 
+;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd`
 (defn s-ready [mpd ndx sdx pdx]
   (state! (c-agent mpd ndx) sdx pdx :ready))
 
@@ -94,6 +133,7 @@
 
 
 ;; ## Tasks
+;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
 (defn t-error [mpd] (agent-error (mpd (:model/task @sys/system))))
 
