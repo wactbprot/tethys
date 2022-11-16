@@ -1,4 +1,4 @@
-(ns tethys.model
+(ns tethys.conts
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
     (:require [clojure.string :as str]))
 

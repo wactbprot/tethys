@@ -3,7 +3,7 @@
             [tethys.system :as sys]
             [tethys.task :as task]))
 
-;; ## Start, stop and restart
+;; ## Start, stop and restart system
 ;; In order to get an overview of the active mpds use `(mpds)`.
 (defn mpds [] (keys (:model/cont @sys/system)))
 
@@ -95,9 +95,9 @@
 
 ;; ## Tasks
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-error [mpd] (agent-error (mpd (:task/all @sys/system))))
+(defn t-error [mpd] (agent-error (mpd (:model/task @sys/system))))
 
-(defn t-queqe [mpd] @(mpd (:task/all @sys/system)))
+(defn t-queqe [mpd] @(mpd (:model/task @sys/system)))
 
 ;; Get a task from the database and resole a `replace-map` by means
 ;; of [[t-resolve]]. An Example would be:
@@ -121,8 +121,7 @@
     (task/assemble (f task-name) replace-map)))
   
 
-
 ;; ## Worker
-(defn w-queqe [mpd] @(mpd (:worker/all @sys/system)))
+(defn w-queqe [mpd] @(mpd (:model/worker @sys/system)))
 
-(defn w-error [mpd] (agent-error (mpd (:worker/all @sys/system))))
+(defn w-error [mpd] (agent-error (mpd (:model/worker @sys/system))))
