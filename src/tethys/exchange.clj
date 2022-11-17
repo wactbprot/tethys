@@ -4,30 +4,12 @@
 
 
 
-
-;; The function `path->second-kw` returns a keyword or nil.
-(comment
-  (path->second-kw "foo")
-  ;; nil
-  (path->second-kw "foo.bar" )
-  ;; :bar
-  )
-(defn path->second-kw [s]
-  (when (string? s)
-    (when-let [x (second (string/split s #"\."))]
-      (keyword x))))
-
-;; The function `path->first-string` returns a string or nil.
-(defn path->first-keyword [s]
-  (when (string? s)
-    (-> s (string/split s #"\.") first keyword)))
-
-
+;; The function `e-value` returns the value of `@e-agt` under the path
+;; `p`.
 (defn e-value [e-agt p]
-  (or (get @e-agt (path->first-keyword p))
-      (when-let [kw (path->second-kw p)]
-        (kw (get @e-agt (path->first-keyword p))))))
-
+  (let [v (mapv keyword (string/split p #"\."))]
+    (get-in @e-agt v)))
+    
 ;; Checks a certain exchange endpoint to evaluate to true.
 (defn ok? [a p] (contains? #{"ok" :ok "true" true "yo!"} (e-value a p)))
 
@@ -49,19 +31,23 @@
     (ok? e-agt p) false))
 
 
-;; Builds a map by replacing the values of the input map `m`.
-;; The replacements are gathered from `e-agt` the complete exchange
-;; 
+;; Builds a map by replacing the values of the input map `m`. The
+;; replacements are gathered from `e-agt` the complete exchange
+;;
 (defn from [e-agt m]
   (when (and (map? @e-agt) (map? m))
     (into {} (mapv (fn [[k p]] {k (e-value e-agt p)}) m))))
 
 (comment
   (def a (agent {:A {:Type "ref" :Unit "Pa" :Value 100.0},
-                 :B "token"
-                 :Target_pressure {:Selected 1 :Unit "Pa"}})
-    (def m {:%check A})
-    (from a m)))
+                 :B "token"}))
+
+  (from a {:%check "A"})
+  {:%check {:Type "ref", :Unit "Pa", :Value 100.0}}
+  (from a {:%check "A.Type"})
+  {:%check "ref"}
+  (from a {:%check "C"})
+  {:%check nil})
 
 
 (defn up [id exch] (agent (assoc exch :id id))) 

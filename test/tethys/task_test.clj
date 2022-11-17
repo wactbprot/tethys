@@ -34,21 +34,25 @@
 
 (tc/quick-check 10000 replace-map-works))
 
-(deftest error?-test-i
+(deftest replace-map-i
   (testing "empty key"
-    (is (= "cacbc" (replace-map "ab" {"" "c"})))
-    (is (= "ab" (replace-map "ab" {"" ""}))))
+    (is (=              "abc" ; !
+           (replace-map "ab" {"" "c"})))
+    (is (=              "abq" ; !
+           (replace-map "ab" {"" ""}))))
   (testing "empty val"
     (is (= "" (replace-map "d" {"d" ""})))
     (is (= "" (replace-map "" {"" ""})))))
 
-(deftest error?-test-i
+(deftest replace-map-ii
   (testing "single and included work for numbers and boolean"
     (is (= "{\"Port\": 100}" (replace-map "{\"Port\": \"@port\"}", {"@port" 100})))
     (is (= "{\"Port\": true}" (replace-map "{\"Port\": \"@port\"}", {"@port" true})))
     (is (= "{\"Port\":\" 100 \"}" (replace-map "{\"Port\":\" @port \"}", {"@port" 100}))))
   (testing "single and included work for strings"
     (is (= "{\"Port\": \"100\"}" (replace-map "{\"Port\": \"@port\"}", {"@port" "100"})))
-    (is (= "{\"Port\": \"port\n\"}" (replace-map "{\"Port\": \"port@CR\"}", {"@CR" "\n"})))))
+    (is (= "{\"Port\": \"port\n\"}" (replace-map "{\"Port\": \"port@CR\"}", {"@CR" "\n"}))))
+  (testing "only entite words"
+    (is (= "{\"Port\": \"@timepath\"}" (replace-map "{\"Port\": \"@timepath\"}", {"@time" "nonono!"})))))
 
 

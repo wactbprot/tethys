@@ -4,7 +4,8 @@
             [clojure.data.json :as json]
             [clojure.string :as string]
             [java-time.api :as jt]
-            [tethys.db :as db]))
+            [tethys.db :as db]
+            [tethys.exchange :as exch]))
 
 (defn get-time-object [] (jt/local-time))
 (defn get-date-object [] (jt/local-date))
@@ -33,7 +34,8 @@
 ;; the database view to a "string map".
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
-(defn key->pattern [s x]  (re-pattern (if (string? x) s (str "\"?" s "\"?"))))
+(defn key->pattern [s x]
+  (re-pattern (if (string? x) (str s "(?![a-z])") (str "\"?" s  "\"?"))))
  
 (defn val->safe-val [x] x (if (string? x) x (json/write-str x)))
 
@@ -69,17 +71,18 @@
    :is :ready})
 
 ;; This map will be [[assemble]]d and pushed into the work-queue `wa`. 
-(defn up [db wa exch]
+(defn up [db w-agt e-agt]
   (µ/log ::up :message "start up task agent queqe")
   (let [f (db/task-fn db)
-        a (agent [])
-        w (fn [_ ta _ v]
+        a (agent []) ;; becomes t-agt
+        w (fn [_ t-agt _ v]
             (when (seq v)
               (let [{:keys [TaskName Use Replace] :as task} (first v)
                     {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-                    task (assemble task Replace Use Defaults FromExchange)]
-                (send wa (fn [v] (conj v task)))
-                (send ta (fn [v] (-> v rest vec))))))]
+                    e-map (exch/from e-agt FromExchange)
+                    task (assemble task Replace Use Defaults e-map)]
+                (send w-agt (fn [v] (conj v task)))
+                (send t-agt (fn [v] (-> v rest vec))))))]
 
     (set-error-handler! a (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))

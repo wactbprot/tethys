@@ -135,11 +135,15 @@
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-error [mpd] (agent-error (mpd (:model/task @sys/system))))
+(defn t-agent [mpd] (mpd (:model/task @sys/system)))
 
-(defn t-queqe [mpd] @(mpd (:model/task @sys/system)))
+(defn t-quequ [mpd] @(t-agent))
 
-;; Get a task from the database and resole a `replace-map` by means
+(defn t-error [mpd] (agent-error (t-agent mpd)))
+
+(defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
+
+  ;; Get a task from the database and resole a `replace-map` by means
 ;; of [[t-resolve]]. An Example would be:
 (comment
   (t-resolve "Common-wait" {"@waittime" 1000})
@@ -162,6 +166,10 @@
   
 
 ;; ## Worker
-(defn w-queqe [mpd] @(mpd (:model/worker @sys/system)))
+(defn w-agent [mpd] (mpd (:model/worker @sys/system)))
 
-(defn w-error [mpd] (agent-error (mpd (:model/worker @sys/system))))
+(defn w-quequ [mpd] @(w-agent))
+
+(defn w-error [mpd] (agent-error (w-agent mpd)))
+
+(defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
