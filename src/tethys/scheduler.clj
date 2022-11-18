@@ -58,8 +58,9 @@
 ;; task `m` to the task-queqe `t-agt`
 (defn start-next! [s-agt t-agt task]
   (when (seq task)
-    (send s-agt (fn [m] (set-op-at-pos :working m task)))
-    (send t-agt (fn [v] (conj v task)))))
+    (send t-agt (fn [v]
+                  (send s-agt (fn [m] (set-op-at-pos :working m task)))
+                  (conj v task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `t-agt` is the

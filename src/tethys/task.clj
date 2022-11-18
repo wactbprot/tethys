@@ -74,15 +74,16 @@
 (defn up [db w-agt e-agt]
   (µ/log ::up :message "start up task queqe agent")
   (let [f (db/task-fn db)
-        a (agent []) ;; becomes t-agt
+        a (agent '()) ;; becomes t-agt
         w (fn [_ t-agt _ v]
             (when (seq v)
               (let [{:keys [TaskName Use Replace] :as task} (first v)
                     {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
                     e-map (exch/from e-agt FromExchange)
                     task (assemble task Replace Use Defaults e-map)]
-                (send w-agt (fn [v] (conj v task)))
-                (send t-agt (fn [v] (-> v rest vec))))))]
+                (send t-agt (fn [v]
+                              (send w-agt (fn [v] (conj v task)))
+                              (-> v rest))))))]
 
     (set-error-handler! a (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))

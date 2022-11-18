@@ -130,7 +130,7 @@
   (µ/log ::worker :message "start system")
   (reduce
    (fn [res [id _]]
-     (assoc res id (work/up conts) (id exch-interface)))
+     (assoc res id (work/up conts (id exch-interface))))
    ini conts))
 
 (defmethod ig/init-key :model/task [_ {:keys [db mpds worker-queqes exch-interface ini]}]

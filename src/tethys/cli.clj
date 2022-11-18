@@ -137,7 +137,7 @@
 ;; Occurring errors are detectaple with the `agent-error` function.
 (defn t-agent [mpd] (mpd (:model/task @sys/system)))
 
-(defn t-quequ [mpd] @(t-agent))
+(defn t-queqe [mpd] @(t-agent mpd))
 
 (defn t-error [mpd] (agent-error (t-agent mpd)))
 
@@ -168,7 +168,7 @@
 ;; ## Worker
 (defn w-agent [mpd] (mpd (:model/worker @sys/system)))
 
-(defn w-quequ [mpd] @(w-agent))
+(defn w-queqe [mpd] @(w-agent mpd))
 
 (defn w-error [mpd] (agent-error (w-agent mpd)))
 
