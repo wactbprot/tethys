@@ -72,7 +72,7 @@
 
 ;; This map will be [[assemble]]d and pushed into the work-queue `wa`. 
 (defn up [db w-agt e-agt]
-  (µ/log ::up :message "start up task agent queqe")
+  (µ/log ::up :message "start up task queqe agent")
   (let [f (db/task-fn db)
         a (agent []) ;; becomes t-agt
         w (fn [_ t-agt _ v]
@@ -91,7 +91,7 @@
     (add-watch a :queqe w)))
 
 (defn down [[_ a]]
-  (µ/log ::down :message "shut down task agent queqe")
+  (µ/log ::down :message "shut down task queqe agent")
   (remove-watch a :queqe)
   (send a (fn [_] [])))
 

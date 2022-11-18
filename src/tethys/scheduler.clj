@@ -47,31 +47,31 @@
                 (predec-exec? sdx v))
         m))))
 
-(defn set-at-pos-op [{:keys [state] :as n} {:keys [sdx pdx]} op]
+(defn set-op-at-pos [op {:keys [state] :as n} {:keys [sdx pdx]}]
   (assoc n :state (mapv (fn [{s :sdx p :pdx :as m}]
                           (if (and (= s sdx) (= p pdx))
                             (assoc m :is op)
                             m))
                         state)))
 
-;; `start-next!` sets the state agent `sa` to working and `conj` the
-;; task `m` to the task-queqe `ta`
-(defn start-next! [sa ta m]
-  (when (seq m)
-    (send sa (fn [n] (set-at-pos-op n m :working)))
-    (send ta (fn [v] (conj v m)))))
+;; `start-next!` sets the state agent `s-agt` to working and `conj` the
+;; task `m` to the task-queqe `t-agt`
+(defn start-next! [s-agt t-agt task]
+  (when (seq task)
+    (send s-agt (fn [m] (set-op-at-pos :working m task)))
+    (send t-agt (fn [v] (conj v task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
-;; the container state agents `sa` of a certain mpd and `ta` is the
+;; the container state agents `s-agt` of a certain mpd and `t-agt` is the
 ;; related task-queqe agent.
-(defn up [conts ta]
-  (mapv #(add-watch % :sched (fn [_ sa _ {:keys [ctrl state]}]
+(defn up [conts t-agt]
+  (mapv #(add-watch % :sched (fn [_ s-agt _ {:keys [ctrl state]}]
                                (cond
                                  (and (not= :error ctrl)
-                                      (error? state))  (ctrl-error! sa)
-                                 (all-exec? state)     (all-ready! sa)
+                                      (error? state))  (ctrl-error! s-agt)
+                                 (all-exec? state)     (all-ready! s-agt)
                                  (or (= :run ctrl)
-                                     (= :mon ctrl))    (start-next! sa ta (find-next state))
+                                     (= :mon ctrl))    (start-next! s-agt t-agt (find-next state))
                                  :nothing-todo-here true)))
 
         conts))

@@ -45,6 +45,7 @@
                 :ini {}}
    
    :model/worker {:conts (ig/ref :model/cont)
+                  :exch-interface (ig/ref :model/exch)
                   :ini {}}
    
    :model/task {:db (ig/ref :db/task)
@@ -125,11 +126,11 @@
      (assoc res id (exch/up id Exchange)))
    ini mpds))
 
-(defmethod ig/init-key :model/worker [_ {:keys [conts ini]}]
+(defmethod ig/init-key :model/worker [_ {:keys [conts exch-interface ini]}]
   (µ/log ::worker :message "start system")
   (reduce
    (fn [res [id _]]
-     (assoc res id (work/up conts)))
+     (assoc res id (work/up conts) (id exch-interface)))
    ini conts))
 
 (defmethod ig/init-key :model/task [_ {:keys [db mpds worker-queqes exch-interface ini]}]
