@@ -15,9 +15,8 @@
     (prop/for-all [v (gen/vector gen/int)]
                   (= (sort v) (sort (sort v)))))
   
-  (tc/quick-check 100 sort-idempotent-prop))
-
-(comment
+  (tc/quick-check 100 sort-idempotent-prop)
+  
   (gen/sample gen/string)
   ("" "" "¡" "" "" "O" "Av&Ç" "{" "ÿoý^\"$" "¬.V")
 
@@ -31,11 +30,26 @@
 
 (tc/quick-check 10000 replace-map-works))
 
-
-(deftest error?-test-i
+(deftest replace-map-i
   (testing "empty key"
     (is (= "cacbc" (replace-map "ab" {"" "c"})))
     (is (= "ab" (replace-map "ab" {"" ""}))))
   (testing "empty val"
     (is (= "" (replace-map "d" {"d" ""})))
     (is (= "" (replace-map "" {"" ""})))))
+
+
+(deftest replace-map-ii
+  (testing "bracket space"
+    (is (= "[[c]]" (replace-map "[[@s]]" {"@s" "c"})))
+    (is (= "[{c}]" (replace-map "[{%s%}]" {"%s%" "c"})))
+    (is (= "[{\r\n}]" (replace-map "[{%s%}]" {"%s%" "\r\n"})))
+    (is (= "   \r\n   " (replace-map "   %s%   " {"%s%" "\r\n"})))))
+
+
+(deftest replace-map-iii
+  (testing "number"
+    (is (= "[[c]]" (replace-map "[[@s]]" {"@s" 100})))
+    (is (= "[{c}]" (replace-map "[{%s%}]" {"%s%" "c"})))
+    (is (= "[{\r\n}]" (replace-map "[{%s%}]" {"%s%" "\r\n"})))
+    (is (= "   \r\n   " (replace-map "   %s%   " {"%s%" "\r\n"})))))
