@@ -223,5 +223,4 @@
      {:ExchangePath "A.Value", :Methode "lt", :Value 13}],
     :Definition
     [[{:TaskName "Common-wait", :Replace {:%waittime 400}}
-      {:TaskName "Common-wait", :Replace {:%waittime 500}}]]}],
-}}
+      {:TaskName "Common-wait", :Replace {:%waittime 500}}]]}]}}
