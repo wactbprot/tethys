@@ -56,7 +56,7 @@
         (replace-map (kw-map->str-map Replace))
         (replace-map (globals))
         (replace-map (kw-map->str-map Defaults))
-        json/read-str)))
+        (json/read-str :key-fn keyword))))
 
 ;; The `up` checks if the `task-queue` (a vector) contains any
 ;; elements. Returns `m` (the agent) if not. If `:task-queue` is not empty it
@@ -70,21 +70,22 @@
    :pdx 0,
    :is :ready})
 
-;; This map will be [[assemble]]d and pushed into the work-queue `wa`. 
+;; The `up` function provides a queqe made of an agent made of a
+;; list.
+;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db w-agt e-agt]
   (µ/log ::up :message "start up task queqe agent")
   (let [f (db/task-fn db)
         a (agent '()) ;; becomes t-agt
-        w (fn [_ t-agt _ v]
-            (when (seq v)
-              (let [{:keys [TaskName Use Replace] :as task} (first v)
-                    {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-                    e-map (exch/from e-agt FromExchange)
-                    task (assemble task Replace Use Defaults e-map)]
-                (send t-agt (fn [v]
+        w (fn [_ t-agt _ _]
+            (send t-agt (fn [v]
+                          (when (seq v)
+                            (let [{:keys [TaskName Use Replace] :as task} (first v)
+                                  {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
+                                  e-map (exch/from e-agt FromExchange)
+                                  task (assemble task Replace Use Defaults e-map)]
                               (send w-agt (fn [v] (conj v task)))
                               (-> v rest))))))]
-
     (set-error-handler! a (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))
                             (Thread/sleep 1000)

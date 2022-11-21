@@ -4,16 +4,13 @@
             [tethys.exchange :as exch]
             [tethys.scheduler :as sched]))
 
-(defn dispatch [conts e-agt task]
-  (prn "...."))
-
 (defn state-agent [conts {:keys [id ndx] :as task}]
-  (-> conts id (nth ndx)))
+  (let [id (keyword id)]
+    (-> conts id (nth ndx))))
 
 (defn check-precond-and-dispatch [conts e-agt task] 
   (let [stop-if-delay 1000
-        s-agt (state-agent conts task)]
-    (prn task)
+        s-agt (state-agent conts task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
         (dispatch conts e-agt task)
@@ -28,16 +25,16 @@
 
 (defn up [conts e-agt]
   (µ/log ::up :message "start up worker queqe agent")
-  (let [a (agent '())
-        w (fn [_ w-agt _ v]
-            (when (seq v)
-              (send w-agt (fn [v]
-                            (future (check-precond-and-dispatch conts e-agt (first v)))
+  (let [a (agent '()) ;; becomes w-agt
+        w (fn [_ w-agt _ _]
+            (send w-agt (fn [v]
+                          (when (seq v)
+                            (check-precond-and-dispatch conts e-agt (first v))
                             (-> v rest)))))]
     (set-error-handler! a (fn [a ex]
-                                (µ/log ::error-handler :error (str "error occured: " ex))
-                                (Thread/sleep 1000)
-                                (restart-agent a @a)))
+                            (µ/log ::error-handler :error (str "error occured: " ex))
+                            (Thread/sleep 1000)
+                            (restart-agent a @a)))
     (add-watch a :queqe w)))
 
 (defn down [[_ w-agt]]

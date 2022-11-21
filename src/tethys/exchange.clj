@@ -2,8 +2,6 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.string :as string]))
 
-
-
 ;; The function `e-value` returns the value of `@e-agt` under the path
 ;; `p`.
 (defn e-value [e-agt p]
