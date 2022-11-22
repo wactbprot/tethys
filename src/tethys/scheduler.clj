@@ -65,22 +65,29 @@
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `t-agt` is the
 ;; related task-queqe agent.
-(defn up [conts t-agt]
-  (mapv #(add-watch % :sched (fn [_ s-agt _ {:keys [ctrl state]}]
-                               (cond
-                                 (and (not= :error ctrl)
-                                      (error? state))  (ctrl-error! s-agt)
-                                 (all-exec? state)     (all-ready! s-agt)
-                                 (or (= :run ctrl)
-                                     (= :mon ctrl))    (start-next! s-agt t-agt (find-next state))
-                                 :nothing-todo-here true)))
+(defn up-whatch-fn [t-agt]
+  (fn [a]
+    (add-watch a :sched (fn [_ s-agt _ {:keys [ctrl state]}]
+                          (cond
+                            (and (not= :error ctrl)
+                                 (error? state))  (ctrl-error! s-agt)
+                            (all-exec? state)     (all-ready! s-agt)
+                            (or (= :run ctrl)
+                                (= :mon ctrl))    (start-next! s-agt t-agt (find-next state))
+                            :nothing-todo-here true)))))
 
-        conts))
+(defn up [{:keys [conts defins]} t-agt]
+  {:conts (mapv (up-whatch-fn t-agt) conts)
+   :defins (mapv (up-whatch-fn t-agt) defins)})
+
+
 ;; The shut down function first removes the whatch function and second
 ;; sets a empty map to all container agents.
-(defn down [[_ conts]]
-  (mapv (fn [a]
-          (remove-watch a :sched)
-          (send a (fn [_] {})))
-        conts))
+(defn down-whatch [a]
+  (remove-watch a :sched)
+  (send a (fn [_] {})))
+
+(defn down [[_ {:keys [conts defins]}]]
+  (mapv down-whatch conts)
+  (mapv down-whatch defins))
 

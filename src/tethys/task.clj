@@ -79,13 +79,14 @@
         a (agent '()) ;; becomes t-agt
         w (fn [_ t-agt _ _]
             (send t-agt (fn [v]
-                          (when (seq v)
+                          (if (seq v)
                             (let [{:keys [TaskName Use Replace] :as task} (first v)
                                   {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
                                   e-map (exch/from e-agt FromExchange)
                                   task (assemble task Replace Use Defaults e-map)]
                               (send w-agt (fn [v] (conj v task)))
-                              (-> v rest))))))]
+                              (-> v rest))
+                            v))))]
     (set-error-handler! a (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))
                             (Thread/sleep 1000)

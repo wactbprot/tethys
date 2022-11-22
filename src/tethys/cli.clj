@@ -1,6 +1,7 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.db :as db]
+            [tethys.model :as model]
             [tethys.system :as sys]
             [tethys.task :as task]))
 
@@ -30,9 +31,8 @@
 ;; ## Start, stop container
 (defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
 
-
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (sys/cont-agent mpd ndx))
+(defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
 
 ;; This `agent` looks like this:
 (comment
@@ -68,7 +68,7 @@
      :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
 
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (sys/exch-agent mpd))
+(defn e-agent [mpd] (sys/mpd-exch-agent mpd))
 
 ;; The derefed e-agent looks like this (keys of the map are
 ;; keywords!):
@@ -135,7 +135,7 @@
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (mpd (:model/task @sys/system)))
+(defn t-agent [mpd] (sys/mpd-task-agent mpd))
 
 (defn t-queqe [mpd] @(t-agent mpd))
 
@@ -166,7 +166,7 @@
   
 
 ;; ## Worker
-(defn w-agent [mpd] (mpd (:model/worker @sys/system)))
+(defn w-agent [mpd] (sys/mpd-work-agent mpd))
 
 (defn w-queqe [mpd] @(w-agent mpd))
 

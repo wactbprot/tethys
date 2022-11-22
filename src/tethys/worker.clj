@@ -2,18 +2,21 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.exchange :as exch]
+            [tethys.model :as model]
             [tethys.scheduler :as sched]))
 
-(defn state-agent [conts {:keys [id ndx] :as task}]
-  (let [id (keyword id)]
-    (-> conts id (nth ndx))))
+(defn dispatch [image task]
+  (prn task))
 
-(defn check-precond-and-dispatch [conts e-agt task] 
+(defn state-agent [image {:keys [ndx group] :as task}]
+  (model/state-agent image ndx group))
+
+(defn check-precond-and-dispatch [image e-agt task] 
   (let [stop-if-delay 1000
-        s-agt (state-agent conts task)]    
+        s-agt (state-agent image task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
-        (dispatch conts e-agt task)
+        (dispatch image e-agt task)
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
@@ -23,13 +26,13 @@
         (µ/log ::check-precond-and-dispatch :message "state set by run-if")
         (send s-agt (fn [m] (sched/set-op-at-pos :ready m task)))))))
 
-(defn up [conts e-agt]
+(defn up [image e-agt]
   (µ/log ::up :message "start up worker queqe agent")
   (let [a (agent '()) ;; becomes w-agt
         w (fn [_ w-agt _ _]
             (send w-agt (fn [v]
                           (when (seq v)
-                            (check-precond-and-dispatch conts e-agt (first v))
+                            (check-precond-and-dispatch image e-agt (first v))
                             (-> v rest)))))]
     (set-error-handler! a (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))
