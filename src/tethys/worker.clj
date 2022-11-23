@@ -5,18 +5,24 @@
             [tethys.model :as model]
             [tethys.scheduler :as sched]))
 
-(defn dispatch [image task]
+(defn dispatch [images task]
   (prn task))
 
-(defn state-agent [image {:keys [ndx group] :as task}]
-  (model/state-agent image ndx group))
+(defn images->image [images {:keys [id]}] (-> id keyword images))
 
-(defn check-precond-and-dispatch [image e-agt task] 
+(defn state-agent [images {:keys [id ndx group] :as task}]
+  (model/state-agent (images->image images task) ndx group))
+
+(defn exch-agent [images task]
+  (model/exch-agent (images->image images task)))
+
+(defn check-precond-and-dispatch [images task] 
   (let [stop-if-delay 1000
-        s-agt (state-agent image task)]    
+        s-agt (state-agent images task)
+        e-agt (exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
-        (dispatch image e-agt task)
+        (dispatch images task)
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
@@ -26,24 +32,23 @@
         (µ/log ::check-precond-and-dispatch :message "state set by run-if")
         (send s-agt (fn [m] (sched/set-op-at-pos :ready m task)))))))
 
-(defn up [image e-agt]
+(defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
-  (let [a (agent '()) ;; becomes w-agt
-        w (fn [_ w-agt _ _]
-            (send w-agt (fn [v]
-                          (when (seq v)
-                            (check-precond-and-dispatch image e-agt (first v))
-                            (-> v rest)))))]
-    (set-error-handler! a (fn [a ex]
+  (let [w (fn [_ wq _ _]
+            (send wq (fn [l]
+                          (when (seq l)
+                            (check-precond-and-dispatch images (first l))
+                            (-> l rest)))))]
+    (set-error-handler! worker-queqe (fn [a ex]
                             (µ/log ::error-handler :error (str "error occured: " ex))
                             (Thread/sleep 1000)
                             (restart-agent a @a)))
-    (add-watch a :queqe w)))
+    (add-watch worker-queqe :queqe w)))
 
-(defn down [[_ w-agt]]
+(defn down [[_ wq]]
   (µ/log ::down :message "shut down worker queqe agent")
-  (remove-watch w-agt :queqe)
-  (send w-agt (fn [_] [])))
+  (remove-watch wq :queqe)
+  (send wq (fn [_] [])))
 
 (comment
   ;; the futures should be kept with a hash key:

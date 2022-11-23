@@ -37,25 +37,18 @@
              :view "tasks"
              :design "dbmp"}
 
-   :model/image {:mpds (ig/ref :db/mpds)
-                :ini {}}
-
-   :model/exch {:mpds (ig/ref :db/mpds)
-                :ini {}}
+   :model/images {:mpds (ig/ref :db/mpds)
+                  :ini {}}
    
-   :model/worker {:image (ig/ref :model/image)
-                  :exch-interface (ig/ref :model/exch)
+   :model/worker {:images (ig/ref :model/images)
                   :ini {}}
    
    :model/task {:db (ig/ref :db/task)
-                :mpds (ig/ref :db/mpds)
-                :exch-interface (ig/ref :model/exch)
-                :worker-queqes (ig/ref :model/worker)
+                :images (ig/ref :model/images)
                 :ini {}}
-
-   :scheduler/image {:image (ig/ref :model/image)
-                    :task-queqes (ig/ref :model/task)
-                    :ini {}}
+   
+   :scheduler/images {:images (ig/ref :model/images)
+                      :ini {}}
 
    :log/mulog {:type :multi
                :log-context {:app-name "tethys"
@@ -111,40 +104,33 @@
       ini id-set)
      (keyword _id) Mp)))
 
-(defmethod ig/init-key :model/image [_ {:keys [mpds ini]}]
+(defmethod ig/init-key :model/images [_ {:keys [mpds ini]}]
   (µ/log ::cont :message "start system")
   (reduce
-   (fn [res [id {:keys [Container Definitions]}]]
-     (assoc res id (model/up id Container Definitions)))
+   (fn [res [id {:keys [Container Definitions Exchange]}]]
+     (assoc res id (model/up id Container Definitions Exchange)))
    ini mpds))
 
-(defmethod ig/init-key :model/exch [_ {:keys [mpds ini]}]
-  (µ/log ::exch :message "start system")
-  (reduce
-   (fn [res [id {:keys [Exchange]}]]
-     (assoc res id (exch/up id Exchange)))
-   ini mpds))
-
-(defmethod ig/init-key :model/worker [_ {:keys [image exch-interface ini]}]
+(defmethod ig/init-key :model/worker [_ {:keys [images ini]}]
   (µ/log ::worker :message "start system")
   (reduce
-   (fn [res [id _]]
-     (assoc res id (work/up image (id exch-interface))))
-   ini image))
+   (fn [res [id image]]
+     (assoc res id (work/up image images)))
+   ini images))
 
-(defmethod ig/init-key :model/task [_ {:keys [db mpds worker-queqes exch-interface ini]}]
+(defmethod ig/init-key :model/task [_ {:keys [db images ini]}]
   (µ/log ::task :message "start system")
   (reduce
-   (fn [res [id _]]
-     (assoc res id (task/up db (id worker-queqes) (id exch-interface))))
-   ini mpds))
+   (fn [res [id image]]
+     (assoc res id (task/up db image)))
+   ini images))
 
-(defmethod ig/init-key :scheduler/image [_ {:keys [image task-queqes ini]}]
+(defmethod ig/init-key :scheduler/images [_ {:keys [images ini]}]
   (µ/log ::scheduler :message "start system")
   (reduce
-   (fn [res [id as]]
-     (assoc res id (sched/up as (id task-queqes))))
-   ini image))
+   (fn [res [id image]]
+     (assoc res id (sched/up image)))
+   ini images))
 
 ;; ## System down multimethods
 ;; The system may be **shut down** by
@@ -154,14 +140,10 @@
 (defmethod ig/halt-key! :log/mulog [_ logger]
   (logger))
 
-(defmethod ig/halt-key! :model/image [_ as]
+(defmethod ig/halt-key! :model/images [_ as]
   (run! #(model/down %) as))
 
-(defmethod ig/halt-key! :model/exch [_ as]
-  (µ/log ::exch :message "halt system")
-  (run! #(exch/down %) as))
-
-(defmethod ig/halt-key! :scheduler/image [_ as]
+(defmethod ig/halt-key! :scheduler/images [_ as]
   (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
 
@@ -185,9 +167,7 @@
 
 ;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
 ;; keyword.
-(defn mpd-image [mpd] (-> @system :model/image mpd))
-
-(defn mpd-exch-agent [mpd] (-> @system :model/exch mpd))
+(defn mpd-image [mpd] (-> @system :model/images mpd))
 
 (defn mpd-work-agent [mpd] (-> @system :model/worker mpd))
 

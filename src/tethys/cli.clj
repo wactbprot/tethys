@@ -68,7 +68,7 @@
      :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
 
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (sys/mpd-exch-agent mpd))
+(defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))
 
 ;; The derefed e-agent looks like this (keys of the map are
 ;; keywords!):

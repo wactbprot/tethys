@@ -73,36 +73,26 @@
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
-(defn up [db w-agt e-agt]
+(defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
   (let [f (db/task-fn db)
-        a (agent '()) ;; becomes t-agt
         w (fn [_ t-agt _ _]
-            (send t-agt (fn [v]
-                          (if (seq v)
-                            (let [{:keys [TaskName Use Replace] :as task} (first v)
+            (send t-agt (fn [l]
+                          (if (seq l)
+                            (let [{:keys [TaskName Use Replace] :as task} (first l)
                                   {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-                                  e-map (exch/from e-agt FromExchange)
+                                  e-map (exch/from exch FromExchange)
                                   task (assemble task Replace Use Defaults e-map)]
-                              (send w-agt (fn [v] (conj v task)))
-                              (-> v rest))
-                            v))))]
-    (set-error-handler! a (fn [a ex]
-                            (µ/log ::error-handler :error (str "error occured: " ex))
-                            (Thread/sleep 1000)
-                            (restart-agent a @a)))
-    (add-watch a :queqe w)))
+                              (send worker-queqe (fn [l] (conj l task)))
+                              (-> l rest))
+                            l))))]
+    (set-error-handler! task-queqe (fn [a ex]
+                                     (µ/log ::error-handler :error (str "error occured: " ex))
+                                     (Thread/sleep 1000)
+                                     (restart-agent a @a)))
+    (add-watch task-queqe :queqe w)))
 
-(defn down [[_ a]]
+(defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")
-  (remove-watch a :queqe)
-  (send a (fn [_] [])))
-
-(comment
-  (defn up []
-    (let [a (agent [])
-          w (fn [_ q _ v]
-              (when (seq q)
-                ;; do stuff with (first q)
-                (send q (fn [v] (-> v rest vec)))))]
-      (add-watch a :queqe w))))
+  (remove-watch  t-agt :queqe)
+  (send t-agt (fn [_] [])))

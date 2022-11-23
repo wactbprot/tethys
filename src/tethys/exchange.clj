@@ -46,8 +46,3 @@
   {:%check "ref"}
   (from a {:%check "C"})
   {:%check nil})
-
-
-(defn up [id exch] (agent (assoc exch :id id))) 
-
-(defn down [[_ a]] (send a (fn [_] {})))

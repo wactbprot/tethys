@@ -55,17 +55,17 @@
                         state)))
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
-;; task `m` to the task-queqe `t-agt`
-(defn start-next! [s-agt t-agt task]
+;; task `m` to the task-queqe `tq`
+(defn start-next! [s-agt tq task]
   (when (seq task)
-    (send t-agt (fn [v]
-                  (send s-agt (fn [m] (set-op-at-pos :working m task)))
-                  (conj v task)))))
+    (send tq (fn [l]
+               (send s-agt (fn [m] (set-op-at-pos :working m task)))
+               (conj l task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
-;; the container state agents `s-agt` of a certain mpd and `t-agt` is the
+;; the container state agents `s-agt` of a certain mpd and `tq` is the
 ;; related task-queqe agent.
-(defn up-whatch-fn [t-agt]
+(defn up-whatch-fn [tq]
   (fn [a]
     (add-watch a :sched (fn [_ s-agt _ {:keys [ctrl state]}]
                           (cond
@@ -73,12 +73,12 @@
                                  (error? state))  (ctrl-error! s-agt)
                             (all-exec? state)     (all-ready! s-agt)
                             (or (= :run ctrl)
-                                (= :mon ctrl))    (start-next! s-agt t-agt (find-next state))
+                                (= :mon ctrl))    (start-next! s-agt tq (find-next state))
                             :nothing-todo-here true)))))
 
-(defn up [{:keys [conts defins]} t-agt]
-  {:conts (mapv (up-whatch-fn t-agt) conts)
-   :defins (mapv (up-whatch-fn t-agt) defins)})
+(defn up [{:keys [conts defins task-queqe]}]
+  {:conts (mapv (up-whatch-fn task-queqe) conts)
+   :defins (mapv (up-whatch-fn task-queqe) defins)})
 
 
 ;; The shut down function first removes the whatch function and second
