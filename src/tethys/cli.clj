@@ -30,6 +30,7 @@
 (defn stop [] (sys/stop))
 
 ;; ## Start, stop container
+;;
 (defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
 
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
@@ -41,7 +42,6 @@
 ;; The derefed e-agent looks like this (keys of the map are
 ;; keywords!):
 (comment
-  
   (deref (e-agent :mpd-ref))
   {:A {:Type "ref", :Unit "Pa", :Value 100.0},
    :B "token",

@@ -3,6 +3,6 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.scheduler :as sched]))
 
-(defn wait [image {:keys [WaitTime] :as task}]
-  (Thread/sleep WaitTime)
+(defn wait [images {:keys [WaitTime] :as task}]
+  (Thread/sleep WaitTime))
   
