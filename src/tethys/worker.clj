@@ -3,7 +3,6 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.exchange :as exch]
             [tethys.model :as model]
-            [tethys.system :as sys]
             [tethys.scheduler :as sched]))
 
 (defn dispatch [images task]
@@ -13,7 +12,7 @@
   (model/state-agent (model/images->image images id) ndx group))
 
 (defn exch-agent [images task]
-  (model/exch-agent (images->image images task)))
+  (model/exch-agent (model/images->image images) task))
 
 (defn check-precond-and-dispatch [images task] 
   (let [stop-if-delay 1000
@@ -25,23 +24,24 @@
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
-          (send s-agt (fn [m] (sched/set-op-at-pos :executed m task)))))
+          (sched/set-state-executed! s-agt task)))
       (do
         (Thread/sleep stop-if-delay)
         (µ/log ::check-precond-and-dispatch :message "state set by run-if")
-        (send s-agt (fn [m] (sched/set-op-at-pos :ready m task)))))))
+        (sched/set-state-ready! s-agt task)))))
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
   (let [w (fn [_ wq _ _]
             (send wq (fn [l]
-                          (when (seq l)
-                            (check-precond-and-dispatch images (first l))
-                            (-> l rest)))))]
+                       (when (seq l)
+                         (check-precond-and-dispatch images (first l))
+                         (-> l rest)))))]
     (set-error-handler! worker-queqe (fn [a ex]
-                            (µ/log ::error-handler :error (str "error occured: " ex))
-                            (Thread/sleep 1000)
-                            (restart-agent a @a)))
+                                       (µ/log ::error-handler :error (str "error occured: " ex))
+                                       (Thread/sleep 1000)
+                                       (µ/log ::error-handler :message "try to restart agent")
+                                       (restart-agent a @a)))
     (add-watch worker-queqe :queqe w)))
 
 (defn down [[_ wq]]

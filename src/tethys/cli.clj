@@ -6,6 +6,7 @@
             [tethys.task :as task]))
 
 ;; # cli
+;;
 ;; This is the tethys **c**ommand **l**ine **i**nterface.
 ;; Some abbreviations:
 ;;
@@ -102,7 +103,7 @@
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (sys/mpd-task-agent mpd))
+(defn t-agent [mpd] (model/task-agent (sys/mpd-image mpd)))
 
 (defn t-queqe [mpd] @(t-agent mpd))
 
@@ -131,9 +132,8 @@
   (let [f (db/task-fn (:db/task @sys/system))]
     (task/assemble (f task-name) replace-map)))
   
-
 ;; ## Worker
-(defn w-agent [mpd] (sys/mpd-work-agent mpd))
+(defn w-agent [mpd] (model/worker-agent (sys/mpd-image mpd)))
 
 (defn w-queqe [mpd] @(w-agent mpd))
 

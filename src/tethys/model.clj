@@ -28,6 +28,10 @@
 
 (defn exch-agent [image] (-> image :exch))
 
+(defn worker-agent [image] (image :worker-queqe))
+
+(defn task-agent [image] (image :task-queqe))
+
 
 ;; The `state` structure holds information of the position
 ;; 
@@ -72,5 +76,5 @@
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
   (send worker-queqe (fn [_] '()))
-  (send task-queqe (fn [_] '()))
+  (send task-queqe (fn [_] '())))
  

@@ -47,19 +47,26 @@
                 (predec-exec? sdx v))
         m))))
 
-(defn set-op-at-pos [op {:keys [state] :as n} {:keys [sdx pdx]}]
-  (assoc n :state (mapv (fn [{s :sdx p :pdx :as m}]
-                          (if (and (= s sdx) (= p pdx))
-                            (assoc m :is op)
-                            m))
-                        state)))
+(defn set-op-fn [op sdx pdx]
+  (fn [{s :sdx p :pdx :as m}]
+    (if (and (= s sdx) (= p pdx))  (assoc m :is op) m)))
+
+(defn set-state! [a op {:keys [sdx pdx]}]
+  (send a (fn [{:keys [state] :as n}] 
+            (assoc n :state (mapv (set-op-fn op sdx pdx) state)))))
+
+(defn set-state-executed! [a task] (set-state! a :executed task))
+
+(defn set-state-ready! [a task] (set-state! a :ready task))
+
+(defn set-state-working! [a task] (set-state! a :ready task))
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
 (defn start-next! [s-agt tq task]
   (when (seq task)
     (send tq (fn [l]
-               (send s-agt (fn [m] (set-op-at-pos :working m task)))
+               (set-state-working! s-agt task)
                (conj l task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
