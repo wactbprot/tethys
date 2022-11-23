@@ -3,15 +3,14 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.exchange :as exch]
             [tethys.model :as model]
+            [tethys.system :as sys]
             [tethys.scheduler :as sched]))
 
 (defn dispatch [images task]
   (prn task))
 
-(defn images->image [images {:keys [id]}] (-> id keyword images))
-
 (defn state-agent [images {:keys [id ndx group] :as task}]
-  (model/state-agent (images->image images task) ndx group))
+  (model/state-agent (model/images->image images id) ndx group))
 
 (defn exch-agent [images task]
   (model/exch-agent (images->image images task)))

@@ -34,39 +34,6 @@
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
 (defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
 
-;; This `agent` looks like this:
-(comment
-  {:ctrl :run
-   :state
-   [{:id :mpd-ppc-gas_dosing
-     :group :cont
-     :ndx 0
-     :sdx 0
-     :pdx 0
-     :is :executed
-     :task {:TaskName "PPC_MaxiGauge-ini"}}
-    {:id :mpd-ppc-gas_dosing
-     :group :cont
-     :ndx 0
-     :sdx 1
-     :pdx 0
-     :is :executed
-     :task {:TaskName "PPC_DualGauge-ini"}}
-    {:id :mpd-ppc-gas_dosing
-     :group :cont
-     :ndx 0
-     :sdx 2
-     :pdx 0
-     :is :executed
-     :task {:TaskName "PPC_VAT_DOSING_VALVE-ini"}}
-    {:id :mpd-ppc-gas_dosing
-     :group :cont
-     :ndx 0
-     :sdx 3
-     :pdx 0
-     :is :executed
-     :task {:TaskName "PPC_Faulhaber_Servo-comp_ini"}}]})
-
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
 (defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))
 

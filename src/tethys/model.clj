@@ -5,13 +5,22 @@
 
 (defn- flattenv [v] (-> v flatten vec))
 
+(defn images->image [images mpd]
+  (let [id (keyword mpd)]
+    (-> images id)))
+
 ;; ## Model
+;;
 ;; The model `ns` transforms the *mpd*s as received from the database
 ;; into a structure where different threads can work on. For the
 ;; moving parts, agents are used.
 ;; This `ns` knows how to pull it out of the `image`; like this:
+
+
 (defn state-agent [image ndx group-kw]
-  (-> image group-kw (nth ndx)))
+  (let [group-kw (keyword group-kw)
+        ndx (Integer. ndx)]
+    (-> image group-kw (nth ndx))))
 
 (defn cont-agent [image ndx] (state-agent image ndx :conts ))
 
@@ -57,6 +66,11 @@
                            :state (state-struct Definition :defins id ndx)})) 
                  defins (range))})
 
-(defn down [[id {:keys [conts defins]}]]
+;; The down methode sets all agents back to its initial value
+(defn down [[_ {:keys [conts defins exch worker-queqe task-queqe]}]]
   (run! #(send % (fn [_] {})) conts)
-  (run! #(send % (fn [_] {})) defins))
+  (run! #(send % (fn [_] {})) defins)
+  (send exch (fn [_] {}))
+  (send worker-queqe (fn [_] '()))
+  (send task-queqe (fn [_] '()))
+ 
