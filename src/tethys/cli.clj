@@ -33,7 +33,6 @@
 ;; The derefed e-agent looks like this (keys of the map are
 ;; keywords!):
 (comment
-  
   (deref (e-agent :mpd-ref))
   {:A {:Type "ref", :Unit "Pa", :Value 100.0},
    :B "token",
