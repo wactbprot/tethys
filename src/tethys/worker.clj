@@ -3,22 +3,20 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.exchange :as exch]
             [tethys.model :as model]
-            [tethys.scheduler :as sched]))
+            [tethys.scheduler :as sched]
+            [tethys.worker.wait :as wait]))
 
-(defn dispatch [images task]
-  (prn "..")
-  (prn task))
+(defn dispatch [images {:keys [Action] :as task}]
 
-(defn state-agent [images {:keys [id ndx group] :as task}]
-  (model/state-agent (model/images->image images id) ndx group))
-
-(defn exch-agent [images {:keys [id] :as task}]
-  (model/exch-agent (model/images->image images id)))
+  (case (keyword Action)
+    :wait (wait/wait images task)
+    (µ/log ::dispatch :error "no matching case")))
 
 (defn check-precond-and-dispatch [images task] 
+  (prn task)
   (let [stop-if-delay 1000
-        s-agt (state-agent images task)
-        e-agt (exch-agent images task)]    
+        s-agt (model/images->state-agent images task)
+        e-agt (model/images->exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
         (dispatch images task)

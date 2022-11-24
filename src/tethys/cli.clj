@@ -89,7 +89,7 @@
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (model/task-agent (sys/mpd-image mpd)))
+(defn t-agent [mpd] (model/image->task-agent (sys/mpd-image mpd)))
 (defn t-queqe [mpd] @(t-agent mpd))
 (defn t-error [mpd] (agent-error (t-agent mpd)))
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
@@ -116,7 +116,7 @@
     (task/assemble (f task-name) replace-map)))
   
 ;; ## Worker
-(defn w-agent [mpd] (model/worker-agent (sys/mpd-image mpd)))
+(defn w-agent [mpd] (model/image->worker-agent (sys/mpd-image mpd)))
 (defn w-queqe [mpd] @(w-agent mpd))
 (defn w-error [mpd] (agent-error (w-agent mpd)))
 (defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
@@ -125,4 +125,4 @@
 ;; ## Exchange interface
 ;;
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))
+(defn e-agent [mpd] (model/image->exch-agent (sys/mpd-image mpd)))

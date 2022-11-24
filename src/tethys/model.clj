@@ -5,8 +5,8 @@
 
 (defn- flattenv [v] (-> v flatten vec))
 
-(defn images->image [images mpd]
-  (let [id (keyword mpd)]
+(defn images->image [images id]
+  (let [id (keyword id)]
     (-> images id)))
 
 ;; ## Model
@@ -17,21 +17,32 @@
 ;; This `ns` knows how to pull it out of the `image`; like this:
 
 
-(defn state-agent [image ndx group-kw]
+(defn image->state-agent [image ndx group-kw]
+  (prn ndx)
+  (prn group-kw)
   (let [group-kw (keyword group-kw)
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
 
-(defn cont-agent [image ndx] (state-agent image ndx :conts ))
+(defn cont-agent [image ndx] (image->state-agent image ndx :conts ))
 
-(defn defin-agent [image ndx] (state-agent image ndx :defins))
+(defn defin-agent [image ndx] (image->state-agent image ndx :defins))
 
-(defn exch-agent [image] (-> image :exch))
+(defn image->task-agent [image] (image :task-queqe))
 
-(defn worker-agent [image] (image :worker-queqe))
+(defn image->worker-agent [image] (image :worker-queqe))
 
-(defn task-agent [image] (image :task-queqe))
+(defn image->exch-agent [image] (-> image :exch))
 
+(defn images->state-agent [images {:keys [id ndx group]}]
+  (-> images
+      (images->image id)
+      (image->state-agent ndx group)))
+
+(defn images->exch-agent [images {:keys [id]}]
+  (-> images
+      (images->image id)
+      image->exch-agent))
 
 ;; The `state` structure holds information of the position
 ;; 
