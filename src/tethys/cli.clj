@@ -60,7 +60,7 @@
 ;; `mpd` with this functions.
 
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
+(defn c-agent [mpd ndx] (model/image->cont-agent (sys/mpd-image mpd) ndx))
 
 ;; ## Start, stop container
 (defn ctrl [a op] (sched/ctrl! a op))
@@ -111,9 +111,9 @@
    "Port" "@port",
    "Value" ["UNI,0\n" "" "PR1\n" ""]})
 
-(defn t-resolve [task-name replace-map]
+(defn t-resolve [task-name replace-map use-map]
   (let [f (db/task-fn (:db/task @sys/system))]
-    (task/assemble (f task-name) replace-map)))
+    (task/assemble (f task-name) replace-map use-map)))
   
 ;; ## Worker
 (defn w-agent [mpd] (model/image->worker-agent (sys/mpd-image mpd)))

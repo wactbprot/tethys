@@ -64,6 +64,7 @@
                             :name-mangling false}]}})
 
 ;; # System
+;;
 ;; The entire system is stored in an `atom` in the
 ;; `tethys.system` (this) namespace.
 (defonce system  (atom {}))
@@ -72,6 +73,7 @@
 ;; multimethods.
 ;;
 ;; ## System up multimethods
+;;
 ;; The `init-key`s methods **read a
 ;; configuration** and **return an implementation**.
 (defmethod ig/init-key :log/mulog [_ opts]
@@ -133,6 +135,7 @@
    ini images))
 
 ;; ## System down multimethods
+;;
 ;; The system may be **shut down** by
 ;; `halt-key!` multimethods.  The `halt-keys!` methods **read in the
 ;; implementation** and shut down in a contolled way. This is a pure

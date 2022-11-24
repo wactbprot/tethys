@@ -3,7 +3,7 @@
   (:require [com.brunobonacci.mulog :as µ]))
 
 
-;; ## state manipulation
+;; ## State manipulation
 
 (defn op-fn [op sdx pdx]
   (fn [{s :sdx p :pdx :as m}]

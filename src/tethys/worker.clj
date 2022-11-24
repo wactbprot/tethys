@@ -7,13 +7,11 @@
             [tethys.worker.wait :as wait]))
 
 (defn dispatch [images {:keys [Action] :as task}]
-
   (case (keyword Action)
     :wait (wait/wait images task)
     (µ/log ::dispatch :error "no matching case")))
 
 (defn check-precond-and-dispatch [images task] 
-  (prn task)
   (let [stop-if-delay 1000
         s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)]    

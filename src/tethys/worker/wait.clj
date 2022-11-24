@@ -4,7 +4,7 @@
             [tethys.model :as model]
             [tethys.scheduler :as sched]))
 
-(defn wait [images {:keys [id WaitTime] :as task}]
+(defn wait [images {:keys [WaitTime] :as task}]
   (Thread/sleep WaitTime)
   (sched/state-executed! (model/images->state-agent images task) task))
   
