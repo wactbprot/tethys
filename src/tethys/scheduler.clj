@@ -2,6 +2,23 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]))
 
+
+;; ## state manipulation
+
+(defn op-fn [op sdx pdx]
+  (fn [{s :sdx p :pdx :as m}]
+    (if (and (= s sdx) (= p pdx)) (assoc m :is op) m)))
+
+(defn state! [a op {:keys [sdx pdx]}]
+  (send a (fn [{:keys [state] :as n}] 
+            (assoc n :state (mapv (op-fn op sdx pdx) state)))))
+
+(defn state-executed! [a task] (state! a :executed task))
+
+(defn state-ready! [a task] (state! a :ready task))
+
+(defn state-working! [a task] (state! a :working task))
+
 ;; ## Scheduler
 ;;
 ;; The *Tethys* scheduler is driven by means
@@ -20,11 +37,13 @@
 
 (defn set-all-pos-ready [v] (mapv (fn [m] (assoc m :is :ready)) v))
 
+(defn ctrl! [a op] (send a (fn [m] (assoc m :ctrl op))))
+  
 ;; The `:ctrl` interface of a container is set to `:error` if a task
 ;; turns to `:error`
 (defn ctrl-error! [a]
   (µ/log ::ctrl-error! :error "state error")
-  (send a (fn [m] (assoc m :ctrl :error))))
+  (ctrl! a :error))
 
 ;; If all tasks in a container are executed, the states are set back
 ;; to `:ready`.  If `ctrl`was `:run` it becomes `:ready` in order to
@@ -32,41 +51,26 @@
 (defn all-ready! [a]  
   (µ/log ::all-ready! :message "set all states to :ready")
   (send a (fn [{:keys [state ctrl] :as m}]
-            (assoc (assoc m :ctrl (if (= ctrl :run) :ready ctrl))
-                   :state (set-all-pos-ready state)))))
+            (-> m
+                (assoc :ctrl (if (= ctrl :run) :ready ctrl))
+                (assoc :state (set-all-pos-ready state))))))
 
 ;; Start next if the [[next-ready]] is first or all predecessors are
 ;; executed.
-
 (defn is-first? [{i :sdx}] (zero? i))
 
 (defn find-next [v]
   (let [{sdx :sdx :as m} (first (filterv (is-eq :ready) v))]
     (when (seq m)
-      (when (or (is-first? m)
-                (predec-exec? sdx v))
+      (when (or (is-first? m) (predec-exec? sdx v))
         m))))
-
-(defn set-op-fn [op sdx pdx]
-  (fn [{s :sdx p :pdx :as m}]
-    (if (and (= s sdx) (= p pdx))  (assoc m :is op) m)))
-
-(defn set-state! [a op {:keys [sdx pdx]}]
-  (send a (fn [{:keys [state] :as n}] 
-            (assoc n :state (mapv (set-op-fn op sdx pdx) state)))))
-
-(defn set-state-executed! [a task] (set-state! a :executed task))
-
-(defn set-state-ready! [a task] (set-state! a :ready task))
-
-(defn set-state-working! [a task] (set-state! a :ready task))
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
 (defn start-next! [s-agt tq task]
   (when (seq task)
     (send tq (fn [l]
-               (set-state-working! s-agt task)
+               (state-working! s-agt task)
                (conj l task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of

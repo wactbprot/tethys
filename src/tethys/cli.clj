@@ -3,6 +3,7 @@
   (:require [tethys.db :as db]
             [tethys.model :as model]
             [tethys.system :as sys]
+            [tethys.scheduler :as sched]
             [tethys.task :as task]))
 
 ;; # cli
@@ -28,15 +29,6 @@
   (mpds))
 
 (defn stop [] (sys/stop))
-
-;; ## Start, stop container
-(defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
-
-;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
-
-;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))
 
 ;; The derefed e-agent looks like this (keys of the map are
 ;; keywords!):
@@ -67,48 +59,40 @@
 ;;
 ;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
+
+;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
+(defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
+
+;; ## Start, stop container
+(defn ctrl [a op] (sched/ctrl! a op))
 (defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
 (defn c-mon [mpd ndx] (ctrl (c-agent mpd ndx) :mon))
 (defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
 
 ;; ## Set container state
 ;;
-;; The function `set-all-pos-ready` allows the direct setting of `:is`
-;; verbs for a given state.
-(defn- set-at-pos [state sdx pdx op]
-  (mapv (fn [{s :sdx p :pdx :as m}]
-          (if (and (= s sdx) (= p pdx))
-            (assoc m :is op)
-            m))
-        state))
-
-(defn- state! [a sdx pdx op]
-  (send a (fn [{:keys [state] :as m}]
-            (assoc m :state (set-at-pos state sdx pdx op)))))
+(defn- state! [a op sdx pdx]
+  (sched/state! a op (struct model/state nil nil nil sdx pdx op)))
 
 ;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd`
 (defn s-ready [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :ready))
+  (state! (c-agent mpd ndx) :ready sdx pdx))
 
 (defn s-exec  [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :executed))
+  (state! (c-agent mpd ndx) :executed sdx pdx))
 
 (defn s-work [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :working))
+  (state! (c-agent mpd ndx) :working sdx pdx))
 
 (defn s-error [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :error))
-
+  (state! (c-agent mpd ndx) :error sdx pdx))
 
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
 (defn t-agent [mpd] (model/task-agent (sys/mpd-image mpd)))
-
 (defn t-queqe [mpd] @(t-agent mpd))
-
 (defn t-error [mpd] (agent-error (t-agent mpd)))
-
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
 
   ;; Get a task from the database and resole a `replace-map` by means
@@ -134,9 +118,12 @@
   
 ;; ## Worker
 (defn w-agent [mpd] (model/worker-agent (sys/mpd-image mpd)))
-
 (defn w-queqe [mpd] @(w-agent mpd))
-
 (defn w-error [mpd] (agent-error (w-agent mpd)))
-
 (defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
+
+
+;; ## Exchange interface
+;;
+;; Get the `agent` of a mpd by `(e-agent mpd)`
+(defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))

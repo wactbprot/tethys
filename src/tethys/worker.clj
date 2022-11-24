@@ -6,13 +6,14 @@
             [tethys.scheduler :as sched]))
 
 (defn dispatch [images task]
+  (prn "..")
   (prn task))
 
 (defn state-agent [images {:keys [id ndx group] :as task}]
   (model/state-agent (model/images->image images id) ndx group))
 
-(defn exch-agent [images task]
-  (model/exch-agent (model/images->image images) task))
+(defn exch-agent [images {:keys [id] :as task}]
+  (model/exch-agent (model/images->image images id)))
 
 (defn check-precond-and-dispatch [images task] 
   (let [stop-if-delay 1000
@@ -24,11 +25,11 @@
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
-          (sched/set-state-executed! s-agt task)))
+          (sched/state-executed! s-agt task)))
       (do
         (Thread/sleep stop-if-delay)
         (µ/log ::check-precond-and-dispatch :message "state set by run-if")
-        (sched/set-state-ready! s-agt task)))))
+        (sched/state-ready! s-agt task)))))
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
