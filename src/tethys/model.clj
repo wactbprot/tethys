@@ -36,11 +36,11 @@
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
 
-(defn image->conf [image] (:conf image))
+(defn image->conf [image] (-> image :conf))
 (defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
-(defn image->task-agent [image] (image :task-queqe))
-(defn image->worker-agent [image] (image :worker-queqe))
+(defn image->task-agent [image] (-> image :task-queqe))
+(defn image->worker-agent [image] (-> image :worker-queqe))
 (defn image->exch-agent [image] (-> image :exch))
 (defn image->ids-agent [image] (-> image :ids))
 (defn image->resp-agent [image] (-> image :response-queqe))

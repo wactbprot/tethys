@@ -4,7 +4,8 @@
             [tethys.model :as model]
             [tethys.system :as sys]
             [tethys.scheduler :as sched]
-            [tethys.task :as task]))
+            [tethys.task :as task]
+            [tethys.worker :as work]))
 
 ;; # cli
 ;;
@@ -29,6 +30,8 @@
   (mpds))
 
 (defn stop [] (sys/stop))
+
+(defn images [] (:model/images @sys/system))
 
 (defn image [mpd] (sys/mpd-image mpd))
 
@@ -90,9 +93,16 @@
    "Value" ["UNI,0\n" "" "PR1\n" ""]})
 
 (defn t-resolve [task-name replace-map use-map]
-  (let [f (db/task-fn (:db/task @sys/system))]
-    (task/assemble (f task-name) replace-map use-map)))
-  
+  (let [f (db/task-fn (:db/task @sys/system))
+        {:keys [Defaults] :as task} (f task-name)]
+    (task/assemble task  replace-map use-map Defaults)))
+
+;; `t-run` uses the always present `mpd-ref` image.
+(defn t-run [task-name replace-map use-map]
+  (let [task (t-resolve task-name replace-map use-map)
+        task (merge task (struct model/state :mpd-ref :conts 0 0 0))]
+    (work/check (images) task)))
+
 ;; ## Worker
 (defn w-agent [mpd] (model/image->worker-agent (sys/mpd-image mpd)))
 (defn w-queqe [mpd] @(w-agent mpd))

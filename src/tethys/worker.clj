@@ -4,14 +4,17 @@
             [tethys.exchange :as exch]
             [tethys.model :as model]
             [tethys.scheduler :as sched]
+            [tethys.worker.devhub :as devhub]
             [tethys.worker.wait :as wait]))
 
 (defn dispatch [images {:keys [Action] :as task}]
   (case (keyword Action)
     :wait (wait/wait images task)
+    :TCP (devhub/devhub images task)
+    :VXI11 (devhub/devhub images task)
     (µ/log ::dispatch :error "no matching case")))
 
-(defn check-precond-and-dispatch [images task] 
+(defn check [images task] 
   (let [stop-if-delay 1000
         s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)]    
@@ -20,11 +23,11 @@
         (dispatch images task)
         (do
           (Thread/sleep stop-if-delay)
-          (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
+          (µ/log ::check :message "state set by only-if-not")
           (sched/state-executed! s-agt task)))
       (do
         (Thread/sleep stop-if-delay)
-        (µ/log ::check-precond-and-dispatch :message "state set by run-if")
+        (µ/log ::check :message "state set by run-if")
         (sched/state-ready! s-agt task)))))
 
 (defn up [{:keys [worker-queqe]} images]
@@ -32,7 +35,7 @@
   (let [w (fn [_ wq _ _]
             (send wq (fn [l]
                        (when (seq l)
-                         (check-precond-and-dispatch images (first l))
+                         (check images (first l))
                          (-> l rest)))))]
     (set-error-handler! worker-queqe (fn [a ex]
                                        (µ/log ::error-handler :error (str "error occured: " ex))

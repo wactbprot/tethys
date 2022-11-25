@@ -10,7 +10,7 @@
 (defn req [{header :json-post-header} task] (assoc header :body (json/write-str task)))
 
 (defn devhub [images {:keys [id] :as task}]
-  (let [image (model/images->state-agent images task)
+  (let [image (model/images->image images id)
         conf  (model/image->conf image)]
     (try
       (prn (http/post (url conf) (req conf task)))
