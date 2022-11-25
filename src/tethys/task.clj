@@ -94,7 +94,7 @@
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
-(defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
+(defn up [db  {:keys [worker-queqe task-queqe exch ] :as image}]
   (µ/log ::up :message "start up task queqe agent")
   (let [w (fn [_ t-agt _ tq]
             (when (seq tq)

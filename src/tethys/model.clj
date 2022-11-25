@@ -36,6 +36,7 @@
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
 
+(defn image->conf [image] (:conf image))
 (defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
 (defn image->task-agent [image] (image :task-queqe))
@@ -62,12 +63,13 @@
                           s (range)))
                   v (range))))
 
-(defn up [id cont defins exch]
-  {:exch (agent (if (map? exch) exch {}))
+(defn up [id cont defins exch conf]
+  {:conf conf
+   :exch (agent (if (map? exch) exch {}))
+   :ids (agent {})
    :response-queqe (agent '())
    :worker-queqe (agent '())
    :task-queqe (agent '())
-   :ids (agent {})
    :conts (mapv (fn [{:keys [Ctrl Definition]} ndx]
                   (agent {:ctrl (or (keyword Ctrl) :ready)
                           :state (state-struct Definition :conts id ndx )})) 
@@ -80,10 +82,11 @@
                  defins (range))})
 
 ;; The down methode sets all agents back to its initial value
-(defn down [[_ {:keys [conts defins exch worker-queqe task-queqe]}]]
+(defn down [[_ {:keys [conts defins exch worker-queqe task-queqe response-queqe ids]}]]
   (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
+  (send ids (fn [_] {}))
   (send worker-queqe (fn [_] '()))
   (send response-queqe (fn [_] '()))
   (send task-queqe (fn [_] '())))

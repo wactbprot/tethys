@@ -37,8 +37,17 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-
+   
+   :model/conf {:json-post-header {:content-type :json
+                                   :socket-timeout 600000 ;; 10 min
+                                   :connection-timeout 600000
+                                   :accept :json}
+                :dev-hub-url "http://localhost:9009"
+                :db-agent-url "http://localhost:9992"
+                :dev-proxy-url "http://localhost:8009"}
+                
    :model/images {:mpds (ig/ref :db/mpds)
+                  :conf (ig/ref :model/conf)
                   :ini {}}
    
    :model/worker {:images (ig/ref :model/images)
@@ -110,11 +119,15 @@
       ini id-set)
      (keyword _id) Mp)))
 
-(defmethod ig/init-key :model/images [_ {:keys [mpds ini]}]
+(defmethod ig/init-key :model/conf [_ conf]
+  
+  conf)
+  
+(defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
   (µ/log ::cont :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
-     (assoc res id (model/up id Container Definitions Exchange)))
+     (assoc res id (model/up id Container Definitions Exchange conf)))
    ini mpds))
 
 (defmethod ig/init-key :model/worker [_ {:keys [images ini]}]

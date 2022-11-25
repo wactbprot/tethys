@@ -30,29 +30,7 @@
 
 (defn stop [] (sys/stop))
 
-;; The derefed e-agent looks like this (keys of the map are
-;; keywords!):
-(comment
-  (deref (e-agent :mpd-ref))
-  {:A {:Type "ref", :Unit "Pa", :Value 100.0},
-   :B "token",
-   :Target_pressure
-   {:Selected 1,
-    :Select [{:value 10.0} {:value 100.0} {:value 1000.0}],
-    :Unit "Pa"},
-   :Ref_gas
-   {:Selected "N2",
-    :Select
-    [{:value "N2", :display "Stickstoff"}
-     {:value "Ar", :display "Argon"}
-     {:value "Ne", :display "Neon"}
-     {:value "Kr", :display "Krypton"}
-     {:value "Xe", :display "Xenon"}
-     {:value "He", :display "Helium"}
-     {:value "H2", :display "Wasserstoff"}],
-    :Ready false},
-   :id :mpd-ref})
-
+(defn image [mpd] (sys/mpd-image mpd))
 
 ;; ## Ctrl-interface
 ;;
