@@ -7,6 +7,7 @@
             [tethys.db :as db]
             [tethys.exchange :as exch]
             [tethys.model :as model]
+            [tethys.response :as resp]
             [tethys.scheduler :as sched]
             [tethys.task :as task]
             [tethys.worker :as work])
@@ -42,6 +43,9 @@
    
    :model/worker {:images (ig/ref :model/images)
                   :ini {}}
+
+   :model/response {:images (ig/ref :model/images)
+                    :ini {}}
    
    :model/task {:db (ig/ref :db/task)
                 :images (ig/ref :model/images)
@@ -120,6 +124,13 @@
      (assoc res id (work/up image images)))
    ini images))
 
+(defmethod ig/init-key :model/response [_ {:keys [images ini]}]
+  (µ/log ::response :message "start system")
+  (reduce
+   (fn [res [id image]]
+     (assoc res id (resp/up image images)))
+   ini images))
+
 (defmethod ig/init-key :model/task [_ {:keys [db images ini]}]
   (µ/log ::task :message "start system")
   (reduce
@@ -153,6 +164,10 @@
 (defmethod ig/halt-key! :model/worker [_ m]
   (µ/log ::worker :message "halt system")
   (run! #(work/down %) m))
+
+(defmethod ig/halt-key! :model/response [_ m]
+  (µ/log ::respons :message "halt system")
+  (run! #(resp/down %) m))
 
 (defmethod ig/halt-key! :model/task [_ m]
   (µ/log ::task :message "halt system")

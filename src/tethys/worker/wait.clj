@@ -1,5 +1,6 @@
 (ns tethys.worker.wait
-  ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"
+    :doc "The wait worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.model :as model]
             [tethys.scheduler :as sched]))

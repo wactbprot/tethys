@@ -41,6 +41,8 @@
 (defn image->task-agent [image] (image :task-queqe))
 (defn image->worker-agent [image] (image :worker-queqe))
 (defn image->exch-agent [image] (-> image :exch))
+(defn image->ids-agent [image] (-> image :ids))
+(defn image->resp-agent [image] (-> image :response-queqe))
 
 (defn images->state-agent [images {:keys [id ndx group]}]
   (-> images
@@ -62,8 +64,10 @@
 
 (defn up [id cont defins exch]
   {:exch (agent (if (map? exch) exch {}))
+   :response-queqe (agent '())
    :worker-queqe (agent '())
    :task-queqe (agent '())
+   :ids (agent {})
    :conts (mapv (fn [{:keys [Ctrl Definition]} ndx]
                   (agent {:ctrl (or (keyword Ctrl) :ready)
                           :state (state-struct Definition :conts id ndx )})) 
@@ -81,5 +85,6 @@
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
   (send worker-queqe (fn [_] '()))
+  (send response-queqe (fn [_] '()))
   (send task-queqe (fn [_] '())))
  
