@@ -9,10 +9,12 @@
 (defn url [{u :dev-hub-url}] u)
 (defn req [{header :json-post-header} task] (assoc header :body (json/write-str task)))
 
-(defn devhub [images {:keys [id] :as task}]
-  (let [image (model/images->image images id)
-        conf  (model/image->conf image)]
+;; ToDo: merge the result into the task in order to ensure that the
+;; position gets not lost.
+(defn devhub [images task]
+  (let [conf  (model/images->conf image task)]
     (try
       (prn (http/post (url conf) (req conf task)))
       (catch Exception e
-        (µ/log ::devhub :message (.getMessage e))))))
+        (µ/log ::devhub :message (.getMessage e))
+        (sched/state-error! (model/images->state-agent images task) task)))))

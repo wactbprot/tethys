@@ -4,6 +4,7 @@
             [libcdb.configure :as cf]))
  
 ;; # Database io functions
+;;
 ;; The database functions used here are simply passed through from
 ;; library [libcdb](https://gitlab1.ptb.de/vaclab/vl-db)
 (defn config [opts] (cf/config opts))
