@@ -15,7 +15,11 @@
   (let [id (keyword id)]
     (-> images id)))
 
-(defn image->conf [image] (-> image :conf))
+(defn image->state-agent [image ndx group-kw]
+  (let [group-kw (keyword group-kw)
+        ndx (Integer. ndx)]
+    (-> image group-kw (nth ndx))))
+
 (defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
 (defn image->task-agent [image] (-> image :task-queqe))
@@ -23,11 +27,7 @@
 (defn image->exch-agent [image] (-> image :exch))
 (defn image->ids-agent [image] (-> image :ids))
 (defn image->resp-agent [image] (-> image :response-queqe))
-
-(defn image->state-agent [image ndx group-kw]
-  (let [group-kw (keyword group-kw)
-        ndx (Integer. ndx)]
-    (-> image group-kw (nth ndx))))
+(defn image->conf [image] (-> image :conf))
 
 (defn images->state-agent [images {:keys [id ndx group]}]
   (-> images

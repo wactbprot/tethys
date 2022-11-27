@@ -8,11 +8,11 @@
             [tethys.worker.wait :as wait]))
 
 (defn dispatch [images {:keys [Action] :as task}]
-  (case (keyword Action)
+  (future (case (keyword Action)
     :wait (wait/wait images task)
     :TCP (devhub/devhub images task)
     :VXI11 (devhub/devhub images task)
-    (µ/log ::dispatch :error "no matching case")))
+    (µ/log ::dispatch :error "no matching case"))))
 
 (defn check [images task] 
   (let [stop-if-delay 1000

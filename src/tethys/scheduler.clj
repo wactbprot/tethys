@@ -14,9 +14,8 @@
             (assoc n :state (mapv (op-fn op sdx pdx) state)))))
 
 (defn state-executed! [a task] (state! a :executed task))
-
 (defn state-ready! [a task] (state! a :ready task))
-
+(defn state-error! [a task] (state! a :error task))
 (defn state-working! [a task] (state! a :working task))
 
 ;; ## Scheduler
