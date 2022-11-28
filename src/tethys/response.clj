@@ -4,7 +4,9 @@
             [clj-http.client :as http]))
 
 
-(defn dispatch [images {:as resp}]
+(defn add [a m] (send a (fn [l] (conj l m))))
+
+(defn dispatch [images {:keys [error ids DocPath ToExchange Result Retry]:as resp}]
   (prn resp))
 
 (defn up [{:keys [response-queqe]} images]
