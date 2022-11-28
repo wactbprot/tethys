@@ -1,6 +1,7 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.db :as db]
+            [tethys.docs :as docs]
             [tethys.model :as model]
             [tethys.system :as sys]
             [tethys.scheduler :as sched]
@@ -17,6 +18,7 @@
 ;;* `e-`... exchange
 ;;* `s-`... state
 ;;* `c-`... container
+;;* `d-`... documents
 
 ;; ## Start, stop and restart system
 ;;
@@ -114,3 +116,15 @@
 ;;
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
 (defn e-agent [mpd] (model/image->exch-agent (sys/mpd-image mpd)))
+
+
+;; ## Documents
+;;
+;; Only the id of the documents (calibration docs, measurement docs)
+;; are stored in a set (see `model`and `docs`namespace).
+(defn d-add [mpd id] (docs/add (images) mpd id))
+
+(defn d-rm [mpd id] (docs/rm (images) mpd id))
+
+(defn d-show [mpd] (docs/ids (images) mpd))
+

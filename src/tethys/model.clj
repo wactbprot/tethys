@@ -11,9 +11,9 @@
 ;; moving parts, agents are used.
 ;;
 ;; This `ns` knows how to pull out thedifferent parts of the mpd `image`. 
-(defn images->image [images id]
-  (let [id (keyword id)]
-    (-> images id)))
+(defn images->image [images mpd]
+  (let [mpd (keyword mpd)]
+    (-> images mpd)))
 
 (defn image->state-agent [image ndx group-kw]
   (let [group-kw (keyword group-kw)
