@@ -36,6 +36,11 @@
   (when (and (map? @e-agt) (map? m))
     (into {} (mapv (fn [[k p]] {k (e-value e-agt p)}) m))))
 
+;; TODO: to function
+(defn to [e-agt m]
+  (prn m))
+
+
 (comment
   (def a (agent {:A {:Type "ref" :Unit "Pa" :Value 100.0},
                  :B "token"}))
