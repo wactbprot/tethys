@@ -117,12 +117,13 @@
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
 (defn e-agent [mpd] (model/image->exch-agent (sys/mpd-image mpd)))
 
-
 ;; ## Documents
 ;;
 ;; Only the id of the documents (calibration docs, measurement docs)
 ;; are stored in a set (see `model`and `docs`namespace).
 (defn d-add [mpd id] (docs/add (images) mpd id))
 (defn d-rm [mpd id] (docs/rm (images) mpd id))
+(defn d-rm-all [mpd] (docs/rm-all (images) mpd))
 (defn d-show [mpd] (docs/ids (images) mpd))
+(defn d-refresh [mpd id-coll] (docs/ids (images) mpd id-coll))
 
