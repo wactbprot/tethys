@@ -40,12 +40,12 @@
 
 ;; Only happy path for the helper functions above.
 (defn dispatch [images {:keys [error ids DocPath ToExchange Result Retry] :as task}]
-  (cond->> task
-    Result (store images)
-    ids (refresh images)
-    Retry (retry images)
-    ToExchange (to-exch images)
-    error (err images)))
+  (future (cond->> task
+            Result (store images)
+            ids (refresh images)
+            Retry (retry images)
+            ToExchange (to-exch images)
+            error (err images))))
 
 (defn add [a m] (send a (fn [l] (conj l m))))
 
@@ -57,10 +57,10 @@
                          (dispatch images (first l))
                          (-> l rest)))))]
     (set-error-handler! response-queqe (fn [a ex]
-                                       (µ/log ::error-handler :error (str "error occured: " ex))
-                                       (Thread/sleep 1000)
-                                       (µ/log ::error-handler :message "try to restart agent")
-                                       (restart-agent a @a)))
+                                         (µ/log ::error-handler :error (str "error occured: " ex))
+                                         (Thread/sleep 1000)
+                                         (µ/log ::error-handler :message "try to restart agent")
+                                         (restart-agent a @a)))
     (add-watch response-queqe :queqe w)))
 
 (defn down [[_ wq]]

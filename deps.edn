@@ -12,7 +12,12 @@
 
             :docs {:extra-deps {wactbprot/marginalia {:local/root "../marginalia"}}
                   :main-opts ["-m" "marginalia.core" "-A" "dev"]
-                  :exec-fn marginalia.core/-main}
+                   :exec-fn marginalia.core/-main}
+            
+            :hiera {:deps {io.github.greglook/clj-hiera {:git/tag "2.0.0", :git/sha "b14e514"}}
+                    :exec-fn hiera.main/graph
+                    :exec-args {:layout :horizontal
+                                :output "."}}
             
             :dev {:extra-paths ["resources" "src"]
                   

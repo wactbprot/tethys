@@ -125,5 +125,5 @@
 (defn d-rm [mpd id] (docs/rm (images) mpd id))
 (defn d-rm-all [mpd] (docs/rm-all (images) mpd))
 (defn d-show [mpd] (docs/ids (images) mpd))
-(defn d-refresh [mpd id-coll] (docs/ids (images) mpd id-coll))
+(defn d-refresh [mpd id-coll] (docs/refresh (images) mpd id-coll))
 

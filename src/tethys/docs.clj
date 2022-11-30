@@ -45,7 +45,7 @@
 (defn req [{header :json-post-header} doc-path result]
   (assoc header :body (json/write-str {:Result result :DocPath doc-path})))
 
-(defn store [images {:keys [id DocPath Result] :as task}]
+(defn store [images {:keys [DocPath Result] :as task}]
   (µ/log ::store :message "initiate to store data")
   (let [conf (model/images->conf images task)
         doc-ids (ids images task)
