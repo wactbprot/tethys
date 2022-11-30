@@ -87,14 +87,14 @@
 (defn build [image db exch task]
   (let [f (db/task-fn db)
         {:keys [TaskName Use Replace] :as task} task
-        {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-        e-map (exch/from exch FromExchange)]
+        {:keys [Defaults] :as task} (merge task (f TaskName))
+        e-map (exch/from exch task)]
     (assemble task Replace Use Defaults e-map)))
     
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
-(defn up [db  {:keys [worker-queqe task-queqe exch ] :as image}]
+(defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
   (let [w (fn [_ t-agt _ tq]
             (when (seq tq)

@@ -5,14 +5,16 @@
             [tethys.model :as model]
             [tethys.scheduler :as sched]
             [tethys.worker.devhub :as devhub]
+            [tethys.worker.exchange :as exchange]
             [tethys.worker.wait :as wait]))
 
 (defn dispatch [images {:keys [Action] :as task}]
-  (future (case (keyword Action)
-    :wait (wait/wait images task)
-    :TCP (devhub/devhub images task)
-    :VXI11 (devhub/devhub images task)
-    (µ/log ::dispatch :error "no matching case"))))
+  (case (keyword Action)
+     :wait (wait/wait images task)
+     :TCP (devhub/devhub images task)
+     :VXI11 (devhub/devhub images task)
+     :writeExchange (exchange/write images task)
+    (µ/log ::dispatch :error "no matching case")))
 
 (defn check [images task] 
   (let [stop-if-delay 1000
@@ -20,7 +22,7 @@
         e-agt (model/images->exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
-        (dispatch images task)
+        (future (dispatch images task))
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check :message "state set by only-if-not")
@@ -36,7 +38,7 @@
             (send wq (fn [l]
                        (when (seq l)
                          (check images (first l))
-                         (-> l rest)))))]
+                         (or (-> l rest) '())))))]
     (set-error-handler! worker-queqe (fn [a ex]
                                        (µ/log ::error-handler :error (str "error occured: " ex))
                                        (Thread/sleep 1000)

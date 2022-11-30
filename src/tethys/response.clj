@@ -9,43 +9,31 @@
 
 ;; The `id` is the mpd id comming from the task; `ids` are the doc-ids
 ;; comming from the response (devproxy).
-(defn refresh [images {:keys [id ids] :as resp}]
+(defn refresh [images {:keys [id ids] :as task}]
   (µ/log ::refresh :message "trigger ids refresh")
   (docs/refresh images id ids)
-  resp)
+  task)
 
-(defn store [images resp]
+(defn store [images task]
   (µ/log ::refresh :message "trigger store results")
-  (docs/store images resp)
-  resp)
+  (docs/store images task)
+  task)
 
-(defn retry [images resp]
-  (µ/log ::refresh :message "trigger retry")
-  (let [s-agt (model/images->state-agent images resp)]
-    (sched/state-ready! s-agt resp)
-    resp))
-
-
-(defn to-exch [images resp]
+(defn to-exch [images task]
   (µ/log ::refresh :message "write data to exchange interface")
-  (let [e-agt (model/images->exch-agent images resp)]
-    (exch/to e-agt resp)
-    resp))
-
-(defn err [images {:keys [error] :as resp}]
-  (µ/log ::refresh :error (str error))
-  (let [s-agt (model/images->state-agent images resp)]
-    (sched/state-error! s-agt resp)
-    resp))
+  (let [e-agt (model/images->exch-agent images task)]
+    (exch/to e-agt task)
+    task))
 
 ;; Only happy path for the helper functions above.
 (defn dispatch [images {:keys [error ids DocPath ToExchange Result Retry] :as task}]
-  (future (cond->> task
-            Result (store images)
-            ids (refresh images)
-            Retry (retry images)
-            ToExchange (to-exch images)
-            error (err images))))
+  (let [s-agt (model/images->state-agent images task)]
+     (cond->> task
+              Result (store images)
+              ids (refresh images)
+              ToExchange (to-exch images))
+            Retry (sched/state-ready! s-agt task)
+            error (sched/state-error! s-agt task)))
 
 (defn add [a m] (send a (fn [l] (conj l m))))
 
@@ -54,7 +42,7 @@
   (let [w (fn [_ rq _ _]
             (send rq (fn [l]
                        (when (seq l)
-                         (dispatch images (first l))
+                         (future (dispatch images (first l)))
                          (-> l rest)))))]
     (set-error-handler! response-queqe (fn [a ex]
                                          (µ/log ::error-handler :error (str "error occured: " ex))

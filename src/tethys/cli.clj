@@ -27,9 +27,11 @@
 
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
-(defn start [id-set]
-  (sys/init id-set)
-  (mpds))
+(defn start
+  ([] (start nil))
+  ([id-set]
+   (sys/init id-set)
+  (mpds)))
 
 (defn stop [] (sys/stop))
 
@@ -116,6 +118,9 @@
 ;;
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
 (defn e-agent [mpd] (model/image->exch-agent (sys/mpd-image mpd)))
+(defn e-interface [mpd] @(e-agent mpd))
+(defn e-error [mpd] (agent-error (e-agent mpd)))
+(defn e-restart [mpd] (restart-agent (e-agent mpd)))
 
 ;; ## Documents
 ;;
