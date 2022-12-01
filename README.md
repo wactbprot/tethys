@@ -34,3 +34,9 @@ nice option to understand the system during runtime.
 ```shell
 clojure -M:docs
 ```
+
+# generate namespace graph
+
+```shell
+clj -X:hiera
+```
