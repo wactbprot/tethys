@@ -11,8 +11,9 @@
 (defn write [images task]
   (let [e-agt (model/images->exch-agent images task)
         s-agt (model/images->state-agent images task)]
-    (prn (exch/to e-agt task))
-    
-    (if (agent-error e-agt)
-      (sched/state-error! s-agt task)
-      (sched/state-ready! s-agt task))))
+    (exch/to e-agt task)
+    (if-let[ex (agent-error e-agt)]
+      (do
+        (µ/log ::write :error (str "error occured: " ex))
+        (sched/state-error! s-agt task))
+      (sched/state-executed! s-agt task))))

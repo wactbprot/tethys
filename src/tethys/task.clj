@@ -5,6 +5,7 @@
             [clojure.string :as string]
             [java-time.api :as jt]
             [tethys.db :as db]
+            [tethys.model :as model]
             [tethys.exchange :as exch]))
 
 (defn get-time-object [] (jt/local-time))
@@ -90,7 +91,13 @@
         {:keys [Defaults] :as task} (merge task (f TaskName))
         e-map (exch/from exch task)]
     (assemble task Replace Use Defaults e-map)))
-    
+
+(defn error [a ex]
+  (µ/log ::error-handler :error (str "error occured: " ex))
+  (Thread/sleep 1000)
+  (µ/log ::error-handler :error "try restart agent")
+  (restart-agent a @a))
+
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
@@ -102,12 +109,8 @@
                             (let [task (build image db exch (first l))]
                               (send worker-queqe (fn [l] (conj l task)))
                               (-> l rest))))))]
-    (set-error-handler! task-queqe (fn [a ex]
-                                     (µ/log ::error-handler :error (str "error occured: " ex))
-                                     (Thread/sleep 1000)
-                                     (µ/log ::error-handler :error "try restart agent")
-                                     (restart-agent a @a)))
-    (add-watch task-queqe :queqe w)))
+    (add-watch task-queqe :queqe w))
+  (set-error-handler! task-queqe model/error))
 
 (defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")

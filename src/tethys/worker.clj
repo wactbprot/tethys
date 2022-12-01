@@ -22,7 +22,8 @@
         e-agt (model/images->exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
-        (future (dispatch images task))
+        (do
+          (dispatch images task))
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check :message "state set by only-if-not")
@@ -34,22 +35,17 @@
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
-  (let [w (fn [_ wq _ _]
-            (send wq (fn [l]
-                       (when (seq l)
-                         (check images (first l))
-                         (or (-> l rest) '())))))]
-    (set-error-handler! worker-queqe (fn [a ex]
-                                       (µ/log ::error-handler :error (str "error occured: " ex))
-                                       (Thread/sleep 1000)
-                                       (µ/log ::error-handler :message "try to restart agent")
-                                       (restart-agent a @a)))
-    (add-watch worker-queqe :queqe w)))
+  (let [w (fn [_ w-agt _ wq]
+            (when (seq wq)
+              (future (check images (first wq)))
+              (send w-agt (fn [l] (-> l rest)))))]
+    (add-watch worker-queqe :queqe w))
+  (set-error-handler! worker-queqe model/error))
 
-(defn down [[_ wq]]
+(defn down [[_ w-agt]]
   (µ/log ::down :message "shut down worker queqe agent")
-  (remove-watch wq :queqe)
-  (send wq (fn [_] [])))
+  (remove-watch w-agt :queqe)
+  (send w-agt (fn [_] '())))
 
 (comment
   ;; the futures should be kept with a hash key:

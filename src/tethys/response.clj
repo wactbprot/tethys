@@ -44,11 +44,7 @@
                        (when (seq l)
                          (future (dispatch images (first l)))
                          (-> l rest)))))]
-    (set-error-handler! response-queqe (fn [a ex]
-                                         (µ/log ::error-handler :error (str "error occured: " ex))
-                                         (Thread/sleep 1000)
-                                         (µ/log ::error-handler :message "try to restart agent")
-                                         (restart-agent a @a)))
+    (set-error-handler! response-queqe model/error)
     (add-watch response-queqe :queqe w)))
 
 (defn down [[_ wq]]
