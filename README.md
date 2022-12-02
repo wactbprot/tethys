@@ -35,17 +35,20 @@ nice option to understand the system during runtime.
 clojure -M:docs
 ```
 
+## find outdated deps
+
+```shell
+clojure -M:outdated
+```
+=======
+<img src="namespaces.png" alt="tethys ns" id="ns" width="900px">
+
 # generate namespace graph
 
 ```shell
 clj -X:hiera
 ```
 
+
 <img src="namespace.png" alt="tethys ns" id="ns" width="900px">
 
-
-## find outdated deps
-
-```shell
-clojure -M:outdated
-```
