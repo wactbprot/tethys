@@ -2,7 +2,6 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]))
 
-
 ;; ## State manipulation
 
 (defn op-fn [op sdx pdx]

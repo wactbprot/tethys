@@ -1,8 +1,15 @@
 (ns tethys.model
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-    (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [com.brunobonacci.mulog :as µ]))
 
 (defn- flattenv [v] (-> v flatten vec))
+
+(defn error [a ex]
+  (µ/log ::error-handler :error (str "error occured: " ex))
+  (Thread/sleep 1000)
+  (µ/log ::error-handler :message "try to restart agent")
+  (restart-agent a @a))
 
 ;; # Model
 ;;

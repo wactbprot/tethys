@@ -64,7 +64,7 @@
 
 
 (defn to [e-agt {:keys [ToExchange ExchangePath Value] :as task}]
-  (send-off e-agt (fn [m]
+  (send e-agt (fn [m]
                 (-> m
                     (merge ToExchange)
                     (merge (path-value->map ExchangePath Value))))))
