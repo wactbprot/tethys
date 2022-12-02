@@ -40,3 +40,5 @@ clojure -M:docs
 ```shell
 clj -X:hiera
 ```
+
+<img src="namespace.png" alt="tethys ns" id="ns" width="900px">
