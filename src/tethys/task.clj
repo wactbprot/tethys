@@ -42,8 +42,32 @@
 
 (defn replace-map [s r]
   (reduce (fn [res [k v]]
-            (string/replace res  (key->pattern k v) (val->safe-val v)))
+            (string/replace res (key->pattern k v) (val->safe-val v)))
           s r))
+
+
+;; ## Use
+
+;; The `Use` construct allows the encoding of multible entries in one
+;; task. (see task_test.clj for an example)
+(defn singular-kw [kw] (keyword (string/join "" (butlast (name kw)))))
+
+(defn filter-match [m kw] (filterv (fn [[k v]] (= kw k)) m))
+
+(defn replace-vec [task use-map]
+  (filterv some? (mapv (fn [[k v]]
+                         (let [kw (singular-kw k)
+                               v (-> (k task)
+                                     (filter-match (keyword v))
+                                     first)]
+                           (when (vector? v)
+                             {kw (second v)})))
+                       use-map)))
+
+(defn resolve-use [task use-map]
+  (reduce (fn [ini m]
+            (merge ini m))
+          task (replace-vec task use-map)))
 
 (defn assemble
   ([task] (assemble task {} {} {} {}))
@@ -51,45 +75,39 @@
   ([task Replace Use] (assemble task Replace Use {} {} ))
   ([task Replace Use Defaults] (assemble task Replace Use Defaults {}))
   ([task Replace Use Defaults FromExchange]
-   (->  task
-        (dissoc  :Replace :Use :Defaults :FromExchange)
-        (json/write-str)
-        (replace-map (kw-map->str-map Replace))
-        (replace-map (kw-map->str-map FromExchange))
-        (replace-map (globals))
-        (replace-map (kw-map->str-map Defaults))
-        (json/read-str :key-fn keyword))))
-
-;; The `up` checks if the `task-queue` (a list) contains
-;; elements. Returns `m` (the agent) if not. If `:task-queue` is not
-;; empty it should contain a map like this:
-(comment
-  {:TaskName "PPC_Faulhaber_Servo-comp_ini",
-   :id :mpd-ppc-gas_dosing,
-   :group :cont,
-   :ndx 0,
-   :sdx 3,
-   :pdx 0,
-   :is :ready})
+   (-> task
+       (resolve-use Use)
+       (dissoc  :Replace :Use :Defaults :FromExchange)
+       (json/write-str)
+       (replace-map (kw-map->str-map Replace))
+       (replace-map (kw-map->str-map FromExchange))
+       (replace-map (globals))
+       (replace-map (kw-map->str-map Defaults))
+       (json/read-str :key-fn keyword))))
 
 
+(defn build [image db exch task]
+  (let [f (db/task-fn db)
+        {:keys [TaskName Use Replace] :as task} task
+        {:keys [Defaults] :as task} (merge task (f TaskName))
+        e-map (exch/from exch task)]
+    (assemble task Replace Use Defaults e-map)))
+    
+;; The `up` function provides a queqe made of an agent made of a
+;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
-  (let [f (db/task-fn db)
-        w (fn [_ t-agt _ _]
-            (send t-agt (fn [l]
-                          (if (seq l)
-                            (let [{:keys [TaskName Use Replace] :as task} (first l)
-                                  {:keys [Defaults FromExchange] :as task} (merge task (f TaskName))
-                                  e-map (exch/from exch FromExchange)
-                                  task (assemble task Replace Use Defaults e-map)]
+  (let [w (fn [_ t-agt _ tq]
+            (when (seq tq)
+              (send t-agt (fn [l]
+                            (let [task (build image db exch (first l))]
                               (send worker-queqe (fn [l] (conj l task)))
-                              (-> l rest))
-                            l))))]
+                              (-> l rest))))))]
     (set-error-handler! task-queqe (fn [a ex]
                                      (µ/log ::error-handler :error (str "error occured: " ex))
                                      (Thread/sleep 1000)
+                                     (µ/log ::error-handler :error "try restart agent")
                                      (restart-agent a @a)))
     (add-watch task-queqe :queqe w)))
 

@@ -3,45 +3,47 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.exchange :as exch]
             [tethys.model :as model]
-            [tethys.system :as sys]
-            [tethys.scheduler :as sched]))
+            [tethys.scheduler :as sched]
+            [tethys.worker.devhub :as devhub]
+            [tethys.worker.exchange :as exchange]
+            [tethys.worker.wait :as wait]))
 
-(defn dispatch [images task]
-  (prn task))
+(defn dispatch [images {:keys [Action] :as task}]
+  (case (keyword Action)
+     :wait (wait/wait images task)
+     :TCP (devhub/devhub images task)
+     :VXI11 (devhub/devhub images task)
+     :writeExchange (exchange/write images task)
+    (µ/log ::dispatch :error "no matching case")))
 
-(defn state-agent [images {:keys [id ndx group] :as task}]
-  (model/state-agent (model/images->image images id) ndx group))
-
-(defn exch-agent [images task]
-  (model/exch-agent (images->image images task)))
-
-(defn check-precond-and-dispatch [images task] 
+(defn check [images task] 
   (let [stop-if-delay 1000
-        s-agt (state-agent images task)
-        e-agt (exch-agent images task)]    
+        s-agt (model/images->state-agent images task)
+        e-agt (model/images->exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
-        (dispatch images task)
+        (future (dispatch images task))
         (do
           (Thread/sleep stop-if-delay)
-          (µ/log ::check-precond-and-dispatch :message "state set by only-if-not")
-          (send s-agt (fn [m] (sched/set-op-at-pos :executed m task)))))
+          (µ/log ::check :message "state set by only-if-not")
+          (sched/state-executed! s-agt task)))
       (do
         (Thread/sleep stop-if-delay)
-        (µ/log ::check-precond-and-dispatch :message "state set by run-if")
-        (send s-agt (fn [m] (sched/set-op-at-pos :ready m task)))))))
+        (µ/log ::check :message "state set by run-if")
+        (sched/state-ready! s-agt task)))))
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
   (let [w (fn [_ wq _ _]
             (send wq (fn [l]
-                          (when (seq l)
-                            (check-precond-and-dispatch images (first l))
-                            (-> l rest)))))]
+                       (when (seq l)
+                         (check images (first l))
+                         (or (-> l rest) '())))))]
     (set-error-handler! worker-queqe (fn [a ex]
-                            (µ/log ::error-handler :error (str "error occured: " ex))
-                            (Thread/sleep 1000)
-                            (restart-agent a @a)))
+                                       (µ/log ::error-handler :error (str "error occured: " ex))
+                                       (Thread/sleep 1000)
+                                       (µ/log ::error-handler :message "try to restart agent")
+                                       (restart-agent a @a)))
     (add-watch worker-queqe :queqe w)))
 
 (defn down [[_ wq]]

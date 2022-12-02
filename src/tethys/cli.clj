@@ -1,11 +1,15 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.db :as db]
+            [tethys.docs :as docs]
             [tethys.model :as model]
             [tethys.system :as sys]
-            [tethys.task :as task]))
+            [tethys.scheduler :as sched]
+            [tethys.task :as task]
+            [tethys.worker :as work]))
 
 ;; # cli
+;;
 ;; This is the tethys **c**ommand **l**ine **i**nterface.
 ;; Some abbreviations:
 ;;
@@ -14,6 +18,7 @@
 ;;* `e-`... exchange
 ;;* `s-`... state
 ;;* `c-`... container
+;;* `d-`... documents
 
 ;; ## Start, stop and restart system
 ;;
@@ -22,92 +27,56 @@
 
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
-(defn start [id-set]
-  (sys/init id-set)
-  (mpds))
+(defn start
+  ([] (start nil))
+  ([id-set]
+   (sys/init id-set)
+  (mpds)))
 
 (defn stop [] (sys/stop))
 
-;; ## Start, stop container
-(defn ctrl [a op] (send a (fn [m] (assoc m :ctrl op))))
+(defn images [] (:model/images @sys/system))
 
-;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (model/cont-agent (sys/mpd-image mpd) ndx))
-
-;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (model/exch-agent (sys/mpd-image mpd)))
-
-;; The derefed e-agent looks like this (keys of the map are
-;; keywords!):
-(comment
-  
-  (deref (e-agent :mpd-ref))
-  {:A {:Type "ref", :Unit "Pa", :Value 100.0},
-   :B "token",
-   :Target_pressure
-   {:Selected 1,
-    :Select [{:value 10.0} {:value 100.0} {:value 1000.0}],
-    :Unit "Pa"},
-   :Ref_gas
-   {:Selected "N2",
-    :Select
-    [{:value "N2", :display "Stickstoff"}
-     {:value "Ar", :display "Argon"}
-     {:value "Ne", :display "Neon"}
-     {:value "Kr", :display "Krypton"}
-     {:value "Xe", :display "Xenon"}
-     {:value "He", :display "Helium"}
-     {:value "H2", :display "Wasserstoff"}],
-    :Ready false},
-   :id :mpd-ref})
-
+(defn image [mpd] (sys/mpd-image mpd))
 
 ;; ## Ctrl-interface
 ;;
 ;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
+
+;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
+(defn c-agent [mpd ndx] (model/image->cont-agent (sys/mpd-image mpd) ndx))
+
+;; ## Start, stop container
+(defn ctrl [a op] (sched/ctrl! a op))
 (defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
 (defn c-mon [mpd ndx] (ctrl (c-agent mpd ndx) :mon))
 (defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
 
 ;; ## Set container state
 ;;
-;; The function `set-all-pos-ready` allows the direct setting of `:is`
-;; verbs for a given state.
-(defn- set-at-pos [state sdx pdx op]
-  (mapv (fn [{s :sdx p :pdx :as m}]
-          (if (and (= s sdx) (= p pdx))
-            (assoc m :is op)
-            m))
-        state))
-
-(defn- state! [a sdx pdx op]
-  (send a (fn [{:keys [state] :as m}]
-            (assoc m :state (set-at-pos state sdx pdx op)))))
+(defn- state! [a op sdx pdx]
+  (sched/state! a op (struct model/state nil nil nil sdx pdx op)))
 
 ;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd`
 (defn s-ready [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :ready))
+  (state! (c-agent mpd ndx) :ready sdx pdx))
 
 (defn s-exec  [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :executed))
+  (state! (c-agent mpd ndx) :executed sdx pdx))
 
 (defn s-work [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :working))
+  (state! (c-agent mpd ndx) :working sdx pdx))
 
 (defn s-error [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) sdx pdx :error))
-
+  (state! (c-agent mpd ndx) :error sdx pdx))
 
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (sys/mpd-task-agent mpd))
-
+(defn t-agent [mpd] (model/image->task-agent (sys/mpd-image mpd)))
 (defn t-queqe [mpd] @(t-agent mpd))
-
 (defn t-error [mpd] (agent-error (t-agent mpd)))
-
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
 
   ;; Get a task from the database and resole a `replace-map` by means
@@ -127,16 +96,39 @@
    "Port" "@port",
    "Value" ["UNI,0\n" "" "PR1\n" ""]})
 
-(defn t-resolve [task-name replace-map]
-  (let [f (db/task-fn (:db/task @sys/system))]
-    (task/assemble (f task-name) replace-map)))
-  
+(defn t-resolve [task-name replace-map use-map]
+  (let [f (db/task-fn (:db/task @sys/system))
+        {:keys [Defaults] :as task} (f task-name)]
+    (task/assemble task  replace-map use-map Defaults)))
+
+;; `t-run` uses the always present `mpd-ref` image.
+(defn t-run [task-name replace-map use-map]
+  (let [task (t-resolve task-name replace-map use-map)
+        task (merge task (struct model/state :mpd-ref :conts 0 0 0))]
+    (work/check (images) task)))
 
 ;; ## Worker
-(defn w-agent [mpd] (sys/mpd-work-agent mpd))
-
+(defn w-agent [mpd] (model/image->worker-agent (sys/mpd-image mpd)))
 (defn w-queqe [mpd] @(w-agent mpd))
-
 (defn w-error [mpd] (agent-error (w-agent mpd)))
-
 (defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
+
+
+;; ## Exchange interface
+;;
+;; Get the `agent` of a mpd by `(e-agent mpd)`
+(defn e-agent [mpd] (model/image->exch-agent (sys/mpd-image mpd)))
+(defn e-interface [mpd] @(e-agent mpd))
+(defn e-error [mpd] (agent-error (e-agent mpd)))
+(defn e-restart [mpd] (restart-agent (e-agent mpd)))
+
+;; ## Documents
+;;
+;; Only the id of the documents (calibration docs, measurement docs)
+;; are stored in a set (see `model`and `docs`namespace).
+(defn d-add [mpd id] (docs/add (images) mpd id))
+(defn d-rm [mpd id] (docs/rm (images) mpd id))
+(defn d-rm-all [mpd] (docs/rm-all (images) mpd))
+(defn d-show [mpd] (docs/ids (images) mpd))
+(defn d-refresh [mpd id-coll] (docs/refresh (images) mpd id-coll))
+

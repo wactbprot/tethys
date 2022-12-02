@@ -7,6 +7,7 @@
             [tethys.db :as db]
             [tethys.exchange :as exch]
             [tethys.model :as model]
+            [tethys.response :as resp]
             [tethys.scheduler :as sched]
             [tethys.task :as task]
             [tethys.worker :as work])
@@ -36,12 +37,24 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-
+   
+   :model/conf {:json-post-header {:content-type :json
+                                   :socket-timeout 600000 ;; 10 min
+                                   :connection-timeout 600000
+                                   :accept :json}
+                :dev-hub-url "http://localhost:9009"
+                :db-agent-url "http://localhost:9992"
+                :dev-proxy-url "http://localhost:8009"}
+                
    :model/images {:mpds (ig/ref :db/mpds)
+                  :conf (ig/ref :model/conf)
                   :ini {}}
    
    :model/worker {:images (ig/ref :model/images)
                   :ini {}}
+
+   :model/response {:images (ig/ref :model/images)
+                    :ini {}}
    
    :model/task {:db (ig/ref :db/task)
                 :images (ig/ref :model/images)
@@ -64,6 +77,7 @@
                             :name-mangling false}]}})
 
 ;; # System
+;;
 ;; The entire system is stored in an `atom` in the
 ;; `tethys.system` (this) namespace.
 (defonce system  (atom {}))
@@ -72,6 +86,7 @@
 ;; multimethods.
 ;;
 ;; ## System up multimethods
+;;
 ;; The `init-key`s methods **read a
 ;; configuration** and **return an implementation**.
 (defmethod ig/init-key :log/mulog [_ opts]
@@ -104,11 +119,15 @@
       ini id-set)
      (keyword _id) Mp)))
 
-(defmethod ig/init-key :model/images [_ {:keys [mpds ini]}]
+(defmethod ig/init-key :model/conf [_ conf]
+  
+  conf)
+  
+(defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
   (µ/log ::cont :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
-     (assoc res id (model/up id Container Definitions Exchange)))
+     (assoc res id (model/up id Container Definitions Exchange conf)))
    ini mpds))
 
 (defmethod ig/init-key :model/worker [_ {:keys [images ini]}]
@@ -116,6 +135,13 @@
   (reduce
    (fn [res [id image]]
      (assoc res id (work/up image images)))
+   ini images))
+
+(defmethod ig/init-key :model/response [_ {:keys [images ini]}]
+  (µ/log ::response :message "start system")
+  (reduce
+   (fn [res [id image]]
+     (assoc res id (resp/up image images)))
    ini images))
 
 (defmethod ig/init-key :model/task [_ {:keys [db images ini]}]
@@ -133,6 +159,7 @@
    ini images))
 
 ;; ## System down multimethods
+;;
 ;; The system may be **shut down** by
 ;; `halt-key!` multimethods.  The `halt-keys!` methods **read in the
 ;; implementation** and shut down in a contolled way. This is a pure
@@ -151,6 +178,10 @@
   (µ/log ::worker :message "halt system")
   (run! #(work/down %) m))
 
+(defmethod ig/halt-key! :model/response [_ m]
+  (µ/log ::respons :message "halt system")
+  (run! #(resp/down %) m))
+
 (defmethod ig/halt-key! :model/task [_ m]
   (µ/log ::task :message "halt system")
   (run! #(task/down %) m))
@@ -164,7 +195,7 @@
   (reset! system {}))
 
 ;; ## Helper functions
-
+;;
 ;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
 ;; keyword.
 (defn mpd-image [mpd] 

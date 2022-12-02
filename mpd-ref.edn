@@ -69,7 +69,8 @@
   [
    ;; Containers are fixed sequences of things to do. 
    ;; In opposit to definitions containers have no conditions structure.
-   ;; First container:
+
+   ;; 1. container:
    {:Description "Container just waits parallel and sequential.",
     ;; The ctrl endpoint of the first container.
     ;; All values are ok. The values start, stop and mon will start stop and mon.
@@ -99,14 +100,16 @@
      [{:TaskName "Common-wait", :Replace {:%waittime 2000}}]
      ;; all together should take less than 1s
      ]}
-   ;; second container
+
+   ;; 2. container
    {:Description "Container with one task only",
     :Ctrl "void",
     :Title "container with single task",
     :Element [ "Target_pressure"],
     :Definition
     [[{:TaskName "Common-wait", :Replace {:%waittime 1000}}]]}
-   ;; third container
+
+   ;; 3. container
    {:Description "Show case select feature",
     :Ctrl "void",
     :Title "choose definition, run it",
@@ -114,6 +117,7 @@
     :Definition
     [[{:TaskName "Common-select_definition",
        :Replace {:%definitionclass "wait"}}]]}
+
    ;; 4. container
    {:Description "Run a mpd (first container of ref).",
     :Ctrl "void",
@@ -138,6 +142,7 @@
     :Element []
     :Definition [
                  [{:TaskName "Common-anselm_get_dut_max"}]]}
+
    ;; 7. container
    {:Description "Test date and time and the ability to parallel write to database docs."
     :Ctrl "void"
@@ -156,19 +161,7 @@
     :Title "message"
     :Element []
     :Definition [[{:TaskName "Common-message"
-                   :Replace {:%message "Lorem ipsum dolor sit amet,
-                 consetetur sadipscing elitr, sed diam nonumy eirmod
-                 tempor invidunt ut labore et dolore magna aliquyam
-                 erat, sed diam voluptua. At vero eos et accusam et
-                 justo duo dolores et ea rebum. Stet clita kasd
-                 gubergren, no sea takimata sanctus est Lorem ipsum
-                 dolor sit amet. Lorem ipsum dolor sit amet,
-                 consetetur sadipscing elitr, sed diam nonumy eirmod
-                 tempor invidunt ut labore et dolore magna aliquyam
-                 erat, sed diam voluptua. At vero eos et accusam et
-                 justo duo dolores et ea rebum. Stet clita kasd
-                 gubergren, no sea takimata sanctus est Lorem ipsum
-                 dolor sit amet."}}]]}
+                   :Replace {:%message "Lorem ipsum dolor sit amet."}}]]}
 
    ;; 9. container
    {:Description "Add and remove documents."
@@ -178,6 +171,17 @@
     :Definition [
                  [{:TaskName "Common-gen_state_doc"}]
                  [{:TaskName "Common-rm_db_docs"}]]}
+
+   ;; 10. container
+   {:Description "Write exchange."
+    :Ctrl "ready"
+    :Title "."
+    :Element []
+    :Definition [
+                 [{:TaskName "Common-exchange_value"
+                   :Replace {"@exchpath" "C"
+                             "@value" "done"}}]
+                 ]}
    ] ;;
 
   ;; -------------------------------------------------------

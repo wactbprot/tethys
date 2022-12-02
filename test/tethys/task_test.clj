@@ -72,4 +72,26 @@
     (is (= "{\"Port\": \"@timepath\"}" (replace-map "{\"Port\": \"@timepath\"}", {"@time" "nonono!"})))))
 
 
-
+(comment
+  (def task {:Port "@port",
+             :TaskName "SE3_PPC4-init",
+             :Comment "Initialisiert PPC",
+             :Values
+             {:stop "ABORT\n",
+              :clear "*CLS\n",
+              :set_pa "UNIT PA\n",
+              :set_static "MODE 0\n",
+              :set_dynamic "MODE 1\n"},
+             :Action "@acc",
+             :PostProcessing ["ok = _x ?true:false;"],
+             :Host "@host"})
+  (def use-map {:Values "stop"})
+  (assemble task {} use-map)
+  ;; gives
+  {:Port "@port",
+   :TaskName "SE3_PPC4-init",
+   :Comment "Initialisiert PPC",
+   :Action "@acc",
+   :PostProcessing ["ok = _x ?true:false;"],
+   :Value "ABORT\n" ;;<- !
+   :Host "@host"})

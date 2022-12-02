@@ -29,20 +29,49 @@
     (ok? e-agt p) false))
 
 
-;; Builds a map by replacing the values of the input map `m`. The
+;; ## Read from Exchange
+;;
+;; Builds a map by replacing the values of the input map `FromExchange`. The
 ;; replacements are gathered from `e-agt` the complete exchange
 ;;
-(defn from [e-agt m]
-  (when (and (map? @e-agt) (map? m))
-    (into {} (mapv (fn [[k p]] {k (e-value e-agt p)}) m))))
+(defn from [e-agt {:keys [FromExchange] :as task}]
+  (when (and (map? @e-agt) (map? FromExchange))
+    (into {} (mapv (fn [[k p]] {k (e-value e-agt p)}) FromExchange))))
 
 (comment
   (def a (agent {:A {:Type "ref" :Unit "Pa" :Value 100.0},
                  :B "token"}))
 
-  (from a {:%check "A"})
+  (from a {:FromExchange {:%check "A"}})
   {:%check {:Type "ref", :Unit "Pa", :Value 100.0}}
-  (from a {:%check "A.Type"})
+  (from a {:FromExchange {:%check "A.Type"}})
   {:%check "ref"}
-  (from a {:%check "C"})
+  (from a {:FromExchange {:%check "C"}})
   {:%check nil})
+
+;; ## Write to Exchange
+;;
+;; There are two mechanisms which enable writing to the exchange interface:
+;;
+;; * `ToExchange` 
+;; * `ExchangePath` and `Value`
+;;
+;; TODO: maybe the value has to be treated (e.g. ensure keyword keys)
+(defn path-value->map [path value]
+  (when (string? path)
+    (let [v (mapv keyword (string/split path #"\."))]
+      (assoc-in {} v value))))
+
+
+(defn to [e-agt {:keys [ToExchange ExchangePath Value] :as task}]
+  (send-off e-agt (fn [m]
+                (-> m
+                    (merge ToExchange)
+                    (merge (path-value->map ExchangePath Value))))))
+
+(comment
+  (def t {:ToExchange {:Filling_Pressure_current {:Value 100 :Unit
+                                                  "mbar"}
+                       :Filling_Pressure_Dev {:Value 0.5
+                                              :Unit "1"}
+                       :Filling_Pressure_Ok {:Ready false}}}))
