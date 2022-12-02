@@ -41,4 +41,4 @@ clojure -M:docs
 clj -X:hiera
 ```
 
-<img src="namespace.png" alt="tethys ns" id="ns" width="900px">
+<img src="namespaces.png" alt="tethys ns" id="ns" width="900px">
