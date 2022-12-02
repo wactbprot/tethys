@@ -37,6 +37,12 @@
 
 (defn add [a m] (send a (fn [l] (conj l m))))
 
+(defn error [a ex]
+  (µ/log ::error-handler :error (str "error occured: " ex))
+  (Thread/sleep 1000)
+  (µ/log ::error-handler :error "try restart agent")
+  (restart-agent a @a))
+
 (defn up [{:keys [response-queqe]} images]
   (µ/log ::up :message "start up response queqe agent")
   (let [w (fn [_ rq _ _]
@@ -44,7 +50,7 @@
                        (when (seq l)
                          (future (dispatch images (first l)))
                          (-> l rest)))))]
-    (set-error-handler! response-queqe model/error)
+    (set-error-handler! response-queqe error)
     (add-watch response-queqe :queqe w)))
 
 (defn down [[_ wq]]

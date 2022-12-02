@@ -5,8 +5,7 @@
             [clojure.string :as string]
             [java-time.api :as jt]
             [tethys.db :as db]
-            [tethys.model :as model]
-            [tethys.exchange :as exch]))
+            [tethys.exchange :as exchange]))
 
 (defn get-time-object [] (jt/local-time))
 (defn get-date-object [] (jt/local-date))
@@ -86,12 +85,11 @@
        (replace-map (kw-map->str-map Defaults))
        (json/read-str :key-fn keyword))))
 
-
 (defn build [image db exch task]
   (let [f (db/task-fn db)
         {:keys [TaskName Use Replace] :as task} task
         {:keys [Defaults] :as task} (merge task (f TaskName))
-        e-map (exch/from exch task)]
+        e-map (exchange/from exch task)]
     (assemble task Replace Use Defaults e-map)))
 
 (defn error [a ex]
@@ -112,7 +110,7 @@
                               (send worker-queqe (fn [l] (conj l task)))
                               (-> l rest))))))]
     (add-watch task-queqe :queqe w))
-  (set-error-handler! task-queqe model/error))
+  (set-error-handler! task-queqe error))
 
 (defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")

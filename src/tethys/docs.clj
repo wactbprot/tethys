@@ -5,8 +5,10 @@
             [clj-http.client :as http]
             [tethys.model :as model]))
 
+
+
 ;; # Documents
-;;
+
 ;; The `docs` namespace cares about the database documents used to
 ;; store the data which is gained by the different worker.
 
@@ -37,6 +39,7 @@
   (rm-all images mpd)
   (run! (fn [id] (add images mpd id)) id-coll)
   (ids images mpd))
+
 
 ;; The data is stored via
 ;; the [vl-db-agent](https://github.com/wactbprot/vl-db-agent).

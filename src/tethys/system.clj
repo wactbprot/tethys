@@ -193,11 +193,3 @@
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
   (reset! system {}))
-
-;; ## Helper functions
-;;
-;; Extract the `ndx`-th `cont`ainer agent of `mpd`. `mpd`have to be a
-;; keyword.
-(defn mpd-image [mpd] 
-  (let [id (keyword mpd)]
-    (-> @system :model/images id)))

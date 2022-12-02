@@ -8,6 +8,20 @@
   (let [v (mapv keyword (string/split p #"\."))]
     (get-in @e-agt v)))
     
+
+;; ## Runtime tests against exchange interface
+
+
+;; A `task`may have this key controlling if it is executed or not
+;; depending on the exchange interface:
+
+;; * `StopIf`
+;; * `RunIf`
+;; * `OnlyIfNot`
+
+;; The values of this keys are `p`aths, directing to a value of the
+;; exchange interface.
+
 ;; Checks a certain exchange endpoint to evaluate to true.
 (defn ok? [a p] (contains? #{"ok" :ok "true" true "yo!"} (e-value a p)))
 
@@ -30,7 +44,7 @@
 
 
 ;; ## Read from Exchange
-;;
+
 ;; Builds a map by replacing the values of the input map `FromExchange`. The
 ;; replacements are gathered from `e-agt` the complete exchange
 ;;
@@ -50,7 +64,7 @@
   {:%check nil})
 
 ;; ## Write to Exchange
-;;
+
 ;; There are two mechanisms which enable writing to the exchange interface:
 ;;
 ;; * `ToExchange` 

@@ -5,14 +5,8 @@
 
 (defn- flattenv [v] (-> v flatten vec))
 
-(defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex))
-  (Thread/sleep 1000)
-  (µ/log ::error-handler :message "try to restart agent")
-  (restart-agent a @a))
-
 ;; # Model
-;;
+
 ;; The model `ns` transforms the *mpd*s as received from the database
 ;; into a structure where different threads can work on. For the
 ;; moving parts, agents are used.
@@ -62,7 +56,7 @@
       (image->ids-agent)))
 
 ;; ## State
-;;
+
 ;; The `state` structure holds information of the position
 ;; 
 ;; * `:id` ... id of the mpd (as keyword)

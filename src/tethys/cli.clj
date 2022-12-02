@@ -34,18 +34,16 @@
   (mpds)))
 
 (defn stop [] (sys/stop))
-
 (defn images [] (:model/images @sys/system))
-
-(defn image [mpd] (sys/mpd-image mpd))
+(defn image [mpd] (-> (images) mpd))
 
 ;; ## Ctrl-interface
-;;
+
 ;; setting Run, stop or mon a `cont`ainer `ndx` of
 ;; `mpd` with this functions.
 
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (model/image->cont-agent (sys/mpd-image mpd) ndx))
+(defn c-agent [mpd ndx] (model/image->cont-agent (image mpd) ndx))
 
 ;; ## Start, stop container
 (defn ctrl [a op] (sched/ctrl! a op))
