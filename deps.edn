@@ -16,11 +16,10 @@
             
             :hiera {:deps {io.github.greglook/clj-hiera {:git/tag "2.0.0", :git/sha "b14e514"}}
                     :exec-fn hiera.main/graph
-                    :exec-args {:layout :horizontal
+                    :exec-args {;:layout :horizontal
                                 :output "."}}
             
-            :outdated {;; Note that it is `:deps`, not `:extra-deps`
-                       :deps {com.github.liquidz/antq {:mvn/version "2.2.962"}}
+            :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.2.962"}}
                        :main-opts ["-m" "antq.core"]}
  
             :dev {:extra-paths ["resources" "src"]
