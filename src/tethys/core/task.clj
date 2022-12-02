@@ -3,31 +3,20 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clojure.string :as string]
-            [java-time.api :as jt]
+            [tethys.core.dt :as dt]
             [tethys.core.db :as db]
             [tethys.core.exchange :as exchange]))
 
-(defn get-time-object [] (jt/local-time))
-(defn get-date-object [] (jt/local-date))
-(defn get-hour [t] (jt/format "HH" t))
-(defn get-min [t] (jt/format "mm" t))
-(defn get-sec [t] (jt/format "ss" t))
-(defn get-day [d] (jt/format "dd"   d))
-(defn get-month [d] (jt/format "MM"   d))
-(defn get-year [d] (jt/format "YYYY" d))
-(defn get-date [] (jt/format "YYYY-MM-dd" (get-date-object)))
-(defn get-time [] (str (jt/to-millis-from-epoch (jt/instant))))
-
 (defn globals [] 
-  (let [d (get-date-object)
-        t (get-time-object)]
-    {"@hour" (get-hour t)
-     "@minute" (get-min t)
-     "@second" (get-sec t)
-     "@year" (get-year d)
-     "@month" (get-month d) 
-     "@day" (get-day d)
-     "@time" (get-time)}))
+  (let [d (dt/get-date-object)
+        t (dt/get-time-object)]
+    {"@hour" (dt/get-hour t)
+     "@minute" (dt/get-min t)
+     "@second" (dt/get-sec t)
+     "@year" (dt/get-year d)
+     "@month" (dt/get-month d) 
+     "@day" (dt/get-day d)
+     "@time" (dt/get-time)}))
  
 ;; In order to overcome the problem of keywords like `:@foo` the
 ;; function `kw-map->str-map` converts the "keyword map" (keys in the

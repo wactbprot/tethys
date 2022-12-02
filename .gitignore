@@ -1,5 +1,6 @@
 **/classes
 **/target
+*.dot
 .cpcache/
 .nrepl-port
 bases/srv/resources/public/js/jquery.js

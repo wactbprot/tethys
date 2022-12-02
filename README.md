@@ -42,3 +42,10 @@ clj -X:hiera
 ```
 
 <img src="namespace.png" alt="tethys ns" id="ns" width="900px">
+
+
+## find outdated deps
+
+```shell
+clojure -M:outdated
+```

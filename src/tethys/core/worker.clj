@@ -13,7 +13,25 @@
      :wait (wait/wait images task)
      :TCP (devhub/devhub images task)
      :VXI11 (devhub/devhub images task)
+     :MODBUS (devhub/devhub images task)
+     :EXECUTE (devhub/devhub images task)
      :writeExchange (exchange/write images task)
+
+     ;; todo:
+     
+     ;; :select        
+     ;; :runMp         
+     ;; :stopMp        
+     ;; :getDate       
+     ;; :getTime       
+     ;; :Anselm        
+     ;; :DevProxy      
+     ;; :genDbDoc      
+     ;; :rmDbDocs      
+     ;; :replicateDB   
+     ;; :readExchange  
+     ;; :message       
+
     (µ/log ::dispatch :error "no matching case")))
 
 (defn check [images task] 

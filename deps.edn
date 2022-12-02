@@ -1,7 +1,7 @@
 {:deps {org.clojure/clojure {:mvn/version "1.11.1"}}
  
  :aliases  {:build {:extra-paths ["src" "resources"]
-                    :deps {io.github.clojure/tools.build {:git/tag "v0.8.2" :git/sha "ba1a2bf"}
+                    :deps {io.github.clojure/tools.build {:git/tag "v0.8.5" :git/sha "ba1a2bf"}
                            :ns-default build}}
             
             :test {:extra-paths ["test"]
@@ -19,14 +19,18 @@
                     :exec-args {:layout :horizontal
                                 :output "."}}
             
+            :outdated {;; Note that it is `:deps`, not `:extra-deps`
+                       :deps {com.github.liquidz/antq {:mvn/version "2.2.962"}}
+                       :main-opts ["-m" "antq.core"]}
+ 
             :dev {:extra-paths ["resources" "src"]
                   
                   :extra-deps {de.ptb.gitlab1/libcdb {:local/root "../libcdb"}
-                               djblue/portal {:mvn/version "0.28.0"}
+                               djblue/portal {:mvn/version "0.35.0"}
                                clj-http/clj-http {:mvn/version "3.12.3"}
                                integrant/integrant {:mvn/version "0.8.0"}
                                clojure.java-time/clojure.java-time {:mvn/version "1.1.0"}
                                org.clojure/test.check {:mvn/version "1.1.1"}
                                org.clojure/data.json {:mvn/version "2.4.0"}
-                               com.brunobonacci/mulog  {:mvn/version "0.6.0"}
-                               com.brunobonacci/mulog-elasticsearch {:mvn/version "0.6.0"}}}}}
+                               com.brunobonacci/mulog  {:mvn/version "0.9.0"}
+                               com.brunobonacci/mulog-elasticsearch {:mvn/version "0.9.0"}}}}}
