@@ -85,12 +85,9 @@
        (replace-map (kw-map->str-map Defaults))
        (json/read-str :key-fn keyword))))
 
-(defn build [image db exch task]
-  (let [f (db/task-fn db)
-        {:keys [TaskName Use Replace] :as task} task
-        {:keys [Defaults] :as task} (merge task (f TaskName))
-        e-map (exchange/from exch task)]
-    (assemble task Replace Use Defaults e-map)))
+(defn build [image exch db-fn {:keys [TaskName Use Replace] :as task}]
+  (let [{:keys [Defaults] :as task} (merge task (db-fn TaskName))]
+    (assemble task Replace Use Defaults (exchange/from exch task))))
 
 (defn error [a ex]
   (µ/log ::error-handler :error (str "error occured: " ex))
@@ -103,13 +100,13 @@
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
-  (let [w (fn [_ t-agt _ tq]
-            (when (seq tq)
-              (send t-agt (fn [l]
-                            (let [task (build image db exch (first l))]
-                              (send worker-queqe (fn [l] (conj l task)))
-                              (-> l rest))))))]
-    (add-watch task-queqe :queqe w))
+  (let [db-fn (db/task-fn db)]
+    (add-watch task-queqe :queqe (fn [_ t-agt _ tq]
+                                   (when (seq tq)
+                                     (send t-agt (fn [l]
+                                                   (let [task (build image exch db-fn (first l))]
+                                                     (send worker-queqe (fn [l] (conj l task)))
+                                                     (-> l rest))))))))
   (set-error-handler! task-queqe error))
 
 (defn down [[_ t-agt]]
