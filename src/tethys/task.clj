@@ -30,8 +30,9 @@
      "@time" (get-time)}))
  
 ;; In order to overcome the problem of keywords like `:@foo` the
-;; function `kw-map->str-map` converts the "keyword map" delivered by
-;; the database view to a "string map".
+;; function `kw-map->str-map` converts the "keyword map" (keys in the
+;; map are keywords) delivered by the database view to a "string map" (keys in the
+;; map are strings).
 (defn kw-map->str-map [m] (-> m json/write-str json/read-str)) 
 
 (defn key->pattern [s x]
@@ -52,15 +53,16 @@
   ([task Replace Use Defaults FromExchange]
    (->  task
         (dissoc  :Replace :Use :Defaults :FromExchange)
-        json/write-str
+        (json/write-str)
         (replace-map (kw-map->str-map Replace))
+        (replace-map (kw-map->str-map FromExchange))
         (replace-map (globals))
         (replace-map (kw-map->str-map Defaults))
         (json/read-str :key-fn keyword))))
 
-;; The `up` checks if the `task-queue` (a vector) contains any
-;; elements. Returns `m` (the agent) if not. If `:task-queue` is not empty it
-;; should contain a map like this:
+;; The `up` checks if the `task-queue` (a list) contains
+;; elements. Returns `m` (the agent) if not. If `:task-queue` is not
+;; empty it should contain a map like this:
 (comment
   {:TaskName "PPC_Faulhaber_Servo-comp_ini",
    :id :mpd-ppc-gas_dosing,
@@ -70,8 +72,7 @@
    :pdx 0,
    :is :ready})
 
-;; The `up` function provides a queqe made of an agent made of a
-;; list.
+
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
