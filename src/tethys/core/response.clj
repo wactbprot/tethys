@@ -1,11 +1,11 @@
-(ns tethys.response
+(ns tethys.core.response
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [clj-http.client :as http]
-            [tethys.docs :as docs]
-            [tethys.exchange :as exch]
-            [tethys.model :as model]
-            [tethys.scheduler :as sched]))
+            [tethys.core.docs :as docs]
+            [tethys.core.exchange :as exch]
+            [tethys.core.model :as model]
+            [tethys.core.scheduler :as sched]))
 
 ;; The `id` is the mpd id comming from the task; `ids` are the doc-ids
 ;; comming from the response (devproxy).

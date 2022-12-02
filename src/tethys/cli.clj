@@ -1,12 +1,12 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [tethys.db :as db]
-            [tethys.docs :as docs]
-            [tethys.model :as model]
-            [tethys.system :as sys]
-            [tethys.scheduler :as sched]
-            [tethys.task :as task]
-            [tethys.worker :as work]))
+  (:require [tethys.core.db :as db]
+            [tethys.core.docs :as docs]
+            [tethys.core.model :as model]
+            [tethys.core.system :as sys]
+            [tethys.core.scheduler :as sched]
+            [tethys.core.task :as task]
+            [tethys.core.worker :as work]))
 
 ;; # cli
 ;;

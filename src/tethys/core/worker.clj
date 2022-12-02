@@ -1,9 +1,9 @@
-(ns tethys.worker
+(ns tethys.core.worker
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
-            [tethys.exchange :as exch]
-            [tethys.model :as model]
-            [tethys.scheduler :as sched]
+            [tethys.core.exchange :as exch]
+            [tethys.core.model :as model]
+            [tethys.core.scheduler :as sched]
             [tethys.worker.devhub :as devhub]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.wait :as wait]))

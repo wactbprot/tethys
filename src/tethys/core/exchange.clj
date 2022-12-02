@@ -1,4 +1,4 @@
-(ns tethys.exchange
+(ns tethys.core.exchange
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.string :as string]))
 

@@ -1,4 +1,4 @@
-(ns tethys.db
+(ns tethys.core.db
    ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [libcdb.core :as db]
             [libcdb.configure :as cf]))

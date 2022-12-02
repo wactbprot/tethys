@@ -1,6 +1,6 @@
-(ns tethys.scheduler-test
+(ns tethys.core.scheduler-test
   (:require [clojure.test :refer :all]
-            [tethys.scheduler :refer :all]))
+            [tethys.core.scheduler :refer :all]))
 
 (def v   [{:id :mpd-ppc-gas_dosing,
            :group :cont,

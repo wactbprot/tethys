@@ -1,4 +1,4 @@
-(ns tethys.model
+(ns tethys.core.model
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.string :as str]
             [com.brunobonacci.mulog :as µ]))

@@ -1,6 +1,6 @@
-(ns tethys.task-test
+(ns tethys.core.task-test
   (:require [clojure.test :refer :all]
-            [tethys.task :refer :all]
+            [tethys.core.task :refer :all]
             [clojure.data.json :as json]
             [clojure.string :as string]
             [clojure.test.check :as tc]

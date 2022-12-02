@@ -1,16 +1,16 @@
-(ns tethys.system
+(ns tethys.core.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [tethys.db :as db]
-            [tethys.exchange :as exch]
-            [tethys.model :as model]
-            [tethys.response :as resp]
-            [tethys.scheduler :as sched]
-            [tethys.task :as task]
-            [tethys.worker :as work])
+            [tethys.core.db :as db]
+            [tethys.core.exchange :as exch]
+            [tethys.core.model :as model]
+            [tethys.core.response :as resp]
+            [tethys.core.scheduler :as sched]
+            [tethys.core.task :as task]
+            [tethys.core.worker :as work])
   (:gen-class))
 
 (defn config [id-set]

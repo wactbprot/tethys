@@ -1,9 +1,9 @@
-(ns tethys.docs
+(ns tethys.core.docs
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.data.json :as json]
             [com.brunobonacci.mulog :as µ]
             [clj-http.client :as http]
-            [tethys.model :as model]))
+            [tethys.core.model :as model]))
 
 
 

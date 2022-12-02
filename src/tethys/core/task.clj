@@ -1,11 +1,11 @@
-(ns tethys.task
+(ns tethys.core.task
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clojure.string :as string]
             [java-time.api :as jt]
-            [tethys.db :as db]
-            [tethys.exchange :as exchange]))
+            [tethys.core.db :as db]
+            [tethys.core.exchange :as exchange]))
 
 (defn get-time-object [] (jt/local-time))
 (defn get-date-object [] (jt/local-date))

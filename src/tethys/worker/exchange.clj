@@ -4,9 +4,9 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clj-http.client :as http]
-            [tethys.exchange :as exch]
-            [tethys.model :as model]
-            [tethys.scheduler :as sched]))
+            [tethys.core.exchange :as exch]
+            [tethys.core.model :as model]
+            [tethys.core.scheduler :as sched]))
 
 (defn write [images task]
   (let [e-agt (model/images->exch-agent images task)

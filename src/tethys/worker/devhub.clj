@@ -4,9 +4,9 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clj-http.client :as http]
-            [tethys.model :as model]
-            [tethys.response :as resp]
-            [tethys.scheduler :as sched]))
+            [tethys.core.model :as model]
+            [tethys.core.response :as resp]
+            [tethys.core.scheduler :as sched]))
 
 (defn url [{u :dev-hub-url}] u)
 (defn req [{header :json-post-header} task] (assoc header :body (json/write-str task)))
