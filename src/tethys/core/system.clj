@@ -119,8 +119,7 @@
       ini id-set)
      (keyword _id) Mp)))
 
-(defmethod ig/init-key :model/conf [_ conf]
-  
+(defmethod ig/init-key :model/conf [_ conf]  
   conf)
   
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
