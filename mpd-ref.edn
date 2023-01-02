@@ -57,23 +57,23 @@
     [
      ;; First: start a wait task with 1000 ms waittime.
      ;; At the same time start a wait task with 2000 ms waittime.
-     [{:TaskName "Common-wait", :Replace {:%waittime 1000}}
-      {:TaskName "Common-wait", :Replace {:%waittime 2000}}]
+     [{:TaskName "Common-wait", :Replace {"@waittime" 1000}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 2000}}]
      [
       ;; After first step is executed: start 4 wait tasks 
       ;; with 100 ms waittime, step is executed within 1000ms
-      {:TaskName "Common-wait", :Replace {:%waittime 1000}}
-      {:TaskName "Common-wait", :Replace {:%waittime 1000}}
-      {:TaskName "Common-wait", :Replace {:%waittime 1000}}
-      {:TaskName "Common-wait", :Replace {:%waittime 1000}}]
-     [{:TaskName "Common-wait", :Replace {:%waittime 2000}}]]}
+      {:TaskName "Common-wait", :Replace {"@waittime" 1000}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 1000}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 1000}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 1000}}]
+     [{:TaskName "Common-wait", :Replace {"@waittime" 2000}}]]}
    {  ;; 2. container
     :Description "Container with one task only",
     :Ctrl "void",
     :Title "container with single task",
     :Element ["Target_pressure"],
     :Definition
-    [[{:TaskName "Common-wait", :Replace {:%waittime 1000}}]]}
+    [[{:TaskName "Common-wait", :Replace {"@waittime" 1000}}]]}
    ;; 3. container   
    {:Description "Show case select feature",
     :Ctrl "void",
@@ -81,7 +81,7 @@
     :Element [],
     :Definition
     [[{:TaskName "Common-select_definition",
-       :Replace {:%definitionclass "wait"}}]]}
+       :Replace {"@definitionclass" "wait"}}]]}
    ;; 4. container
    {:Description "Run a mpd (first container of ref).",
     :Ctrl "void",
@@ -160,8 +160,8 @@
     [{:ExchangePath "A.Unit", :Methode "eq", :Value "Pa"}
      {:ExchangePath "A.Value", :Methode "gt", :Value 133}],
     :Definition
-    [[{:TaskName "Common-wait", :Replace {:%waittime 100}}
-      {:TaskName "Common-wait", :Replace {:%waittime 200}}]]}
+    [[{:TaskName "Common-wait", :Replace {"@waittime" 100}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 200}}]]}
    ;; 2nd wait definition
    ;; The conditions of this match the predefined
    ;; exchange values (see :Exchange section above)
@@ -173,8 +173,8 @@
     ;; The definition structure under definitions section 
     ;; works the same as under container
     :Definition
-    [[{:TaskName "Common-wait", :Replace {:%waittime 300}}
-      {:TaskName "Common-wait", :Replace {:%waittime 400}}]]}
+    [[{:TaskName "Common-wait", :Replace {"@waittime" 300}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 400}}]]}
    ;; 3rd wait definition
    {:DefinitionClass "wait",
     :ShortDescr "waits 0.4 and 0.5s\n",
@@ -182,8 +182,8 @@
     [{:ExchangePath "A.Unit", :Methode "eq", :Value "Pa"}
      {:ExchangePath "A.Value", :Methode "lt", :Value 13}],
     :Definition
-    [[{:TaskName "Common-wait", :Replace {:%waittime 400}}
-      {:TaskName "Common-wait", :Replace {:%waittime 500}}]]}]
+    [[{:TaskName "Common-wait", :Replace {"@waittime" 400}}
+      {:TaskName "Common-wait", :Replace {"@waittime" 500}}]]}]
   ;; -------------------------------------------------------
   ;; Task section 
   ;; -------------------------------------------------------

@@ -4,6 +4,7 @@
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
+            [tethys.worker.select-definition :as select]
             [tethys.worker.devhub :as devhub]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.wait :as wait]))
@@ -16,10 +17,10 @@
      :MODBUS (devhub/devhub images task)
      :EXECUTE (devhub/devhub images task)
      :writeExchange (exchange/write images task)
-
+     :select (select/select images task)
      ;; todo:
      
-     ;; :select        
+     ;; 
      ;; :runMp         
      ;; :stopMp        
      ;; :getDate       
