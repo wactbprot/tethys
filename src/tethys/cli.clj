@@ -77,8 +77,15 @@
 (defn t-error [mpd] (agent-error (t-agent mpd)))
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
 
-  ;; Get a task from the database and resole a `replace-map` by means
-;; of [[t-resolve]]. An Example would be:
+;; Deprecation Note
+
+;; The functions [[t-resolve]] and [[t-run]] should be shipped
+;; to a further app which concernes about building and testing mpds.
+;; The functionality in the task name space should therefore be paged
+;; out to a separate library.
+
+;; Get a task from the database and resole
+;; a `replace-map` by means of [[t-resolve]]. An Example would be:
 (comment
   (t-resolve "Common-wait" {"@waittime" 1000})
   {"Action" "wait",

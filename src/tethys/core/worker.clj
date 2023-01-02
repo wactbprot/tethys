@@ -59,11 +59,11 @@
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
+  (set-error-handler! worker-queqe error)
   (add-watch worker-queqe :queqe (fn [_ w-agt _ wq]
                                    (when (seq wq)
                                      (future (check images (first wq)))
-                                     (send w-agt (fn [l] (-> l rest))))))
-  (set-error-handler! worker-queqe error))
+                                     (send w-agt (fn [l] (-> l rest)))))))
 
 (defn down [[_ w-agt]]
   (µ/log ::down :message "shut down worker queqe agent")

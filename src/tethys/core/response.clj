@@ -45,12 +45,12 @@
 
 (defn up [{:keys [response-queqe]} images]
   (µ/log ::up :message "start up response queqe agent")
+  (set-error-handler! response-queqe error)
   (add-watch response-queqe :queqe (fn [_ r-agt _ rq]
                                      (when (seq rq)
                                        (send r-agt (fn [l]
                                                      (future (dispatch images (first l)))
-                                                     (-> l rest))))))
-  (set-error-handler! response-queqe error))
+                                                     (-> l rest)))))))
 
 (defn down [[_ wq]]
   (µ/log ::down :message "shut down respons queqe agent")

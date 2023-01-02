@@ -58,12 +58,7 @@
             (merge ini m))
           task (replace-vec task use-map)))
 
-(defn assemble
-  ([task] (assemble task {} {} {} {}))
-  ([task Replace] (assemble task Replace {} {} {}))
-  ([task Replace Use] (assemble task Replace Use {} {} ))
-  ([task Replace Use Defaults] (assemble task Replace Use Defaults {}))
-  ([task Replace Use Defaults FromExchange]
+(defn assemble [{:keys [Use Replace FromExchange Defaults] :as task}]
    (-> task
        (resolve-use Use)
        (dissoc  :Replace :Use :Defaults :FromExchange)
@@ -72,11 +67,13 @@
        (replace-map (kw-map->str-map FromExchange))
        (replace-map (globals))
        (replace-map (kw-map->str-map Defaults))
-       (json/read-str :key-fn keyword))))
+       (json/read-str :key-fn keyword)))
 
-(defn build [image exch db-fn {:keys [TaskName Use Replace] :as task}]
-  (let [{:keys [Defaults] :as task} (merge task (db-fn TaskName))]
-    (assemble task Replace Use Defaults (exchange/from exch task))))
+(defn build [image exch db-fn {:keys [TaskName] :as task}]
+  (-> task
+      (merge (db-fn TaskName))
+      (assoc :FromExchange (exchange/from exch task))
+      (assemble)))  
 
 (defn error [a ex]
   (µ/log ::error-handler :error (str "error occured: " ex))
@@ -89,14 +86,14 @@
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
+  (set-error-handler! task-queqe error)
   (let [db-fn (db/task-fn db)]
     (add-watch task-queqe :queqe (fn [_ t-agt _ tq]
                                    (when (seq tq)
                                      (send t-agt (fn [l]
                                                    (let [task (build image exch db-fn (first l))]
                                                      (send worker-queqe (fn [l] (conj l task)))
-                                                     (-> l rest))))))))
-  (set-error-handler! task-queqe error))
+                                                     (-> l rest)))))))))
 
 (defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")
