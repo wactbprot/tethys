@@ -1,5 +1,5 @@
 (ns tethys.worker.devhub
-  ^{:author "wactbprot"
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The devhub worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]

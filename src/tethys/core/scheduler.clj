@@ -53,7 +53,9 @@
                 (assoc :ctrl (if (= ctrl :run) :ready ctrl))
                 (assoc :state (set-all-pos-ready state))))))
 
-;; Start next if the [[next-ready]] is first or all predecessors are
+;; Start next if the next-ready:
+;; `(first (filterv (is-eq :ready) v)`
+;; is first or all predecessors are
 ;; executed.
 (defn is-first? [{i :sdx}] (zero? i))
 

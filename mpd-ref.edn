@@ -174,7 +174,7 @@
     ;; works the same as under container
     :Definition
     [[{:TaskName "Common-wait", :Replace {"@waittime" 300}}
-      {:TaskName "Common-wait", :Replace {"@waittime" 400}}]]}
+      {:TaskName "Common-wait", :Replace {"@waittime" 5000}}]]}
    ;; 3rd wait definition
    {:DefinitionClass "wait",
     :ShortDescr "waits 0.4 and 0.5s\n",

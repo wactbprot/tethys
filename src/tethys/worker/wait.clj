@@ -6,7 +6,6 @@
             [tethys.core.scheduler :as sched]))
 
 (defn wait [images {:keys [WaitTime] :as task}]
-  (prn ".")
   (Thread/sleep (Integer. WaitTime))
   (µ/log ::wait :message "Waittime over")
   (sched/state-executed! (model/images->state-agent images task) task))

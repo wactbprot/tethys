@@ -1,5 +1,5 @@
 (ns tethys.worker.exchange
-  ^{:author "wactbprot"
+  ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The exchange worker writes and reads from the exchange interface."}
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
