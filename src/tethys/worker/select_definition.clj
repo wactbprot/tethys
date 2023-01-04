@@ -42,4 +42,4 @@
                                                  (sched/state-executed! s-agt task)
                                                  (remove-watch agt-to-run :observer))
                                         :noop)))
-    (sched/ctrl! agt-to-run :run)))
+    (sched/ctrl-run! agt-to-run)))

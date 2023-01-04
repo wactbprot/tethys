@@ -43,6 +43,11 @@
   (µ/log ::ctrl-error! :error "state error")
   (ctrl! a :error))
 
+(defn ctrl-stop! [a] (ctrl! a :stop))
+(defn ctrl-suspend! [a] (ctrl! a :suspend))
+(defn ctrl-ready! [a] (ctrl! a :ready))
+(defn ctrl-run! [a] (ctrl! a :run))
+
 ;; If all tasks in a container are executed, the states are set back
 ;; to `:ready`.  If `ctrl`was `:run` it becomes `:ready` in order to
 ;; stop execution of the container tasks.

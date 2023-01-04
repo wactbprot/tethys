@@ -6,6 +6,14 @@
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]))
 
+
+;; # Helper functions
+(defn title->ndx [image title]
+  (reduce (fn [_ a]
+            (when (= title (-> @a :title))
+              (reduced (-> @a :ndx))))
+          {} (-> image :conts)))
+
 (defn run-by-ndx [images {:keys [Container Mp] :as task}]
   (let [image (model/images->image images Mp)
         s-agt (model/images->state-agent images task)
@@ -21,13 +29,7 @@
                                                  (sched/state-executed! s-agt task)
                                                  (remove-watch agt-to-run :observer))
                                         :noop)))
-    (sched/ctrl! agt-to-run :run)))
-
-(defn title->ndx [image title]
-  (reduce (fn [_ a]
-            (when (= title (-> @a :title))
-              (reduced (-> @a :ndx))))
-          {} (-> image :conts)))
+    (sched/ctrl-run! agt-to-run)))
 
 (defn run-by-title [images {:keys [ContainerTitle Mp] :as task}]
   (let [image (model/images->image images Mp)
@@ -40,4 +42,27 @@
     Container (run-by-ndx images task)
     :not-found (do
                  (µ/log ::run-mp :error "Neither ContainerTitle nor Container key given")
+                 (sched/state-error! (model/images->state-agent images task) task))))
+
+
+(defn stop-by-ndx [images {:keys [Container Mp] :as task}]
+  (let [image (model/images->image images Mp)
+        s-agt (model/images->state-agent images task)
+        agt-to-stop (model/image->cont-agent image Container)]
+    (sched/ctrl-stop! agt-to-stop)
+    (when-not (= s-agt agt-to-stop)
+      (sched/state-executed! s-agt task))))
+
+(defn stop-by-title [images {:keys [ContainerTitle Mp] :as task}]
+  (let [image (model/images->image images Mp)
+        ndx (title->ndx image ContainerTitle)]
+    (stop-by-ndx images (assoc task :Container ndx))))
+
+
+(defn stop-mp [images {:keys [ContainerTitle Container] :as task}]
+  (cond
+    ContainerTitle (stop-by-title images task)
+    Container (stop-by-ndx images task)
+    :not-found (do
+                 (µ/log ::stop-mp :error "Neither ContainerTitle nor Container key given")
                  (sched/state-error! (model/images->state-agent images task) task))))
