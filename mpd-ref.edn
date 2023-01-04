@@ -90,7 +90,7 @@
     :Definition
     [[{:TaskName "Common-run_mp",
        :Replace
-       {:%conttitle "multiple wait tasks", :%mpdef "mpd-ref"}}]]}
+       {"@conttitle" "multiple wait tasks" "@mpdef" "mpd-ref"}}]]}
    ;; 5. container
    {:Description "Test read_exchange action.",
     :Ctrl "void",

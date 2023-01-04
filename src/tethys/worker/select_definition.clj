@@ -30,14 +30,16 @@
 (defn select [images {:keys [DefinitionClass id] :as task}]
   (let [s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)
-        d-agt (agent-match (model/images->defins images task) e-agt DefinitionClass)]
-    (add-watch d-agt :observer (fn [_ d-agt _ m]
-                                 (condp = (:ctrl m)
-                                   :error (do
-                                            (µ/log ::select :error "selected definition returns with error")
-                                            (sched/state-error! s-agt task))
-                                   :ready (do
-                                            (µ/log ::select :message "selected definition executed")
-                                            (sched/state-executed! s-agt task))
-                                   :noop)))
-    (sched/ctrl! d-agt :run)))
+        agt-to-run (agent-match (model/images->defins images task) e-agt DefinitionClass)]
+    (add-watch agt-to-run :observer (fn [_ _ _ m]
+                                      (condp = (:ctrl m)
+                                        :error (do
+                                                 (µ/log ::select :error "selected definition returns with error")
+                                                 (sched/state-error! s-agt task)
+                                                 (remove-watch agt-to-run :observer))
+                                        :ready (do
+                                                 (µ/log ::select :message "selected definition executed")
+                                                 (sched/state-executed! s-agt task)
+                                                 (remove-watch agt-to-run :observer))
+                                        :noop)))
+    (sched/ctrl! agt-to-run :run)))

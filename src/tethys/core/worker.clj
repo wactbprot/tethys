@@ -4,6 +4,7 @@
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
+            [tethys.worker.ctrl-mp :as ctrl-mp]
             [tethys.worker.select-definition :as select]
             [tethys.worker.devhub :as devhub]
             [tethys.worker.exchange :as exchange]
@@ -18,10 +19,9 @@
      :EXECUTE (devhub/devhub images task)
      :writeExchange (exchange/write images task)
      :select (select/select images task)
+     :runMp (ctrl-mp/run-mp images task)
      ;; todo:
      
-     ;; 
-     ;; :runMp         
      ;; :stopMp        
      ;; :getDate       
      ;; :getTime       

@@ -93,8 +93,11 @@
    :response-queqe (agent '())
    :worker-queqe (agent '())
    :task-queqe (agent '())
-   :conts (mapv (fn [{:keys [Ctrl Definition]} ndx]
-                  (agent {:ctrl (or (keyword Ctrl) :ready)
+   :conts (mapv (fn [{:keys [Ctrl Definition Title Element]} ndx]
+                  (agent {:title Title
+                          :element Element
+                          :ndx ndx
+                          :ctrl (or (keyword Ctrl) :ready)
                           :state (state-struct Definition :conts id ndx )})) 
                 cont (range))
    :defins (mapv (fn [{:keys [Ctrl Definition DefinitionClass Condition]} ndx]
