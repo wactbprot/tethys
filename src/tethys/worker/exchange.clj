@@ -2,8 +2,6 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The exchange worker writes and reads from the exchange interface."}
   (:require [com.brunobonacci.mulog :as µ]
-            [clojure.data.json :as json]
-            [clj-http.client :as http]
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]))

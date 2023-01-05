@@ -3,7 +3,7 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clojure.string :as string]
-            [tethys.core.dt :as dt]
+            [tethys.core.date-time :as dt]
             [tethys.core.db :as db]
             [tethys.core.exchange :as exchange]))
 

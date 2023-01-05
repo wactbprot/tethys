@@ -1,4 +1,4 @@
-(ns tethys.core.dt
+(ns tethys.core.date-time
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [java-time.api :as jt]))
@@ -6,7 +6,7 @@
 
 ;; ## date time
 
-;; This is just a small namspase encapsulating date time
+;; Small namspase encapsulating date time
 ;; functionality.
 (defn get-time-object [] (jt/local-time))
 (defn get-date-object [] (jt/local-date))

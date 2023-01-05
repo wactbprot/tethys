@@ -7,6 +7,7 @@
             [tethys.worker.ctrl-mp :as ctrl-mp]
             [tethys.worker.select-definition :as select]
             [tethys.worker.devhub :as devhub]
+            [tethys.worker.date-time :as dt]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.wait :as wait]))
 
@@ -20,10 +21,13 @@
      :writeExchange (exchange/write images task)
      :select (select/select images task)
      :runMp (ctrl-mp/run-mp images task)
+     :stopMp (ctrl-mp/stop-mp images task)
+     :getDate (dt/store-date images task)
+     :getTime (dt/store-time images task)
      ;; todo:
      
-     ;; :stopMp        
-     ;; :getDate       
+     ;; 
+     ;;        
      ;; :getTime       
      ;; :Anselm        
      ;; :DevProxy      
