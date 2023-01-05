@@ -16,7 +16,7 @@
 
 (defn store [images task]
   (µ/log ::refresh :message "trigger store results")
-  (docs/store images task)
+  (prn (docs/store images task))
   task)
 
 (defn to-exch [images task]
@@ -29,11 +29,11 @@
 (defn dispatch [images {:keys [error ids DocPath ToExchange Result Retry] :as task}]
   (let [s-agt (model/images->state-agent images task)]
      (cond->> task
-              Result (store images)
-              ids (refresh images)
-              ToExchange (to-exch images))
-            Retry (sched/state-ready! s-agt task)
-            error (sched/state-error! s-agt task)))
+       Result (store images)
+       ids (refresh images)
+       ToExchange (to-exch images)
+       Retry (sched/state-ready! s-agt)
+       error (sched/state-error! s-agt)))
 
 (defn add [a m] (send a (fn [l] (conj l m))))
 
@@ -49,7 +49,7 @@
   (add-watch response-queqe :queqe (fn [_ r-agt _ rq]
                                      (when (seq rq)
                                        (send r-agt (fn [l]
-                                                     (future (dispatch images (first l)))
+                                                     (dispatch images (first l))
                                                      (-> l rest)))))))
 
 (defn down [[_ wq]]

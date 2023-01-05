@@ -19,6 +19,7 @@
 ;;* `s-`... state
 ;;* `c-`... container
 ;;* `d-`... documents
+;;* `r-`... response
 
 ;; ## Start, stop and restart system
 ;;
@@ -131,9 +132,13 @@
 ;;
 ;; Only the id of the documents (calibration docs, measurement docs)
 ;; are stored in a set (see `model`and `docs`namespace).
-(defn d-add [mpd id] (docs/add (images) mpd id))
-(defn d-rm [mpd id] (docs/rm (images) mpd id))
-(defn d-rm-all [mpd] (docs/rm-all (images) mpd))
-(defn d-show [mpd] (docs/ids (images) mpd))
+(defn d-add [mpd id] (docs/add (images) {:id mpd} id))
+(defn d-rm [mpd id] (docs/rm (images) {:id mpd} id))
+(defn d-rm-all [mpd] (docs/rm-all (images) {:id mpd}))
+(defn d-show [mpd] (docs/ids (images) {:id mpd}))
 (defn d-refresh [mpd id-coll] (docs/refresh (images) mpd id-coll))
 
+;; ## response queqe
+;;
+;; Get the `agent` of a mpd by `(r-agent mpd)`
+(defn r-agent [mpd] (model/image->resp-agent (image mpd)))

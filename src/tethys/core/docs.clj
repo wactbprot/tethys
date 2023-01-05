@@ -12,33 +12,31 @@
 ;; The `docs` namespace cares about the database documents used to
 ;; store the data which is gained by the different worker.
 
-(defn ids [images mpd]
-  (let [i-agt (model/images->ids-agent)]
-    (await i-agt)
-    (deref i-agt)))
+(defn ids [images task]
+  @(model/images->ids-agent images task))
 
-(defn add [images mpd doc-id]
-  (µ/log ::add :message (str "add " doc-id " to " mpd))
-  (let [i-agt (model/images->ids-agent)] 
+(defn add [images task doc-id]
+  (µ/log ::add :message (str "add " doc-id))
+  (let [i-agt (model/images->ids-agent images task)] 
     (send i-agt (fn [coll] (conj coll doc-id)))
-    (ids images mpd)))
+    (ids images task)))
 
-(defn rm [images mpd doc-id]
-  (µ/log ::rm :message (str "rm " doc-id " from " mpd))
-  (let [i-agt (model/images->ids-agent)] 
+(defn rm [images task doc-id]
+  (µ/log ::rm :message (str "rm " doc-id))
+  (let [i-agt (model/images->ids-agent images task)] 
     (send i-agt (fn [coll] (disj coll doc-id)))
-    (ids images mpd)))
+    (ids images task)))
 
-(defn rm-all [images mpd]
+(defn rm-all [images task]
   (µ/log ::add :message  "rm all docs")
-  (run! (fn [id] (rm images mpd id)) (ids images mpd))
-  (ids images mpd))
+  (run! (fn [id] (rm images task id)) (ids images task))
+  (ids images task))
 
-(defn refresh [images mpd id-coll]
+(defn refresh [images task id-coll]
   (µ/log ::add :message  (str "refresh documents with collection: " id-coll))
-  (rm-all images mpd)
-  (run! (fn [id] (add images mpd id)) id-coll)
-  (ids images mpd))
+  (rm-all images task)
+  (run! (fn [id] (add images task id)) id-coll)
+  (ids images task))
 
 
 ;; The data is stored via
@@ -49,9 +47,8 @@
   (assoc header :body (json/write-str {:Result result :DocPath doc-path})))
 
 (defn store [images {:keys [DocPath Result] :as task}]
-  (µ/log ::store :message "initiate to store data")
-  (let [conf (model/images->conf images task)
-        doc-ids (ids images task)
-        request (req conf DocPath Result)]
-    (mapv #(http/post (url %) request) doc-ids)))
+  (when-let [doc-ids (ids images task)]
+    (µ/log ::store :message "initiate to store data")
+    (let [request (req (model/images->conf images task) DocPath Result)]
+      (mapv #(http/post (url %) request) doc-ids))))
     

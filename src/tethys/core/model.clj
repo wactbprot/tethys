@@ -21,7 +21,6 @@
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
 
-
 (defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
 (defn image->task-agent [image] (-> image :task-queqe))

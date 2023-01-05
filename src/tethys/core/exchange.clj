@@ -79,9 +79,10 @@
 
 (defn to [e-agt {:keys [ToExchange ExchangePath Value] :as task}]
   (send e-agt (fn [m]
-                (-> m
-                    (merge ToExchange)
-                    (merge (path-value->map ExchangePath Value))))))
+                (cond
+                  (map? ToExchange) (merge m ToExchange)
+                  (and 
+                  :default m))))
 
 (comment
   (def t {:ToExchange {:Filling_Pressure_current {:Value 100 :Unit

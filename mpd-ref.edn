@@ -115,11 +115,12 @@
     :Definition
     [[{:TaskName "Common-get_date",
        :Replace
-       {:%docpath "Calibration.Measurement.Date", :%type "cmp-test"}}
+       {"@docpath" "Calibration.Measurement.Date"
+        "@type" "cmp-test"}}
       {:TaskName "Common-get_time",
        :Replace
-       {:%docpath "Calibration.Measurement.AuxValues.Time",
-        :%type "cmp-test"}}]]}
+       {"@docpath" "Calibration.Measurement.AuxValues.Time"
+        "@type" "cmp-test"}}]]}
    ;; 8. container
    {:Description "Message test.",
     :Ctrl "void",
