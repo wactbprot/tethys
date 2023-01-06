@@ -4,14 +4,43 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
+            [tethys.core.response :as resp]
             [tethys.core.scheduler :as sched]))
 
-(defn write [images task]
+
+;; Example for a `writeExchange`task:
+;; <pre>
+;; {
+;;  "Action": "writeExchange",
+;;  "Comment": "Add a value to the Exchange api",
+;;  "TaskName": "exchange_value",
+;;  "ExchangePath": "@exchpath",
+;;  "Value": "@value"
+;;  }
+;; </pre>
+(defn write-exchange [images task]
   (let [e-agt (model/images->exch-agent images task)
         s-agt (model/images->state-agent images task)]
     (exch/to e-agt task)
-    (if-let[ex (agent-error e-agt)]
+    (sched/state-executed! s-agt task)))
+
+;; Example for a `readExchange`task:
+;; <pre>
+;; {
+;; "Action": "readExchange",
+;; "Comment": "Reads values under the given exchange path.",
+;; "TaskName": "simple_read_element",
+;; "DocPath": "@docpath",
+;; "ExchangePath": "@exchpath"
+;; }
+;; </pre>
+(defn read-exchange [images {:keys [ExchangePath] :as task}]
+  (let [e-agt (model/images->exch-agent images task)
+        r-agt (model/images->resp-agent images task)
+        s-agt (model/images->state-agent images task)]
+    (if-let [value (exch/e-value e-agt ExchangePath)]
+      (resp/add r-agt (merge task {:Result [value]}))
       (do
-        (µ/log ::write :error (str "error occured: " ex))
-        (sched/state-error! s-agt task))
-      (sched/state-executed! s-agt task))))
+        (µ/log ::read :error (str "No value found at exchange path " ExchangePath))
+        (sched/state-error! s-agt task)))))
+        

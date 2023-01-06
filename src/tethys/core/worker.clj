@@ -18,7 +18,8 @@
      :VXI11 (devhub/devhub images task)
      :MODBUS (devhub/devhub images task)
      :EXECUTE (devhub/devhub images task)
-     :writeExchange (exchange/write images task)
+     :writeExchange (exchange/write-exchange images task)
+     :readExchange (exchange/read-exchange images task)
      :select (select/select images task)
      :runMp (ctrl-mp/run-mp images task)
      :stopMp (ctrl-mp/stop-mp images task)
@@ -26,15 +27,12 @@
      :getTime (dt/store-time images task)
      ;; todo:
      
-     ;; 
-     ;;        
-     ;; :getTime       
      ;; :Anselm        
      ;; :DevProxy      
      ;; :genDbDoc      
      ;; :rmDbDocs      
      ;; :replicateDB   
-     ;; :readExchange  
+     
      ;; :message       
 
     (µ/log ::dispatch :error "no matching case")))

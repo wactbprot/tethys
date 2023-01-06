@@ -8,6 +8,25 @@
             [tethys.core.response :as resp]
             [tethys.core.scheduler :as sched]))
 
+;; Example for a `getTime` and a `getDate` task:
+;; <pre>
+;;  {
+;;   "TaskName": "get_time",
+;;   "Action": "getTime",
+;;   "Comment": "Saves a timestamp (path: @docpath).",
+;;   "DocPath": "@docpath",
+;;   "ExchangePath": "@timepath",
+;;   "Type": "@type"
+;;   }
+;; {
+;;  "TaskName": "get_date",
+;;  "Action": "getDate",
+;;  "Comment": "Saves a date string (path: @docpath)",
+;;  "DocPath": "@docpath",
+;;  "Type": "@type"
+;;  }
+;; </pre>
+
 (defn store-time [images {:keys [Type ExchangePath] :as task}]
   (let [r-agt (model/images->resp-agent images task)
         m {:Value (dt/get-time) :Type Type}]
