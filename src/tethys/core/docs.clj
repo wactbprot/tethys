@@ -50,5 +50,6 @@
   (when-let [doc-ids (ids images task)]
     (µ/log ::store :message "initiate to store data")
     (let [request (req (model/images->conf images task) DocPath Result)]
-      (mapv #(http/post (url %) request) doc-ids))))
+      (mapv #(http/post (url %) request) doc-ids)))
+  task)
     

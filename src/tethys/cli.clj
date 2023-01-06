@@ -142,3 +142,6 @@
 ;;
 ;; Get the `agent` of a mpd by `(r-agent mpd)`
 (defn r-agent [mpd] (model/image->resp-agent (image mpd)))
+(defn r-queqe [mpd] @(r-agent mpd))
+(defn r-error [mpd] (agent-error (r-agent mpd)))
+

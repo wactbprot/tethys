@@ -76,12 +76,16 @@
     (let [v (mapv keyword (string/split path #"\."))]
       (assoc-in {} v value))))
 
-
+;; Note:
+;; <pre>
+;; tethys.cli> (merge {:a 1} nil)
+;; {:a 1}
+;; </pre>
 (defn to [e-agt {:keys [ToExchange ExchangePath Value] :as task}]
   (send e-agt (fn [m]
                 (cond
                   (map? ToExchange) (merge m ToExchange)
-                  (and 
+                  (and ExchangePath Value) (merge m (path-value->map ExchangePath Value))
                   :default m))))
 
 (comment
