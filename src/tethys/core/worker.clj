@@ -37,7 +37,7 @@
 
     (µ/log ::dispatch :error "no matching case")))
 
-(defn check [images task] 
+(defn check-run [images task] 
   (let [stop-if-delay 1000
         s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)]    
@@ -60,13 +60,17 @@
   (µ/log ::error-handler :message "try to restart agent")
   (restart-agent a @a))
 
+(defn watch-fn [images]
+  (fn [_ w-agt _ w-queqe]
+    (when (seq w-queqe)
+      (send w-agt (fn [l]
+                    (check-run images (first w-queqe))
+                    (-> l rest))))))
+  
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
   (set-error-handler! worker-queqe error)
-  (add-watch worker-queqe :queqe (fn [_ w-agt _ wq]
-                                   (when (seq wq)
-                                     (future (check images (first wq)))
-                                     (send w-agt (fn [l] (-> l rest)))))))
+  (add-watch worker-queqe :queqe (watch-fn images)))
 
 (defn down [[_ w-agt]]
   (µ/log ::down :message "shut down worker queqe agent")
