@@ -1,7 +1,6 @@
 (ns tethys.core.response
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
-            [clj-http.client :as http]
             [tethys.core.docs :as docs]
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
@@ -46,14 +45,17 @@
   (µ/log ::error-handler :error "try restart agent")
   (restart-agent a @a))
 
+(defn watch-fn [images]
+  (fn [_ r-agt _ r-queqe]
+    (when (seq r-queqe)
+      (send r-agt (fn [l]
+                    (dispatch images (first l))
+                    (-> l rest))))))
+
 (defn up [{:keys [response-queqe]} images]
   (µ/log ::up :message "start up response queqe agent")
   (set-error-handler! response-queqe error)
-  (add-watch response-queqe :queqe (fn [_ r-agt _ r-queqe]
-                                     (when (seq r-queqe)
-                                       (send r-agt (fn [l]
-                                                     (dispatch images (first l))
-                                                     (-> l rest)))))))
+  (add-watch response-queqe :queqe (watch-fn images)))
 
 (defn down [[_ r-agt]]
   (µ/log ::down :message "shut down respons queqe agent")

@@ -81,19 +81,22 @@
   (µ/log ::error-handler :error "try restart agent")
   (restart-agent a @a))
 
+(defn watch-fn [db {:keys [worker-queqe exch] :as image}]
+ (let [db-fn (db/task-fn db)]
+   (fn [_ t-agt _ t-queqe]
+     (when (seq t-queqe)
+       (send t-agt (fn [l]
+                     (let [task (build image exch db-fn (first l))]
+                       (send worker-queqe (fn [l] (conj l task)))
+                       (-> l rest))))))))
+  
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
 (defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
   (µ/log ::up :message "start up task queqe agent")
   (set-error-handler! task-queqe error)
-  (let [db-fn (db/task-fn db)]
-    (add-watch task-queqe :queqe (fn [_ t-agt _ tq]
-                                   (when (seq tq)
-                                     (send t-agt (fn [l]
-                                                   (let [task (build image exch db-fn (first l))]
-                                                     (send worker-queqe (fn [l] (conj l task)))
-                                                     (-> l rest)))))))))
+  (add-watch task-queqe :queqe (watch-fn db image)))
 
 (defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")

@@ -6,7 +6,6 @@
             [tethys.core.model :as model]))
 
 
-
 ;; # Documents
 
 ;; The `docs` namespace cares about the database documents used to

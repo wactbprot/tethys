@@ -13,27 +13,27 @@
 
 (defn dispatch [images {:keys [Action] :as task}]
   (case (keyword Action)
-     :wait (wait/wait images task)
-     :TCP (devhub/devhub images task)
-     :VXI11 (devhub/devhub images task)
-     :MODBUS (devhub/devhub images task)
-     :EXECUTE (devhub/devhub images task)
-     :writeExchange (exchange/write-exchange images task)
-     :readExchange (exchange/read-exchange images task)
-     :select (select/select images task)
-     :runMp (ctrl-mp/run-mp images task)
-     :stopMp (ctrl-mp/stop-mp images task)
-     :getDate (dt/store-date images task)
-     :getTime (dt/store-time images task)
-     ;; todo:
-     
-     ;; :Anselm        
-     ;; :DevProxy      
-     ;; :genDbDoc      
-     ;; :rmDbDocs      
-     ;; :replicateDB   
-     
-     ;; :message       
+    :wait (wait/wait images task)
+    :TCP (devhub/devhub images task)
+    :VXI11 (devhub/devhub images task)
+    :MODBUS (devhub/devhub images task)
+    :EXECUTE (devhub/devhub images task)
+    :writeExchange (exchange/write-exchange images task)
+    :readExchange (exchange/read-exchange images task)
+    :select (select/select images task)
+    :runMp (ctrl-mp/run-mp images task)
+    :stopMp (ctrl-mp/stop-mp images task)
+    :getDate (dt/store-date images task)
+    :getTime (dt/store-time images task)
+    ;; todo:
+    
+    ;; :Anselm        
+    ;; :DevProxy      
+    ;; :genDbDoc      
+    ;; :rmDbDocs      
+    ;; :replicateDB   
+    
+    ;; :message       
 
     (µ/log ::dispatch :error "no matching case")))
 
@@ -64,9 +64,9 @@
   (fn [_ w-agt _ w-queqe]
     (when (seq w-queqe)
       (send w-agt (fn [l]
-                    (check-run images (first w-queqe))
+                    (future (check-run images (first w-queqe)))
                     (-> l rest))))))
-  
+
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")
   (set-error-handler! worker-queqe error)

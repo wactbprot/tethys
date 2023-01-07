@@ -111,7 +111,7 @@
 (defn t-run [task-name replace-map use-map]
   (let [task (t-resolve task-name replace-map use-map)
         task (merge task (struct model/state :mpd-ref :conts 0 0 0))]
-    (work/check (images) task)))
+    (work/check-run (images) task)))
 
 ;; ## Worker
 (defn w-agent [mpd] (model/image->worker-agent (image mpd)))

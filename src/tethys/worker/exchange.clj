@@ -9,6 +9,7 @@
 
 
 ;; Example for a `writeExchange`task:
+
 ;; <pre>
 ;; {
 ;;  "Action": "writeExchange",
@@ -18,6 +19,7 @@
 ;;  "Value": "@value"
 ;;  }
 ;; </pre>
+
 (defn write-exchange [images task]
   (let [e-agt (model/images->exch-agent images task)
         s-agt (model/images->state-agent images task)]
@@ -25,6 +27,7 @@
     (sched/state-executed! s-agt task)))
 
 ;; Example for a `readExchange`task:
+
 ;; <pre>
 ;; {
 ;; "Action": "readExchange",
@@ -34,6 +37,7 @@
 ;; "ExchangePath": "@exchpath"
 ;; }
 ;; </pre>
+
 (defn read-exchange [images {:keys [ExchangePath] :as task}]
   (let [e-agt (model/images->exch-agent images task)
         r-agt (model/images->resp-agent images task)
