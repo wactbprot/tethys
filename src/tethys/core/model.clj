@@ -78,10 +78,14 @@
 ;; * `executed`
 (defstruct state :id :group :ndx :sdx :pdx :is)
 
+(defn assoc-position-string [{:keys [id group ndx sdx pdx] :as m}]
+  (assoc m :pos-str (str/join "."  [id group ndx sdx pdx])))
+
 (defn state-struct [v group-kw id ndx]
   (flattenv (mapv (fn [s sdx] 
                     (mapv (fn [t pdx]
-                            (merge t (struct state id group-kw ndx sdx pdx :ready)))
+                            (assoc-position-string
+                             (merge t (struct state id group-kw ndx sdx pdx :ready))))
                           s (range)))
                   v (range))))
 

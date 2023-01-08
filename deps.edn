@@ -26,6 +26,7 @@
                   
                   :extra-deps {de.ptb.gitlab1/libcdb {:local/root "../libcdb"}
                                djblue/portal {:mvn/version "0.35.0"}
+                               io.github.nextjournal/clerk {:mvn/version "0.12.707"}
                                clj-http/clj-http {:mvn/version "3.12.3"}
                                integrant/integrant {:mvn/version "0.8.0"}
                                clojure.java-time/clojure.java-time {:mvn/version "1.1.0"}

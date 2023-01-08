@@ -44,3 +44,12 @@ clojure -M:outdated
 ```shell
 clj -X:hiera
 ```
+
+
+# ELS
+
+kibana > Management > DevTools
+
+```
+PUT tethys_log
+```

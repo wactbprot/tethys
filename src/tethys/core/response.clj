@@ -8,18 +8,18 @@
 
 ;; The `id` is the mpd id comming from the task; `ids` are the doc-ids
 ;; comming from the response (devproxy).
-(defn refresh [images {:keys [id ids] :as task}]
-  (µ/log ::refresh :message "trigger ids refresh")
+(defn refresh [images {:keys [id ids pos-str] :as task}]
+  (µ/log ::refresh :message "trigger ids refresh" :pos-str pos-str)
   (docs/refresh images id ids)
   task)
 
-(defn store [images task]
-  (µ/log ::refresh :message "trigger store results")
+(defn store [images {:keys [pos-str] :as task}]
+  (µ/log ::refresh :message "trigger store results" :pos-str pos-str)
   (docs/store images task)
   task)
 
-(defn to-exch [images task]
-  (µ/log ::refresh :message "write data to exchange interface")
+(defn to-exch [images {:keys [pos-str] :as task}]
+  (µ/log ::refresh :message "write data to exchange interface" :pos-str pos-str)
   (let [e-agt (model/images->exch-agent images task)]
     (exch/to e-agt task)
     task))
