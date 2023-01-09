@@ -70,7 +70,7 @@
                                            (System/getenv "DEVHUB_FACILITY")
                                            (System/getenv "METIS_FACILITY"))}
                :publishers[{:type :elasticsearch
-                            :url "http://localhost:9200/"
+                            :url "http://a75438:9200/"
                             :els-version :v7.x
                             :publish-delay 1000
                             :data-stream "tethys_log"

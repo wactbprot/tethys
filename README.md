@@ -51,5 +51,25 @@ clj -X:hiera
 kibana > Management > DevTools
 
 ```
-PUT tethys_log
+PUT /tethys_log
+```
+
+## show in kibana
+
+ Management > Kibana > Index Patterns
+ --> create index pattern
+
+
+## logging order accuracy
+
+https://github.com/BrunoBonacci/mulog/issues/76
+
+**Q:** Is it possible to configure higher timestamp accuracy to maintain logging order?
+
+**A:** If you are interested in the relative order of events within the same JVM, then the easiest option is to sort by :mulog/trace-id
+
+**How:** Add field to index with script:
+
+```
+emit(doc['mulog/trace-id.keyword'].value)
 ```
