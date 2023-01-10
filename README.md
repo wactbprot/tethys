@@ -56,8 +56,9 @@ PUT /tethys_log
 
 ## show in kibana
 
- Management > Kibana > Index Patterns
- --> create index pattern
+Management > Kibana > Index Patterns
+`http://<host>:5601//app/management/kibana/indexPatterns`
+--> create index pattern
 
 
 ## logging order accuracy
@@ -68,7 +69,7 @@ https://github.com/BrunoBonacci/mulog/issues/76
 
 **A:** If you are interested in the relative order of events within the same JVM, then the easiest option is to sort by :mulog/trace-id
 
-**How:** Add field to index with script:
+**Here is how:** Add field to index with script:
 
 ```
 emit(doc['mulog/trace-id.keyword'].value)

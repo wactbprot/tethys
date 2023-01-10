@@ -40,13 +40,21 @@
   (sched/state-executed! s-agt task)
   (remove-watch agt-to-run :observer))
 
-(defn select [images {:keys [DefinitionClass id] :as task}]
+(defn watch-fn [agt-to-run s-agt task]
+  (fn [_ _ {o :ctrl} {n :ctrl}]
+    (cond
+      (to-error? o n) (act-error! agt-to-run s-agt task)
+      (to-ready? o n) (act-ready! agt-to-run s-agt task)
+      :default :noop)))
+  
+(defn select [images {:keys [DefinitionClass id pos-str] :as task}]
   (let [s-agt (model/images->state-agent images task)
-        e-agt (model/images->exch-agent images task)
-        agt-to-run (agent-match (model/images->defins images task) e-agt DefinitionClass)]
-    (add-watch agt-to-run :observer (fn [_ _ {o :ctrl} {n :ctrl}]
-                                      (cond
-                                        (to-error? o n) (act-error! agt-to-run s-agt task)
-                                        (to-ready? o n) (act-ready! agt-to-run s-agt task)
-                                        :default :noop)))
-    (sched/ctrl-run! agt-to-run)))
+        e-agt (model/images->exch-agent images task)]
+    (if-let [agt-to-run (agent-match (model/images->defins images task) e-agt DefinitionClass)]
+      (do
+        (µ/log ::select :message (str "found definition for class:" DefinitionClass) :pos-str pos-str)
+        (add-watch agt-to-run :observer (watch-fn agt-to-run s-agt task))
+        (sched/ctrl-run! agt-to-run))
+      (do
+        (µ/log ::select :error (str "no matching definition for class:" DefinitionClass) :pos-str pos-str)
+        (sched/state-error! s-agt task)))))

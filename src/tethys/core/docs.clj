@@ -48,7 +48,8 @@
 (defn store [images {:keys [DocPath Result] :as task}]
   (when-let [doc-ids (ids images task)]
     (µ/log ::store :message "initiate to store data")
-    (let [request (req (model/images->conf images task) DocPath Result)]
-      (mapv #(http/post (url %) request) doc-ids)))
+    (let [conf (model/images->conf images task)
+          request (req conf DocPath Result)]
+      (mapv #(http/post (url conf %) request) doc-ids)))
   task)
     

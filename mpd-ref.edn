@@ -99,7 +99,7 @@
     :Definition
     [[{:TaskName "Common-simple_read_element",
        :Replace
-       {:%docpath "Measurement.Values.Pressure", :%exchpath "A"}}]]}
+       {"@docpath" "Measurement.Values.Pressure", "@exchpath" "A"}}]]}
    ;; 6. container
    {:Description "Test anselm request.",
     :Ctrl "void",
