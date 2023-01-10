@@ -50,7 +50,8 @@
 ;;
 (defn from [e-agt {:keys [FromExchange] :as task}]
   (when (and (map? @e-agt) (map? FromExchange))
-    (into {} (mapv (fn [[k p]] {k (e-value e-agt p)}) FromExchange))))
+    (into {} (mapv (fn [[k p]]
+                     {k (e-value e-agt p)}) FromExchange))))
 
 (comment
   (def a (agent {:A {:Type "ref" :Unit "Pa" :Value 100.0},

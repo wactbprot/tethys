@@ -7,6 +7,7 @@
             [tethys.worker.ctrl-mp :as ctrl-mp]
             [tethys.worker.select-definition :as select]
             [tethys.worker.devhub :as devhub]
+            [tethys.worker.devproxy :as devproxy]
             [tethys.worker.date-time :as dt]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.wait :as wait]))
@@ -25,10 +26,11 @@
     :stopMp (ctrl-mp/stop-mp images task)
     :getDate (dt/store-date images task)
     :getTime (dt/store-time images task)
+    :Anselm (devproxy/devproxy images task)
+    :DevProxy (devproxy/devproxy images task)
+ 
     ;; todo:
     
-    ;; :Anselm        
-    ;; :DevProxy      
     ;; :genDbDoc      
     ;; :rmDbDocs      
     ;; :replicateDB   

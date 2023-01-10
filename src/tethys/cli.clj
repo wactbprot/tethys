@@ -1,12 +1,10 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [tethys.core.db :as db]
-            [tethys.core.docs :as docs]
+  (:require [tethys.core.docs :as docs]
             [tethys.core.model :as model]
-            [tethys.core.system :as sys]
             [tethys.core.scheduler :as sched]
-            [tethys.core.task :as task]
-            [tethys.core.worker :as work]))
+            [tethys.core.worker :as work]
+            [tethys.system :as sys]))
 
 ;; # cli
 ;;
@@ -77,41 +75,6 @@
 (defn t-queqe [mpd] @(t-agent mpd))
 (defn t-error [mpd] (agent-error (t-agent mpd)))
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
-
-;; Deprecation Note
-
-;; The functions [[t-resolve]] and [[t-run]] should be shipped
-;; to a further app which concernes about building and testing mpds.
-;; The functionality in the task name space should therefore be paged
-;; out to a separate library.
-
-;; Get a task from the database and resole
-;; a `replace-map` by means of [[t-resolve]]. An Example would be:
-(comment
-  (t-resolve "Common-wait" {"@waittime" 1000})
-  {"Action" "wait",
-   "Comment" "@waitfor  1000 ms",
-   "TaskName" "Common-wait",
-   "WaitTime" 1000}
-
-  (t-resolve "PPC_MaxiGauge-ini" {"@CR" "\n"})
-  {"TaskName" "PPC_MaxiGauge-ini",
-   "Comment" "Initializes the safe gauge",
-   "Action" "@acc",
-   "Host" "@host",
-   "Port" "@port",
-   "Value" ["UNI,0\n" "" "PR1\n" ""]})
-
-(defn t-resolve [task-name replace-map use-map]
-  (let [f (db/task-fn (:db/task @sys/system))
-        {:keys [Defaults] :as task} (f task-name)]
-    (task/assemble task  replace-map use-map Defaults)))
-
-;; `t-run` uses the always present `mpd-ref` image.
-(defn t-run [task-name replace-map use-map]
-  (let [task (t-resolve task-name replace-map use-map)
-        task (merge task (struct model/state :mpd-ref :conts 0 0 0))]
-    (work/check-run (images) task)))
 
 ;; ## Worker
 (defn w-agent [mpd] (model/image->worker-agent (image mpd)))

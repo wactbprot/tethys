@@ -70,10 +70,9 @@
        (json/read-str :key-fn keyword)))
 
 (defn build [image exch db-fn {:keys [TaskName] :as task}]
-  (-> task
-      (merge (db-fn TaskName))
-      (assoc :FromExchange (exchange/from exch task))
-      (assemble)))  
+  (let [task (merge task (db-fn TaskName))
+        from-exchange (exchange/from exch task)]
+    (assemble (assoc task :FromExchange from-exchange ))))  
 
 (defn error [a ex]
   (µ/log ::error-handler :error (str "error occured: " ex))

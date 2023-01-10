@@ -1,4 +1,4 @@
-(ns tethys.core.system
+(ns tethys.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
