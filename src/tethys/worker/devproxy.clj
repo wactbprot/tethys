@@ -8,7 +8,7 @@
             [tethys.core.response :as resp]
             [tethys.core.scheduler :as sched]))
 
-;; Example for a `writeExchange`task:
+;; Example for a `devproxy` (aka `anselm`) task:
 
 ;; <pre>
 ;; {
@@ -31,13 +31,11 @@
 (defn req [{header :json-post-header} {:keys [Value] :as task}] (assoc header :body (json/write-str Value)))
 
 (defn devproxy [images {:keys [pos-str] :as task}]
-  (prn task)
   (let [conf (model/images->conf images task)
         r-agt (model/images->resp-agent images task)
         s-agt (model/images->state-agent images task)]
     (try
       (let [{:keys [status body error]} (http/post (url conf task) (req conf task))]
-        (prn body)
         (if (or (not error)
                 (< status 400))
           (try

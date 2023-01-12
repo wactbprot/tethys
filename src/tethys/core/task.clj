@@ -17,7 +17,7 @@
      "@month" (dt/get-month d) 
      "@day" (dt/get-day d)
      "@time" (dt/get-time)}))
- 
+
 ;; In order to overcome the problem of keywords like `:@foo` the
 ;; function `kw-map->str-map` converts the "keyword map" (keys in the
 ;; map are keywords) delivered by the database view to a "string map" (keys in the
@@ -26,7 +26,7 @@
 
 (defn key->pattern [s x]
   (re-pattern (if (string? x) (str s "(?![a-z])") (str "\"?" s  "\"?"))))
- 
+
 (defn val->safe-val [x] x (if (string? x) x (json/write-str x)))
 
 (defn replace-map [s r]
@@ -59,19 +59,19 @@
           task (replace-vec task use-map)))
 
 (defn assemble [{:keys [Use Replace FromExchange Defaults] :as task}]
-   (-> task
-       (resolve-use Use)
-       (dissoc  :Replace :Use :Defaults :FromExchange)
-       (json/write-str)
-       (replace-map (kw-map->str-map Replace))
-       (replace-map (kw-map->str-map FromExchange))
-       (replace-map (globals))
-       (replace-map (kw-map->str-map Defaults))
-       (json/read-str :key-fn keyword)))
+  (-> task
+      (resolve-use Use)
+      (dissoc  :Replace :Use :Defaults :FromExchange)
+      (json/write-str)
+      (replace-map (kw-map->str-map Replace))
+      (replace-map (kw-map->str-map FromExchange))
+      (replace-map (globals))
+      (replace-map (kw-map->str-map Defaults))
+      (json/read-str :key-fn keyword)))
 
 (defn build [image exch db-fn {:keys [TaskName] :as task}]
   (let [task (merge task (db-fn TaskName))
-        from-exchange (exchange/from exch task)]
+        from-exchange (exchange/from exch task)]      
     (assemble (assoc task :FromExchange from-exchange ))))  
 
 (defn error [a ex]
@@ -81,14 +81,14 @@
   (restart-agent a @a))
 
 (defn watch-fn [db {:keys [worker-queqe exch] :as image}]
- (let [db-fn (db/task-fn db)]
-   (fn [_ t-agt _ t-queqe]
-     (when (seq t-queqe)
-       (send t-agt (fn [l]
-                     (let [task (build image exch db-fn (first l))]
-                       (send worker-queqe (fn [l] (conj l task)))
-                       (-> l rest))))))))
-  
+  (let [db-fn (db/task-fn db)]
+    (fn [_ t-agt _ t-queqe]
+      (when (seq t-queqe)
+        (send t-agt (fn [l]
+                      (let [task (build image exch db-fn (first l))]
+                        (send worker-queqe (fn [l] (conj l task)))
+                        (-> l rest))))))))
+
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.
 ;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 

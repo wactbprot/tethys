@@ -30,7 +30,6 @@
 (defn image->resp-agent [image] (-> image :response-queqe))
 (defn image->conf [image] (-> image :conf))
 
-
 (defn images->defins [images {:keys [id]}]
   (-> images
       (images->image id)
@@ -60,6 +59,21 @@
   (-> images
       (images->image id)
       (image->ids-agent)))
+
+;; ## message
+
+(defn add-message [images {:keys [id ndx Message]}]
+  (let [s-agt (-> images
+                  (images->image id)
+                  (image->cont-agent ndx))]
+    (send s-agt (fn [m] (assoc m :message Message)))))
+
+(defn rm-message [images {:keys [id ndx]}]
+  (let [s-agt (-> images
+                  (images->image id)
+                  (image->cont-agent ndx))]
+    (send s-agt (fn [m] (dissoc m :message)))))
+
 
 ;; ## State
 

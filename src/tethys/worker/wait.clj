@@ -7,7 +7,6 @@
 
 (defn wait [images {:keys [WaitTime pos-str] :as task}]
   (Thread/sleep (Integer. WaitTime))
-  (prn ".")
   (µ/log ::wait :message "Waittime over" :pos-str pos-str)
   (sched/state-executed! (model/images->state-agent images task) task))
   
