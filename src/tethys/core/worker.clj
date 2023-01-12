@@ -9,6 +9,7 @@
             [tethys.worker.devhub :as devhub]
             [tethys.worker.devproxy :as devproxy]
             [tethys.worker.date-time :as dt]
+            [tethys.worker.db :as db]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.message :as message]
             [tethys.worker.wait :as wait]))
@@ -30,12 +31,12 @@
     :Anselm (devproxy/devproxy images task)
     :DevProxy (devproxy/devproxy images task)
     :message (message/message images task)
+    :replicateDB (db/repli images task)
+    
     ;; todo:
     
     ;; :genDbDoc      
-    ;; :rmDbDocs      
-    ;; :replicateDB   
-    
+    ;; :rmDbDocs          
     ;;        
 
     (µ/log ::dispatch :error "no matching case")))

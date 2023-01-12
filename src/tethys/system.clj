@@ -38,7 +38,8 @@
              :view "tasks"
              :design "dbmp"}
    
-   :model/conf {:json-post-header {:content-type :json
+   :model/conf {:db (ig/ref :db/couch)
+                :json-post-header {:content-type :json
                                    :socket-timeout 600000 ;; 10 min
                                    :connection-timeout 600000
                                    :accept :json}

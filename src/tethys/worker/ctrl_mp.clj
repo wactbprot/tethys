@@ -13,7 +13,7 @@
             (when (= title (-> @a :title))
               (reduced (-> @a :ndx))))
           {} (-> image :conts)))
-
+ 
 (defn run-by-ndx [images {:keys [Container Mp] :as task}]
   (let [image (model/images->image images Mp)
         s-agt (model/images->state-agent images task)

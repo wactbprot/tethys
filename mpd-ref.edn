@@ -144,7 +144,14 @@
     :Element [],
     :Definition
     [[{:TaskName "Common-exchange_value",
-       :Replace {"@exchpath" "C", "@value" "done"}}]]}],
+       :Replace {"@exchpath" "C", "@value" "done"}}]]}
+   ;; 11. container
+   {:Description "Replicate feature.",
+    :Ctrl "ready",
+    :Title "replicate",
+    :Element [],
+    :Definition
+    [[{:TaskName "Common-db_replicate"}]]}],
   ;; -------------------------------------------------------
   ;; Definitions section 
   ;; -------------------------------------------------------
