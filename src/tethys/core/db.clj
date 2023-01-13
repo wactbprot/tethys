@@ -11,6 +11,8 @@
 
 (defn get-doc [id db] (db/get-doc id db))
 
+(defn replicate-db [m db] (db/replicate-db m db))
+
 ;; The `task` fnunction is generated during the initialisation. It
 ;; encapsulates the entire `config` so that only the `task-name` has
 ;; to be given.
