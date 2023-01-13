@@ -3,8 +3,8 @@
   (:require [tethys.core.docs :as docs]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
-            [tethys.core.worker :as work]
-            [tethys.system :as sys]))
+            [tethys.system :as sys]
+            [portal.api :as p]))
 
 ;; # cli
 ;;
@@ -23,16 +23,25 @@
 ;;
 ;; In order to get an overview of the active mpds use `(mpds)`.
 (defn mpds [] (keys (:db/mpds @sys/system)))
+(def p (p/open))
 
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
 (defn start
   ([] (start nil))
   ([id-set]
+   
+   (add-tap #'p/submit)
    (sys/init id-set)
   (mpds)))
 
-(defn stop [] (sys/stop))
+(defn stop []
+  (p/close)
+  (sys/stop))
+
+(comment
+   (tap> @(c-agent :mpd-ref 0)))
+
 (defn images [] (:model/images @sys/system))
 (defn image [mpd] (-> (images) mpd))
 
