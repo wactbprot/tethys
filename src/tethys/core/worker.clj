@@ -33,12 +33,7 @@
     :message (message/message images task)
     :replicateDB (db/replicate-db images task)
     :genDbDoc (db/gen-doc  images task)
-    ;; todo:
-    
-    ;; :genDbDoc      
-    ;; :rmDbDocs          
-    ;;        
-
+    :rmDbDocs (db/rm-docs  images task)
     (µ/log ::dispatch :error "no matching case")))
 
 (defn check-run [images task] 

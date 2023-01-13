@@ -63,3 +63,9 @@
     (docs/add images task id)
     (µ/log ::gen-doc :message "document added" :pos-str pos-str)
     (sched/state-executed! s-agt task)))
+
+(defn rm-docs [images {:keys [pos-str] :as task}]
+  (let [s-agt (model/images->state-agent images task)]
+    (docs/rm-all images task)
+    (µ/log ::rm-docs :message "all document ids removed form ids interface" :pos-str pos-str)
+    (sched/state-executed! s-agt task)))
