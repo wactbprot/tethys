@@ -31,8 +31,8 @@
     :Anselm (devproxy/devproxy images task)
     :DevProxy (devproxy/devproxy images task)
     :message (message/message images task)
-    :replicateDB (db/repli images task)
-    
+    :replicateDB (db/replicate-db images task)
+    :genDbDoc (db/gen-doc  images task)
     ;; todo:
     
     ;; :genDbDoc      

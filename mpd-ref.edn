@@ -38,7 +38,7 @@
   [;; Containers are fixed sequences of things to do. 
    ;; In opposit to definitions containers have no conditions structure.
    
-   ;; 1. container:
+   ;; 0. container:
    {:Description "Container just waits parallel and sequential.",
     ;; The ctrl endpoint of the first container.
     ;; All values are ok. The values start, stop and mon will start stop and mon.
@@ -67,14 +67,14 @@
       {:TaskName "Common-wait", :Replace {"@waittime" 1000}}
       {:TaskName "Common-wait", :Replace {"@waittime" 1000}}]
      [{:TaskName "Common-wait", :Replace {"@waittime" 2000}}]]}
-   {  ;; 2. container
+   {  ;; 1. container
     :Description "Container with one task only",
     :Ctrl "void",
     :Title "container with single task",
     :Element ["Target_pressure"],
     :Definition
     [[{:TaskName "Common-wait", :Replace {"@waittime" 1000}}]]}
-   ;; 3. container   
+   ;; 2. container   
    {:Description "Show case select feature",
     :Ctrl "void",
     :Title "choose definition, run it",
@@ -82,7 +82,7 @@
     :Definition
     [[{:TaskName "Common-select_definition",
        :Replace {"@definitionclass" "wait"}}]]}
-   ;; 4. container
+   ;; 3. container
    {:Description "Run a mpd (first container of ref).",
     :Ctrl "void",
     :Title "run 1st container",
@@ -91,7 +91,7 @@
     [[{:TaskName "Common-run_mp",
        :Replace
        {"@conttitle" "multiple wait tasks" "@mpdef" "mpd-ref"}}]]}
-   ;; 5. container
+   ;; 4. container
    {:Description "Test read_exchange action.",
     :Ctrl "void",
     :Title "read exchange.",
@@ -100,13 +100,13 @@
     [[{:TaskName "Common-simple_read_element",
        :Replace
        {"@docpath" "Measurement.Values.Pressure", "@exchpath" "A"}}]]}
-   ;; 6. container
+   ;; 5. container
    {:Description "Test anselm request.",
     :Ctrl "void",
     :Title "anselm.",
     :Element [],
     :Definition [[{:TaskName "Common-anselm_get_dut_max"}]]}
-   ;; 7. container
+   ;; 6. container
    {:Description
     "Test date and time and the ability to parallel write to database docs.",
     :Ctrl "void",
@@ -121,7 +121,7 @@
        :Replace
        {"@docpath" "Calibration.Measurement.AuxValues.Time"
         "@type" "tethys-test"}}]]}
-   ;; 8. container
+   ;; 7. container
    {:Description "Message test.",
     :Ctrl "void",
     :Title "message",
@@ -129,15 +129,14 @@
     :Definition
     [[{:TaskName "Common-message",
        :Replace {"@message" "Lorem ipsum dolor sit amet."}}]]}
-   ;; 9. container
-   {:Description "Add and remove documents.",
+   ;; 8. container
+   {:Description "Add a document.",
     :Ctrl "void",
-    :Title "add & rm docs.",
+    :Title "add doc.",
     :Element [],
     :Definition
-    [[{:TaskName "Common-gen_state_doc"}]
-     [{:TaskName "Common-rm_db_docs"}]]}
-   ;; 10. container
+    [[{:TaskName "SE3_state-gen_state_doc"}]]}
+   ;; 9. container
    {:Description "Write exchange.",
     :Ctrl "ready",
     :Title ".",
@@ -145,13 +144,20 @@
     :Definition
     [[{:TaskName "Common-exchange_value",
        :Replace {"@exchpath" "C", "@value" "done"}}]]}
-   ;; 11. container
+   ;; 10. container
    {:Description "Replicate feature.",
     :Ctrl "ready",
     :Title "replicate",
     :Element [],
     :Definition
-    [[{:TaskName "Common-db_replicate"}]]}],
+    [[{:TaskName "Common-db_replicate"}]]}
+   ;; 11. container
+   {:Description "Remove documents.",
+    :Ctrl "void",
+    :Title "rm docs.",
+    :Element [],
+    :Definition
+       [[{:TaskName "Common-rm_db_docs"}]]}],
   ;; -------------------------------------------------------
   ;; Definitions section 
   ;; -------------------------------------------------------

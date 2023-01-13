@@ -9,7 +9,11 @@
 ;; library [libcdb](https://gitlab1.ptb.de/vaclab/vl-db)
 (defn config [opts] (cf/config opts))
 
+(defn put-doc [doc db] (db/put-doc doc db))
+
 (defn get-doc [id db] (db/get-doc id db))
+
+(defn doc-exist? [id db] (db/doc-exist? id db))
 
 (defn replicate-db [m db] (db/replicate-db m db))
 
