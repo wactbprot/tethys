@@ -6,7 +6,9 @@
 
 (defn op-fn [op sdx pdx]
   (fn [{s :sdx p :pdx :as m}]
-    (if (and (= s sdx) (= p pdx)) (assoc m :is op) m)))
+    (if (and (= s sdx) (= p pdx))
+      (assoc m :is op)
+      m)))
 
 (defn state! [a op {:keys [sdx pdx]}]
   (send a (fn [{:keys [state] :as n}] 
@@ -36,7 +38,9 @@
 
 (defn set-all-pos-ready [v] (mapv (fn [m] (assoc m :is :ready)) v))
 
-(defn ctrl! [a op] (send a (fn [m] (assoc m :ctrl op))))
+(defn ctrl! [a op]
+  (send a (fn [m] (assoc m :ctrl op)))
+  {:ctrl op})
   
 ;; The `:ctrl` interface of a container is set to `:error` if a task
 ;; turns to `:error`

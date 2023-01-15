@@ -77,12 +77,12 @@
 
 ;; ## worker
 
-(defn spawn! [images {:keys [id pos-str]} call]
+(defn spawn-work [images {:keys [id pos-str] :as task} f]
   (let [kw (keyword pos-str)
         w-atm (-> images
                   (images->image id)
                   (image->worker-futures))]
-    (swap! w-atm assoc kw call)))
+    (swap! w-atm assoc kw (future (f images task)))))
 
 ;; ## State
 

@@ -50,42 +50,54 @@
 
 ;; ## Ctrl-interface
 
-;; setting Run, stop or mon a `cont`ainer `ndx` of
-;; `mpd` with this functions.
-
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
 (defn c-agent [mpd ndx] (model/image->cont-agent (image mpd) ndx))
 
-(comment
-  (map :is (:state @(c-agent :mpd-ref 0))))
 
 ;; ## Start, stop container
-(defn ctrl [a op]
-  (sched/ctrl! a op)
-  (await a)
-  (-> @a :ctrl))
 
-(defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
-(defn c-mon [mpd ndx] (ctrl (c-agent mpd ndx) :mon))
-(defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
+(defn ctrl!
+  "Set `op` at position `mpd` `ndx` by `sendìng it to the ctrl scheduler."
+  [[mpd ndx] op]
+  {:pre  [(keyword? mpd)
+          (int? ndx)
+          (keyword? op)]}
+  (sched/ctrl! (c-agent mpd ndx) op))
+
+;; Sets the ctrl at the `pos`ition defined by `ndx` `mpd`
+
+(comment
+  (c-run :mpd-ref 0)
+  (map :is (:state @(c-agent :mpd-ref 0))))
+
+(defn c-run [& pos] (ctrl! pos :run))
+(defn c-mon [& pos] (ctrl! pos :mon))
+(defn c-stop [& pos] (ctrl! pos :stop))
 
 ;; ## Set container state
-;;
-(defn- state! [a op mpd ndx sdx pdx]
-  (sched/state! a op (struct model/state mpd :cont ndx sdx pdx op)))
 
-;; Sets the state at position `ndx`,`sdx`, `pdx`  of `mpd`
-(defn s-ready [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) :ready mpd ndx sdx pdx))
+(defn- state!
+  "Set `op` at position `mpd` `ndx` `sdx` `pdx` by `sendìng it to the
+  state scheduler."
+  [[mpd ndx sdx pdx] op]
+  {:pre  [(keyword? mpd)
+          (int? ndx)
+          (int? sdx)
+          (int? pdx)
+          (keyword? op)]}
+  (let [a (c-agent mpd ndx)
+        s (struct model/state mpd :cont ndx sdx pdx op)]
+    (sched/state! a op s)))
 
-(defn s-exec  [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) :executed mpd ndx sdx pdx))
+;; Sets the state at the `pos`ition defined by `ndx`,`sdx`, `pdx`  of `mpd`
 
-(defn s-work [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) :working mpd ndx sdx pdx))
+(comment
+  (s-ready :mpd-ref 0 0 0))
 
-(defn s-error [mpd ndx sdx pdx]
-  (state! (c-agent mpd ndx) :error mpd ndx sdx pdx))
+(defn s-ready [& pos] (state! pos :ready))
+(defn s-exec  [& pos] (state! pos :executed))
+(defn s-work [& pos] (state! pos :working))
+(defn s-error [& pos] (state! pos :error))
 
 ;; ## Tasks
 ;; 
