@@ -15,28 +15,30 @@
             [tethys.worker.wait :as wait]))
 
 (defn dispatch [images {:keys [Action] :as task}]
-  (case (keyword Action)
-    :wait (wait/wait images task)
-    :TCP (devhub/devhub images task)
-    :VXI11 (devhub/devhub images task)
-    :MODBUS (devhub/devhub images task)
-    :EXECUTE (devhub/devhub images task)
-    :writeExchange (exchange/write-exchange images task)
-    :readExchange (exchange/read-exchange images task)
-    :select (select/select images task)
-    :runMp (ctrl-mp/run-mp images task)
-    :stopMp (ctrl-mp/stop-mp images task)
-    :getDate (dt/store-date images task)
-    :getTime (dt/store-time images task)
-    :Anselm (devproxy/devproxy images task)
-    :DevProxy (devproxy/devproxy images task)
-    :message (message/message images task)
-    :replicateDB (db/replicate-db images task)
-    :genDbDoc (db/gen-doc  images task)
-    :rmDbDocs (db/rm-docs  images task)
-    (µ/log ::dispatch :error "no matching case")))
-
-(defn check-run [images task] 
+  (model/spawn! images task 
+                (future
+                  (case (keyword Action)
+                    :wait (wait/wait images task)
+                    :TCP (devhub/devhub images task)
+                    :VXI11 (devhub/devhub images task)
+                    :MODBUS (devhub/devhub images task)
+                    :EXECUTE (devhub/devhub images task)
+                    :writeExchange (exchange/write-exchange images task)
+                    :readExchange (exchange/read-exchange images task)
+                    :select (select/select images task)
+                    :runMp (ctrl-mp/run-mp images task)
+                    :stopMp (ctrl-mp/stop-mp images task)
+                    :getDate (dt/store-date images task)
+                    :getTime (dt/store-time images task)
+                    :Anselm (devproxy/devproxy images task)
+                    :DevProxy (devproxy/devproxy images task)
+                    :message (message/message images task)
+                    :replicateDB (db/replicate-db images task)
+                    :genDbDoc (db/gen-doc  images task)
+                    :rmDbDocs (db/rm-docs  images task)
+                    (µ/log ::dispatch :error "no matching case")))))
+  
+(defn check-spawn! [images task] 
   (let [stop-if-delay 1000
         s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)]    
@@ -63,7 +65,7 @@
   (fn [_ w-agt _ w-queqe]
     (when (seq w-queqe)
       (send w-agt (fn [l]
-                    (future (check-run images (first w-queqe)))
+                    (check-spawn! images (first w-queqe))
                     (-> l rest))))))
 
 (defn up [{:keys [worker-queqe]} images]

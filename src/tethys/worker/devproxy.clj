@@ -39,7 +39,7 @@
         (if (or (not error)
                 (< status 400))
           (try
-            (resp/add r-agt (merge task (json/read-str body :key-fn keyword))) 
+            (resp/add r-agt (merge task (json/read-str body :key-fn keyword)))
             (catch Exception e
               (µ/log ::devproxy :error (.getMessage e) :pos-str pos-str)
               (sched/state-error! s-agt task)))

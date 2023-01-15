@@ -10,7 +10,8 @@
 
 (defn state! [a op {:keys [sdx pdx]}]
   (send a (fn [{:keys [state] :as n}] 
-            (assoc n :state (mapv (op-fn op sdx pdx) state)))))
+            (assoc n :state (mapv (op-fn op sdx pdx) state))))
+  {:state op})
 
 (defn state-executed! [a task] (state! a :executed task))
 (defn state-ready! [a task] (state! a :ready task))
@@ -83,14 +84,16 @@
 ;; related task-queqe agent.
 (defn up-watch-fn [tq]
   (fn [a]
-    (add-watch a :sched (fn [_ s-agt _ {:keys [ctrl state]}]
-                          (cond
-                            (and (not= :error ctrl)
-                                 (error? state))  (ctrl-error! s-agt)
-                            (all-exec? state)     (all-ready! s-agt)
-                            (or (= :run ctrl)
-                                (= :mon ctrl))    (start-next! s-agt tq (find-next state))
-                            :nothing-todo-here true)))))
+    (add-watch a :sched (fn [_ s-agt o-state-queqe n-state-queqe]
+                          (when (not= o-state-queqe n-state-queqe)
+                            (let [{:keys [ctrl state]} n-state-queqe]
+                              (cond
+                                (and (not= :error ctrl)
+                                     (error? state))  (ctrl-error! s-agt)
+                                (all-exec? state)     (all-ready! s-agt)
+                                (or (= :run ctrl)
+                                    (= :mon ctrl))    (start-next! s-agt tq (find-next state))
+                                :nothing-todo-here true)))))))
 
 (defn up [{:keys [conts defins task-queqe]}]
   {:conts (mapv (up-watch-fn task-queqe) conts)

@@ -28,10 +28,12 @@
     (if-not error
       (do
         (µ/log ::replicate :message "replication done" :pos-str pos-str)
-        (sched/state-executed! s-agt task))
+        (sched/state-executed! s-agt task)
+        {:ok true})
       (do
         (µ/log ::replicate :error (str "from database"  error) :pos-str pos-str)
-        (sched/state-error! s-agt task)))))
+        (sched/state-error! s-agt task)
+        {:error true}))))
 
 
 ;; Example for a `gen-doc` task:
@@ -62,7 +64,8 @@
       (db/put-doc Value db))
     (docs/add images task id)
     (µ/log ::gen-doc :message "document added" :pos-str pos-str)
-    (sched/state-executed! s-agt task)))
+    (sched/state-executed! s-agt task)
+    {:ok true}))
 
 (defn rm-docs [images {:keys [pos-str] :as task}]
   (let [s-agt (model/images->state-agent images task)]

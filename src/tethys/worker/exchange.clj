@@ -24,7 +24,8 @@
   (let [e-agt (model/images->exch-agent images task)
         s-agt (model/images->state-agent images task)]
     (exch/to e-agt task)
-    (sched/state-executed! s-agt task)))
+    (sched/state-executed! s-agt task)
+    {:ok true}))
 
 ;; Example for a `readExchange`task:
 
@@ -43,7 +44,8 @@
         r-agt (model/images->resp-agent images task)
         s-agt (model/images->state-agent images task)]
     (if-let [value (exch/e-value e-agt ExchangePath)]
-      (resp/add r-agt (merge task {:Result [value]}))
+      (do
+        (resp/add r-agt (merge task {:Result [value]})))
       (do
         (µ/log ::read :error (str "No value found at exchange path " ExchangePath))
         (sched/state-error! s-agt task)))))

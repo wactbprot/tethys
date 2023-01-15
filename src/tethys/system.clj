@@ -14,57 +14,7 @@
   (:gen-class))
 
 (defn config [id-set]
-  {:mpd/id-set {:id-set id-set
-                :id-sets {:ppc ["mpd-ppc-gas_dosing"]
-                          :se3 ["mpd-se3-calib"
-                                "mpd-se3-state"
-                                "mpd-se3-servo"]}}
-   
-   :mpd/reference {:file-name "mpd-ref.edn"}
-
-   :db/couch {:prot "http",
-              :host "localhost",
-              :port 5984,
-              :usr (System/getenv "CAL_USR")
-              :pwd (System/getenv "CAL_PWD")
-              :name "vl_db_work"}
-
-   :db/mpds {:db (ig/ref :db/couch)
-             :reference-mpd (ig/ref :mpd/reference)
-             :id-set (ig/ref :mpd/id-set) 
-             :ini {}}
-
-   :db/task {:db (ig/ref :db/couch)
-             :view "tasks"
-             :design "dbmp"}
-   
-   :model/conf {:db (ig/ref :db/couch)
-                :json-post-header {:content-type :json
-                                   :socket-timeout 600000 ;; 10 min
-                                   :connection-timeout 600000
-                                   :accept :json}
-                :dev-hub-url "http://localhost:9009"
-                :db-agent-url "http://localhost:9992"
-                :dev-proxy-url "http://localhost:8009"}
-                
-   :model/images {:mpds (ig/ref :db/mpds)
-                  :conf (ig/ref :model/conf)
-                  :ini {}}
-   
-   :model/worker {:images (ig/ref :model/images)
-                  :ini {}}
-
-   :model/response {:images (ig/ref :model/images)
-                    :ini {}}
-   
-   :model/task {:db (ig/ref :db/task)
-                :images (ig/ref :model/images)
-                :ini {}}
-   
-   :scheduler/images {:images (ig/ref :model/images)
-                      :ini {}}
-
-   :log/mulog {:type :multi
+  {:log/mulog {:type :multi
                :log-context {:app-name "tethys"
                              :facility (or (System/getenv "TETHYS_FACILITY")
                                            (System/getenv "DEVPROXY_FACILITY")
@@ -75,7 +25,46 @@
                             :els-version :v7.x
                             :publish-delay 1000
                             :data-stream "tethys_log"
-                            :name-mangling false}]}})
+                            :name-mangling false}]}
+   :mpd/id-set {:id-set id-set
+                :id-sets {:ppc ["mpd-ppc-gas_dosing"]
+                          :se3 ["mpd-se3-calib"
+                                "mpd-se3-state"
+                                "mpd-se3-servo"]}}
+   :mpd/reference {:file-name "mpd-ref.edn"}
+   :db/couch {:prot "http",
+              :host "localhost",
+              :port 5984,
+              :usr (System/getenv "CAL_USR")
+              :pwd (System/getenv "CAL_PWD")
+              :name "vl_db_work"}
+   :db/mpds {:db (ig/ref :db/couch)
+             :reference-mpd (ig/ref :mpd/reference)
+             :id-set (ig/ref :mpd/id-set) 
+             :ini {}}
+   :db/task {:db (ig/ref :db/couch)
+             :view "tasks"
+             :design "dbmp"}
+   :model/conf {:db (ig/ref :db/couch)
+                :json-post-header {:content-type :json
+                                   :socket-timeout 600000 ;; 10 min
+                                   :connection-timeout 600000
+                                   :accept :json}
+                :dev-hub-url "http://localhost:9009"
+                :db-agent-url "http://localhost:9992"
+                :dev-proxy-url "http://localhost:8009"}
+   :model/images {:mpds (ig/ref :db/mpds)
+                  :conf (ig/ref :model/conf)
+                  :ini {}}
+   :model/worker {:images (ig/ref :model/images)
+                  :ini {}}
+   :model/response {:images (ig/ref :model/images)
+                    :ini {}}
+   :model/task {:db (ig/ref :db/task)
+                :images (ig/ref :model/images)
+                :ini {}}
+   :scheduler/images {:images (ig/ref :model/images)
+                      :ini {}}})
 
 ;; # System
 ;;
@@ -108,7 +97,7 @@
   (-> (io/file file-name) slurp edn/read-string))
 
 (defmethod ig/init-key :db/task [_ {:keys [db view design]}]
-    (µ/log ::task-db :message "start system")
+  (µ/log ::task-db :message "start system")
   (db/config (assoc db :view view :design design)))
 
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini reference-mpd]}]
@@ -120,8 +109,7 @@
       ini id-set)
      (keyword _id) Mp)))
 
-(defmethod ig/init-key :model/conf [_ conf]  
-  conf)
+(defmethod ig/init-key :model/conf [_ conf] conf)
   
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
   (µ/log ::cont :message "start system")

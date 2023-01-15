@@ -6,6 +6,14 @@
             [tethys.system :as sys]
             [portal.api :as p]))
 
+;; # open portal
+
+;; See https://github.com/djblue/portal
+(def p (p/open))
+
+(comment
+   (tap> @(c-agent :mpd-ref 0)))
+
 ;; # cli
 ;;
 ;; This is the tethys **c**ommand **l**ine **i**nterface.
@@ -22,15 +30,13 @@
 ;; ## Start, stop and restart system
 ;;
 ;; In order to get an overview of the active mpds use `(mpds)`.
-(defn mpds [] (keys (:db/mpds @sys/system)))
-(def p (p/open))
+(defn mpds [] (-> @sys/system :db/mpds keys))
 
 ;; The following functions are intended
 ;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
 (defn start
   ([] (start nil))
   ([id-set]
-   
    (add-tap #'p/submit)
    (sys/init id-set)
   (mpds)))
@@ -39,10 +45,7 @@
   (p/close)
   (sys/stop))
 
-(comment
-   (tap> @(c-agent :mpd-ref 0)))
-
-(defn images [] (:model/images @sys/system))
+(defn images [] (-> @sys/system :model/images))
 (defn image [mpd] (-> (images) mpd))
 
 ;; ## Ctrl-interface
@@ -53,8 +56,15 @@
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
 (defn c-agent [mpd ndx] (model/image->cont-agent (image mpd) ndx))
 
+(comment
+  (map :is (:state @(c-agent :mpd-ref 0))))
+
 ;; ## Start, stop container
-(defn ctrl [a op] (sched/ctrl! a op))
+(defn ctrl [a op]
+  (sched/ctrl! a op)
+  (await a)
+  (-> @a :ctrl))
+
 (defn c-run [mpd ndx] (ctrl (c-agent mpd ndx) :run))
 (defn c-mon [mpd ndx] (ctrl (c-agent mpd ndx) :mon))
 (defn c-stop [mpd ndx] (ctrl (c-agent mpd ndx) :stop))
@@ -87,6 +97,8 @@
 
 ;; ## Worker
 (defn w-agent [mpd] (model/image->worker-agent (image mpd)))
+(defn w-future [mpd] (model/image->worker-futures (image mpd)))
+
 (defn w-queqe [mpd] @(w-agent mpd))
 (defn w-error [mpd] (agent-error (w-agent mpd)))
 (defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))

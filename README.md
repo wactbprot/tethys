@@ -23,11 +23,11 @@ nice option to understand the system during runtime.
 
 * the system maintained by
   [integrant](https://github.com/weavejester/integrant)
-* Idea: integrant provides [suspend and
-  resume](https://github.com/weavejester/integrant#suspending-and-resuming)
+* Idea: integrant provides [suspend and resume](https://github.com/weavejester/integrant#suspending-and-resuming)
   which can be used dump the system into a database or filesystem
   etc. and resume at any point in time
 
+# development
   
 ## generate documentation
 

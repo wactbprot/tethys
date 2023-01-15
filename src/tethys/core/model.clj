@@ -25,6 +25,7 @@
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
 (defn image->task-agent [image] (-> image :task-queqe))
 (defn image->worker-agent [image] (-> image :worker-queqe))
+(defn image->worker-futures [image] (-> image :worker-futures))
 (defn image->exch-agent [image] (-> image :exch))
 (defn image->ids-agent [image] (-> image :ids))
 (defn image->resp-agent [image] (-> image :response-queqe))
@@ -74,6 +75,14 @@
                   (image->cont-agent ndx))]
     (send s-agt (fn [m] (dissoc m :message)))))
 
+;; ## worker
+
+(defn spawn! [images {:keys [id pos-str]} call]
+  (let [kw (keyword pos-str)
+        w-atm (-> images
+                  (images->image id)
+                  (image->worker-futures))]
+    (swap! w-atm assoc kw call)))
 
 ;; ## State
 
@@ -109,6 +118,7 @@
    :ids (agent #{})
    :response-queqe (agent '())
    :worker-queqe (agent '())
+   :worker-futures (atom {})
    :task-queqe (agent '())
    :conts (mapv (fn [{:keys [Ctrl Definition Title Element]} ndx]
                   (agent {:title Title

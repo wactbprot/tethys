@@ -8,6 +8,9 @@
 
 ;; # Documents
 
+;; TODO: move all `send` calls to model; the docs ns should not need
+;; to know how to add ...
+
 ;; The `docs` namespace cares about the database documents used to
 ;; store the data which is gained by the different worker.
 
