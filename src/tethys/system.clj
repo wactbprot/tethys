@@ -5,6 +5,7 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [tethys.core.db :as db]
+            [tethys.core.date-time :as dt]
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
             [tethys.core.response :as resp]
@@ -45,7 +46,8 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   :model/conf {:db (ig/ref :db/couch)
+   :model/conf {:suspend-folder "suspend"
+                :db (ig/ref :db/couch)
                 :json-post-header {:content-type :json
                                    :socket-timeout 600000 ;; 10 min
                                    :connection-timeout 600000
@@ -112,7 +114,7 @@
 (defmethod ig/init-key :model/conf [_ conf] conf)
   
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
-  (µ/log ::cont :message "start system")
+  (µ/log ::images :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
      (assoc res id (model/up id Container Definitions Exchange conf)))
@@ -158,10 +160,20 @@
 (defmethod ig/halt-key! :model/images [_ as]
   (run! #(model/down %) as))
 
+(defmethod ig/suspend-key! :model/images [_ as]
+  (let [folder (str "suspend/" (dt/get-date) "_" (dt/get-time))
+        new-folder? (.mkdirs (java.io.File. folder))]
+    (if new-folder?
+      (do
+        (µ/log ::images :message (str "suspend to folder " folder))
+        (run! #(model/suspend % folder) as))
+      (do
+        (µ/log ::images :error (str "can not create folder " folder))))))
+  
 (defmethod ig/halt-key! :scheduler/images [_ as]
   (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
-
+  
 (defmethod ig/halt-key! :model/worker [_ m]
   (µ/log ::worker :message "halt system")
   (run! #(work/down %) m))
@@ -181,3 +193,7 @@
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
   (reset! system {}))
+
+(defn suspend []  
+  (µ/log ::start :message "halt system")
+  (ig/suspend! @system))

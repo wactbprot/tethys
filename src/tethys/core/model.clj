@@ -1,6 +1,7 @@
 (ns tethys.core.model
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.string :as str]
+            [clojure.pprint :as pp]
             [com.brunobonacci.mulog :as µ]))
 
 (defn- flattenv [v] (-> v flatten vec))
@@ -135,12 +136,20 @@
                  defins (range))})
 
 ;; The down methode sets all agents back to its initial value
-(defn down [[_ {:keys [conts defins exch worker-queqe task-queqe response-queqe ids]}]]
-  (run! #(send % (fn [_] {})) conts)
+(defn down [[_ {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids]}]]
+  (prn ",,,,")
+  (run! #(send % (fn [_] {:a 1})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
   (send ids (fn [_] {}))
   (send worker-queqe (fn [_] '()))
+  (reset! worker-futures {})
   (send response-queqe (fn [_] '()))
   (send task-queqe (fn [_] '())))
- 
+
+(defn write-edn [file data] (spit file (with-out-str (pp/pprint data))))
+
+(defn suspend [a folder]
+  (prn a)
+  #_(write-edn (str folder "/exch.edn") @exch)
+  #_(write-edn (str folder "/conts.edn") (mapv deref conts)))

@@ -45,6 +45,8 @@
   (p/close)
   (sys/stop))
 
+(defn suspend [] (sys/suspend))
+
 (defn images [] (-> @sys/system :model/images))
 (defn image [mpd] (-> (images) mpd))
 
