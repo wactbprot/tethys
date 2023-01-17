@@ -3,7 +3,7 @@
   (:require [tethys.core.docs :as docs]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
-            [tethys.system :as sys]
+            [tethys.core.system :as sys]
             [portal.api :as p]))
 
 ;; # open portal
