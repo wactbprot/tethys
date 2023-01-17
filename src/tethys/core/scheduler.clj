@@ -103,12 +103,9 @@
   {:conts (mapv (up-watch-fn task-queqe) conts)
    :defins (mapv (up-watch-fn task-queqe) defins)})
 
-
 ;; The shut down function first removes the watch function and second
 ;; sets a empty map to all container agents.
-(defn down-watch [a]
-  (remove-watch a :sched)
-  (send a (fn [_] {})))
+(defn down-watch [a] (remove-watch a :sched))
 
 (defn down [[_ {:keys [conts defins]}]]
   (mapv down-watch conts)
