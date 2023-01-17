@@ -148,9 +148,10 @@
 
 (defn write-edn [file data] (spit file (with-out-str (pp/pprint data))))
 
-(defn suspend [[id {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids]}] folder]
+(defn suspend [[id {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids conf] :as image}] folder]
   (let [folder (str folder "/" (name id) "/")]
     (.mkdirs (java.io.File. folder))
+    (write-edn (str folder "conf.edn") conf)
     (write-edn (str folder "exch.edn") @exch)
     (write-edn (str folder "ids.edn") @ids)
     (write-edn (str folder "worker-queqe.edn") @worker-queqe)
@@ -158,4 +159,5 @@
     (write-edn (str folder "task-queqe.edn") @task-queqe)
     (write-edn (str folder "response-queqe.edn") @response-queqe)
     (write-edn (str folder "conts.edn") (mapv deref conts))
-    (write-edn (str folder "defins.edn") (mapv deref defins))))
+    (write-edn (str folder "defins.edn") (mapv deref defins)))
+  (down [id image]))

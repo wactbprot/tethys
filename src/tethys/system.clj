@@ -46,8 +46,7 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   :model/conf {:suspend-folder "suspend"
-                :db (ig/ref :db/couch)
+   :model/conf {:db (ig/ref :db/couch)
                 :json-post-header {:content-type :json
                                    :socket-timeout 600000 ;; 10 min
                                    :connection-timeout 600000
