@@ -32,7 +32,8 @@
                 :id-sets {:ppc ["mpd-ppc-gas_dosing"]
                           :se3 ["mpd-se3-calib"
                                 "mpd-se3-state"
-                                "mpd-se3-servo"]}}
+                                "mpd-se3-servo"
+                                "mpd-se3-valves"]}}
    :mpd/reference {:file-name "mpd-ref.edn"}
    :db/couch {:prot "http",
               :host "localhost",
@@ -47,7 +48,9 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   :model/conf {:db (ig/ref :db/couch)
+   :model/conf {:stop-if-delay 500 ; ms
+                :run-if-delay 500 ; ms
+                :db (ig/ref :db/couch)
                 :json-post-header {:content-type :json
                                    :socket-timeout 600000 ;; 10 min
                                    :connection-timeout 600000
