@@ -34,7 +34,6 @@
             (string/replace res (key->pattern k v) (val->safe-val v)))
           s r))
 
-
 ;; ## Use
 
 ;; The `Use` construct allows the encoding of multible entries in one
@@ -75,10 +74,7 @@
     (assemble (assoc task :FromExchange from-exchange ))))  
 
 (defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex))
-  (Thread/sleep 1000)
-  (µ/log ::error-handler :error "try restart agent")
-  (restart-agent a @a))
+  (µ/log ::error-handler :error (str "error occured: " ex)))
 
 (defn watch-fn [db {:keys [worker-queqe exch] :as image}]
   (let [db-fn (db/task-fn db)]

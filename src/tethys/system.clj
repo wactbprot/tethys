@@ -13,7 +13,6 @@
             [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
             [tethys.core.worker :as work])
-  (:import java.io.File)
   (:gen-class))
 
 (defn config [id-set]
@@ -208,4 +207,4 @@
   (defn system-load-from-fs [folder]
     (let [last-folder (str folder "/" (-> (list-folders folder) last))
           ids (mapv keyword (list-folders last-folder))]
-      (model/load-from-fs (first ids) last-folder)))))
+      (model/load-from-fs (first ids) last-folder))))

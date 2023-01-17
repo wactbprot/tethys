@@ -40,10 +40,7 @@
 (defn add [a m] (send a (fn [l] (conj l m))))
 
 (defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex))
-  (Thread/sleep 1000)
-  (µ/log ::error-handler :error "try restart agent")
-  (restart-agent a @a))
+  (µ/log ::error-handler :error (str "error occured: " ex)))
 
 (defn watch-fn [images]
   (fn [_ r-agt _ r-queqe]

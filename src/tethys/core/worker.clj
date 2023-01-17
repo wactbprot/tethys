@@ -55,10 +55,7 @@
         (sched/state-ready! s-agt task)))))
 
 (defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex))
-  (Thread/sleep 1000)
-  (µ/log ::error-handler :message "try to restart agent")
-  (restart-agent a @a))
+  (µ/log ::error-handler :error (str "error occured: " ex)))
 
 (defn watch-fn [images]
   (fn [_ w-agt _ w-queqe]
