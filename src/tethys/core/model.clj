@@ -1,7 +1,7 @@
 (ns tethys.core.model
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [clojure.string :as str]
-            [clojure.pprint :as pp]
+            [clojure.edn :as edn]
             [com.brunobonacci.mulog :as µ]))
 
 (defn- flattenv [v] (-> v flatten vec))
@@ -113,14 +113,22 @@
                           s (range)))
                   v (range))))
 
-(defn up [id cont defins exch conf]
+(defn up [{:keys [id
+                  ids
+                  cont
+                  defins
+                  exch
+                  conf
+                  response-queqe
+                  worker-queqe
+                  task-queqe]}]
   {:conf conf
-   :exch (agent (if (map? exch) exch {}))
-   :ids (agent #{})
-   :response-queqe (agent '())
-   :worker-queqe (agent '())
+   :exch (agent (or exch {}))
+   :ids (agent (or ids  #{}))
+   :response-queqe (agent (or response-queqe '()))
+   :worker-queqe (agent (or worker-queqe '()))
    :worker-futures (atom {})
-   :task-queqe (agent '())
+   :task-queqe (agent (or task-queqe '()))
    :conts (mapv (fn [{:keys [Ctrl Definition Title Element]} ndx]
                   (agent {:title Title
                           :element Element
@@ -136,7 +144,14 @@
                  defins (range))})
 
 ;; The down methode sets all agents back to its initial value
-(defn down [[_ {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids]}]]
+(defn down [[_ {:keys [conts
+                       defins
+                       exch
+                       worker-queqe
+                       worker-futures
+                       task-queqe
+                       response-queqe
+                       ids]}]]
   (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
@@ -145,19 +160,3 @@
   (reset! worker-futures {})
   (send response-queqe (fn [_] '()))
   (send task-queqe (fn [_] '())))
-
-(defn write-edn [file data] (spit file (with-out-str (pp/pprint data))))
-
-(defn suspend [[id {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids conf] :as image}] folder]
-  (let [folder (str folder "/" (name id) "/")]
-    (.mkdirs (java.io.File. folder))
-    (write-edn (str folder "conf.edn") conf)
-    (write-edn (str folder "exch.edn") @exch)
-    (write-edn (str folder "ids.edn") @ids)
-    (write-edn (str folder "worker-queqe.edn") @worker-queqe)
-    (write-edn (str folder "worker-futures.edn") @worker-futures)
-    (write-edn (str folder "task-queqe.edn") @task-queqe)
-    (write-edn (str folder "response-queqe.edn") @response-queqe)
-    (write-edn (str folder "conts.edn") (mapv deref conts))
-    (write-edn (str folder "defins.edn") (mapv deref defins)))
-  (down [id image]))

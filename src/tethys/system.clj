@@ -3,6 +3,7 @@
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
             [clojure.edn :as edn]
+            [clojure.pprint :as pp]
             [clojure.java.io :as io]
             [tethys.core.db :as db]
             [tethys.core.date-time :as dt]
@@ -12,6 +13,7 @@
             [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
             [tethys.core.worker :as work])
+  (:import java.io.File)
   (:gen-class))
 
 (defn config [id-set]
@@ -116,7 +118,11 @@
   (µ/log ::images :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
-     (assoc res id (model/up id Container Definitions Exchange conf)))
+     (assoc res id (model/up {:id id
+                              :cont Container
+                              :defins Definitions
+                              :exch Exchange
+                              :conf conf})))
    ini mpds))
 
 (defmethod ig/init-key :model/worker [_ {:keys [images ini]}]
@@ -159,15 +165,6 @@
 (defmethod ig/halt-key! :model/images [_ as]
   (run! #(model/down %) as))
 
-(defmethod ig/suspend-key! :model/images [_ as]
-  (let [folder (str "suspend/" (dt/get-date) "_" (dt/get-time))
-        new-folder? (.mkdirs (java.io.File. folder))]
-    (if new-folder?
-      (do
-        (µ/log ::images :message (str "suspend to folder " folder))
-        (run! #(model/suspend % folder) as))
-      (do
-        (µ/log ::images :error (str "can not create folder " folder))))))
   
 (defmethod ig/halt-key! :scheduler/images [_ as]
   (µ/log ::scheduler :message "halt system")
@@ -193,6 +190,22 @@
   (ig/halt! @system)
   (reset! system {}))
 
-(defn suspend []  
-  (µ/log ::start :message "halt system")
-  (ig/suspend! @system))
+(comment
+  ;; give up
+  (defn write-edn [file data]
+    (io/make-parents file)
+    (spit file (with-out-str (pp/pprint data))))
+  
+  (defn read-edn [file-name] (-> (io/file file-name) slurp edn/read-string))
+
+  (defn system-dump-to-fs [folder]
+    (let [file-name (str folder "/" (dt/get-date) "/" (dt/get-time) ".edn")]
+      (µ/log ::images :message (str "dump to file system " folder))
+      (write-edn file-name system)))  
+
+  (defn list-folders [folder] (sort (.list (io/file folder))))
+
+  (defn system-load-from-fs [folder]
+    (let [last-folder (str folder "/" (-> (list-folders folder) last))
+          ids (mapv keyword (list-folders last-folder))]
+      (model/load-from-fs (first ids) last-folder)))))
