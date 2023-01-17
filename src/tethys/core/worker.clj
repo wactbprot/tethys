@@ -74,8 +74,7 @@
 
 (defn down [[_ w-agt]]
   (µ/log ::down :message "shut down worker queqe agent")
-  (remove-watch w-agt :queqe)
-  (send w-agt (fn [_] '())))
+  (remove-watch w-agt :queqe))
 
 (comment
   ;; the futures should be kept with a hash key:

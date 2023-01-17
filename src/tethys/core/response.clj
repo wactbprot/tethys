@@ -59,5 +59,4 @@
 
 (defn down [[_ r-agt]]
   (µ/log ::down :message "shut down respons queqe agent")
-  (remove-watch r-agt :queqe)
-  (send r-agt (fn [_] [])))
+  (remove-watch r-agt :queqe))

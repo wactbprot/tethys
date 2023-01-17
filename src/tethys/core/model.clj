@@ -137,8 +137,7 @@
 
 ;; The down methode sets all agents back to its initial value
 (defn down [[_ {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids]}]]
-  (prn ",,,,")
-  (run! #(send % (fn [_] {:a 1})) conts)
+  (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
   (send ids (fn [_] {}))
@@ -149,7 +148,14 @@
 
 (defn write-edn [file data] (spit file (with-out-str (pp/pprint data))))
 
-(defn suspend [a folder]
-  (prn a)
-  #_(write-edn (str folder "/exch.edn") @exch)
-  #_(write-edn (str folder "/conts.edn") (mapv deref conts)))
+(defn suspend [[id {:keys [conts defins exch worker-queqe worker-futures task-queqe response-queqe ids]}] folder]
+  (let [folder (str folder "/" (name id) "/")]
+    (.mkdirs (java.io.File. folder))
+    (write-edn (str folder "exch.edn") @exch)
+    (write-edn (str folder "ids.edn") @ids)
+    (write-edn (str folder "worker-queqe.edn") @worker-queqe)
+    (write-edn (str folder "worker-futures.edn") @worker-futures)
+    (write-edn (str folder "task-queqe.edn") @task-queqe)
+    (write-edn (str folder "response-queqe.edn") @response-queqe)
+    (write-edn (str folder "conts.edn") (mapv deref conts))
+    (write-edn (str folder "defins.edn") (mapv deref defins))))

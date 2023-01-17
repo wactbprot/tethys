@@ -99,5 +99,4 @@
 
 (defn down [[_ t-agt]]
   (µ/log ::down :message "shut down task queqe agent")
-  (remove-watch  t-agt :queqe)
-  (send t-agt (fn [_] [])))
+  (remove-watch  t-agt :queqe))
