@@ -70,26 +70,28 @@
 (defn doc-ids [images task] @(images->ids-agent images task)) 
 
 (defn add-doc-id [images task doc-id]
+  (µ/log ::add-doc-id :message (str "add doc id " doc-id))
   (let [i-agt (images->ids-agent images task)]
     (send i-agt (fn [coll] (conj coll doc-id)))))
 
 (defn rm-doc-id [images task doc-id]
+  (µ/log ::rm-doc-id :message (str "rm doc id " doc-id))
   (let [i-agt (images->ids-agent images task)] 
     (send i-agt (fn [coll] (disj coll doc-id)))))
 
 (defn rm-all-doc-ids [images task]
+  (µ/log ::rm-all-doc-ids :message  "rm all doc ids")
   (let [i-agt (images->ids-agent images task)]
     (run! (fn [id] (rm-doc-id images task id)) @i-agt)))
 
 (defn refresh-doc-ids [images task id-coll]
+  (µ/log ::refresh-doc-ids :message (str "refresh doc ids" id-coll))
   (rm-all-doc-ids images task)
   (run! (fn [id] (add-doc-id images task id)) id-coll))
 
-
-
 ;; ## message
 
-(defn add-message [images {:keys [id ndx Message]}]
+(defn add-message [images {:keys [id ndx Message pos-str]}]
   (let [s-agt (-> images
                   (images->image id)
                   (image->cont-agent ndx))]

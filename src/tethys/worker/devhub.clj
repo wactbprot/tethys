@@ -15,8 +15,7 @@
 ;; position gets not lost. Done: <*>
 (defn devhub [images task]
   (let [conf (model/images->conf images task)
-        r-agt (model/images->resp-agent images task)
-        s-agt (model/images->state-agent images task)]
+        r-agt (model/images->resp-agent images task)]
     (try
       (let [{:keys [status body error]} (http/post (url conf) (req conf task))]
         (if (or (not error)
@@ -25,10 +24,10 @@
             (resp/add r-agt (merge task (json/read-str body :key-fn keyword))) ; <*>
             (catch Exception e
               (µ/log ::devhub :error (.getMessage e))
-              (sched/state-error! s-agt task)))
+              (sched/state-error! images task)))
           (do
             (µ/log ::devhub :error error)
-            (sched/state-error! s-agt task))))
+            (sched/state-error! images task))))
       (catch Exception e
         (µ/log ::devhub :error (.getMessage e))
-        (sched/state-error! s-agt task)))))
+        (sched/state-error! images task)))))

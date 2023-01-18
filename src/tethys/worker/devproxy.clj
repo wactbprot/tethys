@@ -32,8 +32,7 @@
 
 (defn devproxy [images {:keys [pos-str] :as task}]
   (let [conf (model/images->conf images task)
-        r-agt (model/images->resp-agent images task)
-        s-agt (model/images->state-agent images task)]
+        r-agt (model/images->resp-agent images task)]
     (try
       (let [{:keys [status body error]} (http/post (url conf task) (req conf task))]
         (if (or (not error)
@@ -42,10 +41,10 @@
             (resp/add r-agt (merge task (json/read-str body :key-fn keyword)))
             (catch Exception e
               (µ/log ::devproxy :error (.getMessage e) :pos-str pos-str)
-              (sched/state-error! s-agt task)))
+              (sched/state-error! images task)))
           (do
             (µ/log ::devproxy :error error :pos-str pos-str)
-            (sched/state-error! s-agt task))))
+            (sched/state-error! images task))))
       (catch Exception e
         (µ/log ::devproxy :error (.getMessage e) :pos-str pos-str)
-        (sched/state-error! s-agt task)))))
+        (sched/state-error! images task)))))

@@ -1,6 +1,7 @@
 (ns tethys.core.scheduler
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [com.brunobonacci.mulog :as µ]))
+  (:require [com.brunobonacci.mulog :as µ]
+            [tethys.core.model :as model]))
 
 ;; ## State manipulation
 
@@ -10,15 +11,16 @@
       (assoc m :is op)
       m)))
 
-(defn state! [a op {:keys [sdx pdx]}]
-  (send a (fn [{:keys [state] :as n}] 
-            (assoc n :state (mapv (op-fn op sdx pdx) state))))
-  {:state op})
-
-(defn state-executed! [a task] (state! a :executed task))
-(defn state-ready! [a task] (state! a :ready task))
-(defn state-error! [a task] (state! a :error task))
-(defn state-working! [a task] (state! a :working task))
+(defn state! [images {:keys [sdx pdx] :as task} op]
+  (let [s-agt (model/images->state-agent images task)]
+    (send s-agt (fn [{:keys [state] :as n}] 
+                  (assoc n :state (mapv (op-fn op sdx pdx) state))))
+    {:state op}))
+  
+(defn state-executed! [images task] (state! images task :executed))
+(defn state-ready! [images task] (state! images  task :ready))
+(defn state-error! [images task] (state! images task :error))
+(defn state-working! [images task] (state! images task :working ))
 
 ;; ## Scheduler
 ;;
@@ -77,10 +79,11 @@
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
-(defn start-next! [s-agt tq task]
+(defn start-next! [s-agt tq {:keys [sdx pdx] :as task}]
   (when (seq task)
     (send tq (fn [l]
-               (state-working! s-agt task)
+               (send s-agt (fn [{:keys [state] :as m}] 
+                             (assoc m :state (mapv (op-fn :working sdx pdx) state))))
                (conj l task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of

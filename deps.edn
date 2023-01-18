@@ -16,7 +16,8 @@
             
             :hiera {:deps {io.github.greglook/clj-hiera {:git/tag "2.0.0", :git/sha "b14e514"}}
                     :exec-fn hiera.main/graph
-                    :exec-args {;:layout :horizontal
+                    :exec-args {:layout :horizontal
+                                :cluster-depth 3
                                 :output "."}}
             
             :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.2.962"}}

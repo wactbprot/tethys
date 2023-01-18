@@ -40,7 +40,6 @@
 (defn check-spawn! [images task] 
   (let [{:keys [run-if-delay
                 stop-if-delay]} (model/images->conf images task)
-        s-agt (model/images->state-agent images task)
         e-agt (model/images->exch-agent images task)]    
     (if (exch/run-if e-agt task)
       (if (exch/only-if-not e-agt task)
@@ -49,11 +48,11 @@
         (do
           (Thread/sleep stop-if-delay)
           (µ/log ::check :message "state set by only-if-not")
-          (sched/state-executed! s-agt task)))
+          (sched/state-executed! images task)))
       (do
         (Thread/sleep run-if-delay)
         (µ/log ::check :message "state set by run-if")
-        (sched/state-ready! s-agt task)))))
+        (sched/state-ready! images task)))))
 
 (defn error [a ex]
   (µ/log ::error-handler :error (str "error occured: " ex)))

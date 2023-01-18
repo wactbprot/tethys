@@ -23,16 +23,15 @@
 
 (defn replicate-db [images {:keys [pos-str SourceDB TargetDB] :as task}]
   (let [conf (model/images->conf images task)
-        s-agt (model/images->state-agent images task)
         {error :error} (db/replicate-db {:source SourceDB :target TargetDB} (-> conf :db))]
     (if-not error
       (do
         (µ/log ::replicate :message "replication done" :pos-str pos-str)
-        (sched/state-executed! s-agt task)
+        (sched/state-executed! images task)
         {:ok true})
       (do
         (µ/log ::replicate :error (str "from database"  error) :pos-str pos-str)
-        (sched/state-error! s-agt task)
+        (sched/state-error! images task)
         {:error true}))))
 
 
@@ -58,17 +57,15 @@
 (defn gen-doc [images {:keys [Value pos-str] :as task}]
   (let [conf (model/images->conf images task)
         db (-> conf :db)
-        id (-> Value :_id)
-        s-agt (model/images->state-agent images task)]
+        id (-> Value :_id)]
     (when-not (db/doc-exist? id db)
       (db/put-doc Value db))
     (model/add-doc-id images task id)
     (µ/log ::gen-doc :message "document added" :pos-str pos-str)
-    (sched/state-executed! s-agt task)
+    (sched/state-executed! images task)
     {:ok true}))
 
 (defn rm-docs [images {:keys [pos-str] :as task}]
-  (let [s-agt (model/images->state-agent images task)]
-    (model/rm-all-doc-ids images task)
-    (µ/log ::rm-docs :message "all document ids removed form ids interface" :pos-str pos-str)
-    (sched/state-executed! s-agt task)))
+  (model/rm-all-doc-ids images task)
+  (µ/log ::rm-docs :message "all document ids removed form ids interface" :pos-str pos-str)
+  (sched/state-executed! images task))
