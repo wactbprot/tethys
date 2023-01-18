@@ -1,7 +1,6 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
-  (:require [tethys.core.docs :as docs]
-            [tethys.core.model :as model]
+  (:require [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
             [tethys.core.system :as sys]
             [portal.api :as p]))
@@ -127,12 +126,12 @@
 ;; ## Documents
 ;;
 ;; Only the id of the documents (calibration docs, measurement docs)
-;; are stored in a set (see `model`and `docs`namespace).
-(defn d-add [mpd id] (docs/add (images) {:id mpd} id))
-(defn d-rm [mpd id] (docs/rm (images) {:id mpd} id))
-(defn d-rm-all [mpd] (docs/rm-all (images) {:id mpd}))
-(defn d-show [mpd] (docs/ids (images) {:id mpd}))
-(defn d-refresh [mpd id-coll] (docs/refresh (images) mpd id-coll))
+;; are stored in a set (see `model`).
+(defn d-add [mpd id] (model/add-doc-id (images) {:id mpd} id))
+(defn d-rm [mpd id] (model/rm-doc-id (images) {:id mpd} id))
+(defn d-rm-all [mpd] (model/rm-all-doc-ids (images) {:id mpd}))
+(defn d-refresh [mpd id-coll] (model/refresh-doc-ids (images) mpd id-coll))
+(defn d-show [mpd] (model/doc-ids (images) {:id mpd}))
 
 ;; ## response queqe
 ;;

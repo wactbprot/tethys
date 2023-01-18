@@ -10,7 +10,7 @@
 ;; comming from the response (devproxy).
 (defn refresh [images {:keys [id ids pos-str] :as task}]
   (µ/log ::refresh :message "trigger ids refresh" :pos-str pos-str)
-  (docs/refresh images id ids)
+  (model/refresh-doc-ids images task ids)
   task)
 
 (defn store [images {:keys [pos-str] :as task}]

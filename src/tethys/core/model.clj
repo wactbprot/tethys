@@ -62,6 +62,31 @@
       (images->image id)
       (image->ids-agent)))
 
+;; ## doc ids
+
+;; TODO: move all `send` calls to model; the docs ns should not need
+;; to know how to add; done
+
+(defn doc-ids [images task] @(images->ids-agent images task)) 
+
+(defn add-doc-id [images task doc-id]
+  (let [i-agt (images->ids-agent images task)]
+    (send i-agt (fn [coll] (conj coll doc-id)))))
+
+(defn rm-doc-id [images task doc-id]
+  (let [i-agt (images->ids-agent images task)] 
+    (send i-agt (fn [coll] (disj coll doc-id)))))
+
+(defn rm-all-doc-ids [images task]
+  (let [i-agt (images->ids-agent images task)]
+    (run! (fn [id] (rm-doc-id images task id)) @i-agt)))
+
+(defn refresh-doc-ids [images task id-coll]
+  (rm-all-doc-ids images task)
+  (run! (fn [id] (add-doc-id images task id)) id-coll))
+
+
+
 ;; ## message
 
 (defn add-message [images {:keys [id ndx Message]}]
