@@ -1,4 +1,4 @@
-(ns tethys.worker.select-definition
+(ns tethys.worker.ctrl-definition
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The select definition worker."}
   (:require [com.brunobonacci.mulog :as µ]

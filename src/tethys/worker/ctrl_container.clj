@@ -1,4 +1,4 @@
-(ns tethys.worker.ctrl-mp
+(ns tethys.worker.ctrl-container
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The worker for controlling mpds."}
   (:require [com.brunobonacci.mulog :as µ]
