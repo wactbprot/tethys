@@ -4,6 +4,16 @@
             [clojure.edn :as edn]
             [com.brunobonacci.mulog :as µ]))
 
+
+;; # Helper functions
+
+(defn title->ndx [images task title]
+  (reduce (fn [_ s-agt]
+            (let [a @s-agt]
+               (when (= title (-> a :title))
+                (reduced (-> a :ndx)))))
+          {} (images->conts images task)))
+
 (defn- flattenv [v] (-> v flatten vec))
 
 ;; # Model
@@ -17,7 +27,7 @@
   (let [id (keyword id)]
     (-> images id)))
 
-(defn image->state-agent [image ndx group-kw]
+(defn image->state-agent [image ndx group-kw] 
   (let [group-kw (keyword group-kw)
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
@@ -31,6 +41,16 @@
 (defn image->ids-agent [image] (-> image :ids))
 (defn image->resp-agent [image] (-> image :response-queqe))
 (defn image->conf [image] (-> image :conf))
+
+(defn images->cont-agent [images {:keys [id ndx]}]
+  (-> images
+      (images->image id)
+      (image->cont-agent ndx)))
+
+(defn images->conts [images {:keys [id]}]
+  (-> images
+      (images->image id)
+      (get :conts)))
 
 (defn images->defins [images {:keys [id]}]
   (-> images
@@ -52,6 +72,16 @@
       (images->image id)
       image->resp-agent))
 
+(defn images->worker-agent [images {:keys [id]}]
+  (-> images
+      (images->image id)
+      image->worker-agent))
+
+(defn images->worker-futures [images {:keys [id]}]
+  (-> images
+      (images->image id)
+      image->worker-futures))
+
 (defn images->conf [images {:keys [id]}]
   (-> images
       (images->image id)
@@ -61,6 +91,11 @@
   (-> images
       (images->image id)
       (image->ids-agent)))
+
+(defn images->task-agent [images {:keys [id]}]
+  (-> images
+      (images->image id)
+      (image->task-agent)))
 
 ;; ## doc ids
 
@@ -111,14 +146,6 @@
                   (images->image id)
                   (image->worker-futures))]
     (swap! w-atm assoc kw (future (f images task)))))
-
-;; # Helper functions
-(defn title->ndx [images task title]
-  (reduce (fn [_ s-agt]
-            (let [a @s-agt]
-              (when (= title (-> a :title))
-                (reduced (-> a :ndx)))))
-          {} (images->state-agent images task)))
 
 
 ;; ## State
@@ -175,6 +202,7 @@
    :defins (mapv (fn [{:keys [Ctrl Definition DefinitionClass Condition]} ndx]
                    (agent {:cls DefinitionClass
                            :cond Condition
+                           :ndx ndx
                            :ctrl (or (keyword Ctrl) :ready)
                            :state (state-struct Definition :defins id ndx)})) 
                  defins (range))})

@@ -7,7 +7,7 @@
             [tethys.core.scheduler :as sched]))
 
 (defn task->target [{:keys [Container Mp] :as task}]
-  {:id Mp :ndx Container :group :conts})
+  (struct model/state Mp :conts Container))
 
 (defn run-by-ndx [images {:keys [Container Mp] :as task}]
   (let [target (task->target task)
@@ -26,7 +26,7 @@
     (sched/nctrl-run! images target)))
 
 (defn run-by-title [images {:keys [ContainerTitle Mp] :as task}]
-  (let [ndx (model/title->ndx images ContainerTitle)]
+  (let [ndx (model/title->ndx images task ContainerTitle)]
     (run-by-ndx images (assoc task :Container ndx))))
   
 (defn run-mp [images {:keys [ContainerTitle Container] :as task}]
@@ -45,7 +45,7 @@
     (sched/state-executed! images task)))
 
 (defn stop-by-title [images {:keys [ContainerTitle Mp] :as task}]
-  (let [ndx (model/title->ndx images ContainerTitle)]
+  (let [ndx (model/title->ndx images task ContainerTitle)]
     (stop-by-ndx images (assoc task :Container ndx))))
 
 (defn stop-mp [images {:keys [ContainerTitle Container] :as task}]

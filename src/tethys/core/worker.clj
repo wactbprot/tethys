@@ -23,7 +23,7 @@
                  :EXECUTE devhub/devhub
                  :writeExchange exchange/write-exchange
                  :readExchange exchange/read-exchange
-                 :select cont-defins/select
+                 :select ctrl-defins/select
                  :runMp ctrl-cont/run-mp
                  :stopMp ctrl-cont/stop-mp
                  :getDate dt/store-date

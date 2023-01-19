@@ -6,6 +6,7 @@
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]))
 
+
 (defn is? [f l r] (f (read-string (str l)) (read-string (str r))))
 
 (defn condition-ok? [f l r]

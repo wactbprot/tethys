@@ -60,9 +60,9 @@
 (defn ctrl-ready! [a] (ctrl! a :ready))
 (defn ctrl-run! [a] (ctrl! a :run))
 
-(defn nctrl-error! [a]
+(defn nctrl-error! [images task]
   (µ/log ::ctrl-error! :error "state error")
-  (ctrl! a :error))
+  (nctrl! images task :error))
 
 (defn nctrl-stop! [images task] (nctrl! images task :stop))
 (defn nctrl-suspend! [images task] (nctrl! images task  :suspend))

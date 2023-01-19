@@ -50,7 +50,8 @@
 ;; ## Ctrl-interface
 
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
-(defn c-agent [mpd ndx] (model/image->cont-agent (image mpd) ndx))
+(defn c-agent [mpd ndx]
+  (model/images->cont-agent (images) (struct model/state mpd :conts ndx)))
 
 
 ;; ## Start, stop container
@@ -61,7 +62,7 @@
   {:pre  [(keyword? mpd)
           (int? ndx)
           (keyword? op)]}
-  (sched/ctrl! (c-agent mpd ndx) op))
+  (sched/nctrl! (images) (struct model/state mpd :conts ndx) op))
 
 ;; Sets the ctrl at the `pos`ition defined by `ndx` `mpd`
 
@@ -84,9 +85,7 @@
           (int? sdx)
           (int? pdx)
           (keyword? op)]}
-  (let [a (c-agent mpd ndx)
-        s (struct model/state mpd :cont ndx sdx pdx op)]
-    (sched/state! a op s)))
+  (sched/state! (images) (struct model/state mpd :conts ndx sdx pdx) op))
 
 ;; Sets the state at the `pos`ition defined by `ndx`,`sdx`, `pdx`  of `mpd`
 
@@ -101,15 +100,14 @@
 ;; ## Tasks
 ;; 
 ;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (model/image->task-agent (image mpd)))
+(defn t-agent [mpd] (model/images->task-agent (images) (struct model/state mpd)))
 (defn t-queqe [mpd] @(t-agent mpd))
 (defn t-error [mpd] (agent-error (t-agent mpd)))
 (defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
 
 ;; ## Worker
-(defn w-agent [mpd] (model/image->worker-agent (image mpd)))
-(defn w-future [mpd] (model/image->worker-futures (image mpd)))
-
+(defn w-agent [mpd] (model/images->worker-agent (images) (struct model/state mpd)))
+(defn w-future [mpd] (model/images->worker-futures (images) (struct model/state mpd)))
 (defn w-queqe [mpd] @(w-agent mpd))
 (defn w-error [mpd] (agent-error (w-agent mpd)))
 (defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
@@ -118,7 +116,7 @@
 ;; ## Exchange interface
 ;;
 ;; Get the `agent` of a mpd by `(e-agent mpd)`
-(defn e-agent [mpd] (model/image->exch-agent (image mpd)))
+(defn e-agent [mpd] (model/images->exch-agent (images) (struct model/state mpd)))
 (defn e-interface [mpd] @(e-agent mpd))
 (defn e-error [mpd] (agent-error (e-agent mpd)))
 (defn e-restart [mpd] (restart-agent (e-agent mpd)))
@@ -127,16 +125,16 @@
 ;;
 ;; Only the id of the documents (calibration docs, measurement docs)
 ;; are stored in a set (see `model`).
-(defn d-add [mpd id] (model/add-doc-id (images) {:id mpd} id))
-(defn d-rm [mpd id] (model/rm-doc-id (images) {:id mpd} id))
-(defn d-rm-all [mpd] (model/rm-all-doc-ids (images) {:id mpd}))
+(defn d-add [mpd id] (model/add-doc-id (images) (struct model/state mpd) id))
+(defn d-rm [mpd id] (model/rm-doc-id (images) (struct model/state mpd) id))
+(defn d-rm-all [mpd] (model/rm-all-doc-ids (images) (struct model/state mpd)))
 (defn d-refresh [mpd id-coll] (model/refresh-doc-ids (images) mpd id-coll))
-(defn d-show [mpd] (model/doc-ids (images) {:id mpd}))
+(defn d-show [mpd] (model/doc-ids (images) (struct model/state mpd)))
 
-;; ## response queqe
+;; ## Response queqe
 ;;
 ;; Get the `agent` of a mpd by `(r-agent mpd)`
-(defn r-agent [mpd] (model/image->resp-agent (image mpd)))
+(defn r-agent [mpd] (model/images->resp-agent (images) (struct model/state mpd)))
 (defn r-queqe [mpd] @(r-agent mpd))
 (defn r-error [mpd] (agent-error (r-agent mpd)))
 
