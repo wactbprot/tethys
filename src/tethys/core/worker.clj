@@ -4,8 +4,8 @@
             [tethys.core.exchange :as exch]
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
-            [tethys.worker.ctrl-mp :as ctrl-mp]
-            [tethys.worker.select-definition :as select]
+            [tethys.worker.ctrl-container :as ctrl-cont]
+            [tethys.worker.ctrl-definition :as ctrl-defins]
             [tethys.worker.devhub :as devhub]
             [tethys.worker.devproxy :as devproxy]
             [tethys.worker.date-time :as dt]
@@ -23,9 +23,9 @@
                  :EXECUTE devhub/devhub
                  :writeExchange exchange/write-exchange
                  :readExchange exchange/read-exchange
-                 :select select/select
-                 :runMp ctrl-mp/run-mp
-                 :stopMp ctrl-mp/stop-mp
+                 :select cont-defins/select
+                 :runMp ctrl-cont/run-mp
+                 :stopMp ctrl-cont/stop-mp
                  :getDate dt/store-date
                  :getTime dt/store-time
                  :Anselm devproxy/devproxy

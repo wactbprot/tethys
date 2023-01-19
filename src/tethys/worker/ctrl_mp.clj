@@ -6,19 +6,14 @@
             [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]))
 
+(defn task->target [{:keys [Container Mp] :as task}]
+  {:id Mp :ndx Container :group :conts})
 
-;; # Helper functions
-(defn title->ndx [image title]
-  (reduce (fn [_ a]
-            (when (= title (-> @a :title))
-              (reduced (-> @a :ndx))))
-          {} (-> image :conts)))
- 
 (defn run-by-ndx [images {:keys [Container Mp] :as task}]
-  (let [image (model/images->image images Mp)
-        agt-to-run (model/image->cont-agent image Container)]
-    (add-watch agt-to-run :observer (fn [_ _ _ m]
-                                      (condp = (:ctrl m)
+  (let [target (task->target task)
+        agt-to-run (model/images->state-agent images target)]
+    (add-watch agt-to-run :observer (fn [_ _ _ {ctrl :ctrl}]
+                                      (condp = ctrl
                                         :error (do
                                                  (µ/log ::run-mp :error "mp-run returns with error")
                                                  (sched/state-error! images task)
@@ -28,11 +23,10 @@
                                                  (sched/state-executed! images task)
                                                  (remove-watch agt-to-run :observer))
                                         :noop)))
-    (sched/ctrl-run! agt-to-run)))
+    (sched/nctrl-run! images target)))
 
 (defn run-by-title [images {:keys [ContainerTitle Mp] :as task}]
-  (let [image (model/images->image images Mp)
-        ndx (title->ndx image ContainerTitle)]
+  (let [ndx (model/title->ndx images ContainerTitle)]
     (run-by-ndx images (assoc task :Container ndx))))
   
 (defn run-mp [images {:keys [ContainerTitle Container] :as task}]
@@ -44,19 +38,15 @@
                  (sched/state-error! images task))))
 
 
-(defn stop-by-ndx [images {:keys [Container Mp] :as task}]
-  (let [image (model/images->image images Mp)
-        s-agt (model/images->state-agent images task)
-        agt-to-stop (model/image->cont-agent image Container)]
-    (sched/ctrl-stop! agt-to-stop)
-    (when-not (= s-agt agt-to-stop)
-      (sched/state-executed! images task))))
+(defn stop-by-ndx [images {:keys [Container Mp ndx id] :as task}]
+  (sched/nctrl-stop! images (task->target task))
+  (when-not (and (= (str ndx) (str Container))
+                 (= (keyword Mp) (keyword id)))
+    (sched/state-executed! images task)))
 
 (defn stop-by-title [images {:keys [ContainerTitle Mp] :as task}]
-  (let [image (model/images->image images Mp)
-        ndx (title->ndx image ContainerTitle)]
+  (let [ndx (model/title->ndx images ContainerTitle)]
     (stop-by-ndx images (assoc task :Container ndx))))
-
 
 (defn stop-mp [images {:keys [ContainerTitle Container] :as task}]
   (cond

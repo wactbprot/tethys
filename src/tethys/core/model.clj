@@ -13,9 +13,9 @@
 ;; moving parts, agents are used.
 ;;
 ;; This `ns` knows how to pull out thedifferent parts of the mpd `image`. 
-(defn images->image [images mpd]
-  (let [mpd (keyword mpd)]
-    (-> images mpd)))
+(defn images->image [images id]
+  (let [id (keyword id)]
+    (-> images id)))
 
 (defn image->state-agent [image ndx group-kw]
   (let [group-kw (keyword group-kw)
@@ -103,7 +103,7 @@
                   (image->cont-agent ndx))]
     (send s-agt (fn [m] (dissoc m :message)))))
 
-;; ## worker
+;; ## Worker
 
 (defn spawn-work [images {:keys [id pos-str] :as task} f]
   (let [kw (keyword pos-str)
@@ -111,6 +111,15 @@
                   (images->image id)
                   (image->worker-futures))]
     (swap! w-atm assoc kw (future (f images task)))))
+
+;; # Helper functions
+(defn title->ndx [images task title]
+  (reduce (fn [_ s-agt]
+            (let [a @s-agt]
+              (when (= title (-> a :title))
+                (reduced (-> a :ndx)))))
+          {} (images->state-agent images task)))
+
 
 ;; ## State
 
