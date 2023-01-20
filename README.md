@@ -28,7 +28,47 @@ nice option to understand the system during runtime.
   etc. and resume at any point in time
 
 # development
-  
+
+## launch clj and compile
+
+Ensure classes folder exist:
+```shell
+mkdir -p target/classes
+```
+
+```shell
+clj -A:dev
+```
+
+```clojure
+(set! *compile-path* "target/classes")
+;; => "target/classes"
+(compile 'tethys.cli) 
+(start)
+;; => {:ctrl :run}
+(c-run :mpd-ref 0)
+;; => ":mpd-ref.:conts.0.0.0"
+;;    ":mpd-ref.:conts.0.0.1"
+;;    ":mpd-ref.:conts.0.1.0"
+;;    ":mpd-ref.:conts.0.1.1"
+;;    ":mpd-ref.:conts.0.1.2"
+;;    ":mpd-ref.:conts.0.1.3"
+;;    ":mpd-ref.:conts.0.2.0"
+```
+
+
+## spawn nrepl and connect from somewhere
+
+```shell
+clj -A:dev -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
+```
+The connection port is stored in the file `.nrepl-port` in pwd. 
+To connect to system with  **CIDER** (Emacs) use  `M-x` cider-connect `RET`
+
+> CIDER will prompt you for the host and port information,...
+
+[see cider manual](https://docs.cider.mx/cider/basics/up_and_running.html#connect-to-a-running-nrepl-server)
+
 ## generate documentation
 
 ```shell

@@ -5,16 +5,6 @@
             [com.brunobonacci.mulog :as µ]))
 
 
-;; # Helper functions
-
-(defn title->ndx [images task title]
-  (reduce (fn [_ s-agt]
-            (let [a @s-agt]
-               (when (= title (-> a :title))
-                (reduced (-> a :ndx)))))
-          {} (images->conts images task)))
-
-(defn- flattenv [v] (-> v flatten vec))
 
 ;; # Model
 
@@ -147,6 +137,16 @@
                   (image->worker-futures))]
     (swap! w-atm assoc kw (future (f images task)))))
 
+;; # Helper functions
+
+(defn title->ndx [images task title]
+  (reduce (fn [_ s-agt]
+            (let [a @s-agt]
+               (when (= title (-> a :title))
+                (reduced (-> a :ndx)))))
+          {} (images->conts images task)))
+
+(defn- flattenv [v] (-> v flatten vec))
 
 ;; ## State
 

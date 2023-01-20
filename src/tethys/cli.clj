@@ -3,7 +3,8 @@
   (:require [tethys.core.model :as model]
             [tethys.core.scheduler :as sched]
             [tethys.core.system :as sys]
-            [portal.api :as p]))
+            [portal.api :as p])
+   (:gen-class))
 
 ;; # open portal
 
@@ -62,7 +63,7 @@
   {:pre  [(keyword? mpd)
           (int? ndx)
           (keyword? op)]}
-  (sched/ctrl! (model/images->state-agent images (struct model/state mpd :conts ndx)) op))
+  (sched/ctrl! (model/images->state-agent (images) (struct model/state mpd :conts ndx)) op))
 
 ;; Sets the ctrl at the `pos`ition defined by `ndx` `mpd`
 
@@ -138,3 +139,4 @@
 (defn r-queqe [mpd] @(r-agent mpd))
 (defn r-error [mpd] (agent-error (r-agent mpd)))
 
+(defn -main [] (start))

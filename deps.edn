@@ -1,5 +1,5 @@
 {:deps {org.clojure/clojure {:mvn/version "1.11.1"}}
- 
+ :paths ["src" "classes"]
  :aliases  {:build {:extra-paths ["src" "resources"]
                     :deps {io.github.clojure/tools.build {:git/tag "v0.8.5" :git/sha "ba1a2bf"}
                            :ns-default build}}
@@ -22,11 +22,11 @@
             
             :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.2.962"}}
                        :main-opts ["-m" "antq.core"]}
- 
-            :dev {:extra-paths ["resources" "src"]
-                  
-                  :extra-deps {de.ptb.gitlab1/libcdb {:local/root "../libcdb"}
+            
+           
+            :dev {:extra-deps {de.ptb.gitlab1/libcdb {:local/root "../libcdb"}
                                djblue/portal {:mvn/version "0.35.0"}
+                               cider/cider-nrepl {:mvn/version "0.29.0"}
                                io.github.nextjournal/clerk {:mvn/version "0.12.707"}
                                clj-http/clj-http {:mvn/version "3.12.3"}
                                integrant/integrant {:mvn/version "0.8.0"}
