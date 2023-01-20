@@ -5,8 +5,8 @@
             [tethys.core.db :as db]
             [tethys.core.docs :as docs]
             [clj-http.client :as http]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]))
 
 
 ;; Example for a `replicate` task:

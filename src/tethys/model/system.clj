@@ -1,4 +1,4 @@
-(ns tethys.core.system
+(ns tethys.model.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
@@ -8,11 +8,11 @@
             [tethys.core.db :as db]
             [tethys.core.date-time :as dt]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
+            [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]
+            [tethys.model.scheduler :as sched]
             [tethys.core.task :as task]
-            [tethys.core.worker :as work])
+            [tethys.worker.core :as work])
   (:gen-class))
 
 (defn config [id-set]

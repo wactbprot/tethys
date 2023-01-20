@@ -22,6 +22,7 @@
 ;; to be given.
 (defn task-fn [config]
   (fn [task-name]
+    (prn task-name)
     (-> config
         (assoc :key task-name)
         db/get-view

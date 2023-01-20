@@ -3,10 +3,10 @@
     :doc "The date and time worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
-            [tethys.core.model :as model]
+            [tethys.model.core :as model]
             [tethys.core.date-time :as dt]
             [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.scheduler :as sched]))
 
 ;; Example for a `getTime` and a `getDate` task:
 ;; <pre>

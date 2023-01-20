@@ -2,8 +2,8 @@
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"
     :doc "The wait worker."}
   (:require [com.brunobonacci.mulog :as µ]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]))
 
 ;; Example for a `message` task:
 ;; <pre>

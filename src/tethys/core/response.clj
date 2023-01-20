@@ -3,8 +3,8 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.docs :as docs]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]))
 
 ;; The `id` is the mpd id comming from the task; `ids` are the doc-ids
 ;; comming from the response (devproxy).
@@ -42,8 +42,9 @@
   (µ/log ::error-handler :error (str "error occured: " ex)))
 
 (defn watch-fn [images]
-  (fn [_ r-agt _ r-queqe]
-    (when (seq r-queqe)
+  (fn [_ r-agt o-r-queqe n-r-queqe]
+    (when (and (not= o-r-queqe n-r-queqe)
+               (seq n-r-queqe))
       (send r-agt (fn [l]
                     (dispatch images (first l))
                     (-> l rest))))))

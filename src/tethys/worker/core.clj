@@ -1,9 +1,9 @@
-(ns tethys.core.worker
+(ns tethys.worker.core
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]
             [tethys.worker.ctrl-container :as ctrl-cont]
             [tethys.worker.ctrl-definition :as ctrl-defins]
             [tethys.worker.devhub :as devhub]
@@ -58,10 +58,11 @@
   (µ/log ::error-handler :error (str "error occured: " ex)))
 
 (defn watch-fn [images]
-  (fn [_ w-agt _ w-queqe]
-    (when (seq w-queqe)
+  (fn [_ w-agt o-w-queqe n-w-queqe]
+    (when (and (not= o-w-queqe n-w-queqe)
+               (seq n-w-queqe))
       (send w-agt (fn [l]
-                    (check-spawn! images (first w-queqe))
+                    (check-spawn! images (first l))
                     (-> l rest))))))
 
 (defn up [{:keys [worker-queqe]} images]

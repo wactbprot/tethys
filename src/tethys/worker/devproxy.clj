@@ -4,9 +4,9 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clj-http.client :as http]
-            [tethys.core.model :as model]
+            [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.scheduler :as sched]))
 
 ;; Example for a `devproxy` (aka `anselm`) task:
 

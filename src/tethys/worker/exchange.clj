@@ -3,9 +3,9 @@
     :doc "The exchange worker writes and reads from the exchange interface."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
+            [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.scheduler :as sched]))
 
 
 ;; Example for a `writeExchange`task:

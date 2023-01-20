@@ -3,8 +3,8 @@
     :doc "The worker for controlling mpds."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]))
 
 (defn task->target [{:keys [Container Mp] :as task}]
   (struct model/state Mp :conts Container))

@@ -3,7 +3,7 @@
   (:require [clojure.data.json :as json]
             [com.brunobonacci.mulog :as µ]
             [clj-http.client :as http]
-            [tethys.core.model :as model]))
+            [tethys.model.core :as model]))
 
 ;; The data is stored via
 ;; the [vl-db-agent](https://github.com/wactbprot/vl-db-agent).

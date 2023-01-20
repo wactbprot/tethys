@@ -3,8 +3,8 @@
     :doc "The select definition worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.core.model :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]
+            [tethys.model.scheduler :as sched]))
 
 
 (defn is? [f l r] (f (read-string (str l)) (read-string (str r))))

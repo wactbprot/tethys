@@ -68,7 +68,8 @@
       (replace-map (kw-map->str-map Defaults))
       (json/read-str :key-fn keyword)))
 
-(defn build [image exch db-fn {:keys [TaskName] :as task}]
+(defn build [exch db-fn {:keys [TaskName pos-str] :as task}]
+  (µ/log ::build :message (str "Try build task: " TaskName :pos-str pos-str))
   (let [task (merge task (db-fn TaskName))
         from-exchange (exchange/from exch task)]      
     (assemble (assoc task :FromExchange from-exchange ))))  
@@ -78,12 +79,15 @@
 
 (defn watch-fn [db {:keys [worker-queqe exch] :as image}]
   (let [db-fn (db/task-fn db)]
-    (fn [_ t-agt _ t-queqe]
-      (when (seq t-queqe)
+    (fn [_ t-agt o-t-queqe n-t-queqe]
+      (when (not= o-t-queqe n-t-queqe)
+        (prn ".")
+        (prn (count n-t-queqe))
         (send t-agt (fn [l]
-                      (let [task (build image exch db-fn (first l))]
-                        (send worker-queqe (fn [l] (conj l task)))
-                        (-> l rest))))))))
+                      (when (seq l)
+                        (let [task (build exch db-fn (first l))]
+                          (send worker-queqe (fn [l] (conj l task)))
+                          (-> l rest)))))))))
 
 ;; The `up` function provides a queqe made of an agent made of a
 ;; list.

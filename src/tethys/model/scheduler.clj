@@ -1,7 +1,7 @@
-(ns tethys.core.scheduler
+(ns tethys.model.scheduler
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
-            [tethys.core.model :as model]))
+            [tethys.model.core :as model]))
 
 ;; ## State manipulation
 
@@ -80,17 +80,21 @@
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
-(defn start-next! [s-agt tq {:keys [sdx pdx] :as task}]
+(defn start-next! [s-agt task-queqe {:keys [sdx pdx] :as task}]
   (when (seq task)
-    (send tq (fn [l]
-               (send s-agt (fn [{:keys [state] :as m}] 
-                             (assoc m :state (mapv (op-fn :working sdx pdx) state))))
-               (conj l task)))))
+     (send task-queqe (fn [l]
+                        (send s-agt (fn [{:keys [state] :as m}]
+                                      (prn 2)
+                                      (assoc m :state (mapv (op-fn :working sdx pdx) state))))
+                        (prn 1)
+                        (conj l task)))
+     
+     ))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `tq` is the
 ;; related task-queqe agent.
-(defn up-watch-fn [tq]
+(defn up-watch-fn [task-queqe]
   (fn [a]
     (add-watch a :sched (fn [_ s-agt o-state-queqe n-state-queqe]
                           (when (not= o-state-queqe n-state-queqe)
@@ -100,7 +104,7 @@
                                      (error? state))  (ctrl-error! s-agt)
                                 (all-exec? state)     (all-ready! s-agt)
                                 (or (= :run ctrl)
-                                    (= :mon ctrl))    (start-next! s-agt tq (find-next state))
+                                    (= :mon ctrl))    (start-next! s-agt task-queqe (find-next state))
                                 :nothing-todo-here true)))))))
 
 (defn up [{:keys [conts defins task-queqe]}]
