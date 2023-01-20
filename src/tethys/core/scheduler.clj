@@ -44,11 +44,6 @@
   (send a (fn [m] (assoc m :ctrl op)))
   {:ctrl op})
 
-(defn nctrl! [images task op]
-  (let [s-agt (model/images->state-agent images task)]
-    (send s-agt (fn [m] (assoc m :ctrl op)))
-    {:ctrl op}))
-
 ;; The `:ctrl` interface of a container is set to `:error` if a task
 ;; turns to `:error`
 (defn ctrl-error! [a]
@@ -60,14 +55,6 @@
 (defn ctrl-ready! [a] (ctrl! a :ready))
 (defn ctrl-run! [a] (ctrl! a :run))
 
-(defn nctrl-error! [images task]
-  (µ/log ::ctrl-error! :error "state error")
-  (nctrl! images task :error))
-
-(defn nctrl-stop! [images task] (nctrl! images task :stop))
-(defn nctrl-suspend! [images task] (nctrl! images task  :suspend))
-(defn nctrl-ready! [images task] (nctrl! images task :ready))
-(defn nctrl-run! [images task] (nctrl! images task :run))
 
 ;; If all tasks in a container are executed, the states are set back
 ;; to `:ready`.  If `ctrl`was `:run` it becomes `:ready` in order to

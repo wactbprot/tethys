@@ -23,7 +23,7 @@
                                                  (sched/state-executed! images task)
                                                  (remove-watch agt-to-run :observer))
                                         :noop)))
-    (sched/nctrl-run! images target)))
+    (sched/ctrl-run! agt-to-run)))
 
 (defn run-by-title [images {:keys [ContainerTitle Mp] :as task}]
   (let [ndx (model/title->ndx images task ContainerTitle)]
@@ -39,7 +39,7 @@
 
 
 (defn stop-by-ndx [images {:keys [Container Mp ndx id] :as task}]
-  (sched/nctrl-stop! images (task->target task))
+  (sched/ctrl-stop! (model/images->state-agent images (task->target task)))
   (when-not (and (= (str ndx) (str Container))
                  (= (keyword Mp) (keyword id)))
     (sched/state-executed! images task)))

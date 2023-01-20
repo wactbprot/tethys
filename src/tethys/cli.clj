@@ -62,7 +62,7 @@
   {:pre  [(keyword? mpd)
           (int? ndx)
           (keyword? op)]}
-  (sched/nctrl! (images) (struct model/state mpd :conts ndx) op))
+  (sched/ctrl! (model/images->state-agent images (struct model/state mpd :conts ndx)) op))
 
 ;; Sets the ctrl at the `pos`ition defined by `ndx` `mpd`
 
