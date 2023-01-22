@@ -53,6 +53,10 @@
     (into {} (mapv (fn [[k p]]
                      {k (e-value e-agt p)}) FromExchange))))
 
+(defn from-fn [e-agt]
+  (fn [task]
+    (from e-agt task)))
+
 (comment
   (def a (agent {:A {:Type "ref" :Unit "Pa" :Value 100.0},
                  :B "token"}))

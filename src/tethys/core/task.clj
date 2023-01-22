@@ -3,9 +3,7 @@
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
             [clojure.string :as string]
-            [tethys.core.date-time :as dt]
-            [tethys.core.db :as db]
-            [tethys.core.exchange :as exchange]))
+            [tethys.core.date-time :as dt]))
 
 (defn globals [] 
   (let [d (dt/get-date-object)
@@ -68,33 +66,12 @@
       (replace-map (kw-map->str-map Defaults))
       (json/read-str :key-fn keyword)))
 
-(defn build [exch db-fn {:keys [TaskName pos-str] :as task}]
-  (µ/log ::build :message (str "Try build task: " TaskName :pos-str pos-str))
-  (let [task (merge task (db-fn TaskName))
-        from-exchange (exchange/from exch task)]      
-    (assemble (assoc task :FromExchange from-exchange ))))  
+(defn build-fn [db-task-fn exch-from-fn]
+  (fn [{:keys [TaskName pos-str] :as task}]
+    (µ/log ::build :message (str "Try build task: " TaskName :pos-str pos-str))
+    (let [task (merge task (db-task-fn TaskName))
+          from-exchange (exch-from-fn task)]
+      (prn "t")
+      (prn task)
+      (assemble (assoc task :FromExchange from-exchange)))))  
 
-(defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex)))
-
-(defn watch-fn [db {:keys [worker-queqe exch] :as image}]
-  (let [db-fn (db/task-fn db)]
-    (fn [_ t-agt o-t-queqe n-t-queqe]
-      (when (not= o-t-queqe n-t-queqe)
-        (send t-agt (fn [l]
-                      (when (seq l)
-                        (let [task (build exch db-fn (first l))]
-                          (send worker-queqe (fn [l] (conj l task)))
-                          (-> l rest)))))))))
-
-;; The `up` function provides a queqe made of an agent made of a
-;; list.
-;; This map will be [[assemble]]d and pushed into the work-queue `w-agt`. 
-(defn up [db  {:keys [worker-queqe task-queqe exch] :as image}]
-  (µ/log ::up :message "start up task queqe agent")
-  (set-error-handler! task-queqe error)
-  (add-watch task-queqe :queqe (watch-fn db image)))
-
-(defn down [[_ t-agt]]
-  (µ/log ::down :message "shut down task queqe agent")
-  (remove-watch  t-agt :queqe))

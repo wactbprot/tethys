@@ -45,9 +45,6 @@
              :reference-mpd (ig/ref :mpd/reference)
              :id-set (ig/ref :mpd/id-set) 
              :ini {}}
-   :db/task {:db (ig/ref :db/couch)
-             :view "tasks"
-             :design "dbmp"}
    :model/conf {:stop-if-delay 500 ; ms
                 :run-if-delay 500 ; ms
                 :db (ig/ref :db/couch)
@@ -58,17 +55,20 @@
                 :dev-hub-url "http://localhost:9009"
                 :db-agent-url "http://localhost:9992"
                 :dev-proxy-url "http://localhost:8009"}
+
    :model/images {:mpds (ig/ref :db/mpds)
                   :conf (ig/ref :model/conf)
                   :ini {}}
-   :model/worker {:images (ig/ref :model/images)
-                  :ini {}}
+
+   :db/task {:db (ig/ref :db/couch)
+             :view "tasks"
+             :design "dbmp"}
+   
    :model/response {:images (ig/ref :model/images)
                     :ini {}}
-   :model/task {:db (ig/ref :db/task)
-                :images (ig/ref :model/images)
-                :ini {}}
-   :scheduler/images {:images (ig/ref :model/images)
+
+   :scheduler/images {:db-task-fn (ig/ref :db/task)
+                      :images (ig/ref :model/images)
                       :ini {}}})
 
 ;; # System
@@ -101,10 +101,6 @@
   (µ/log ::mpd-reference :message "start system")
   (-> (io/file file-name) slurp edn/read-string))
 
-(defmethod ig/init-key :db/task [_ {:keys [db view design]}]
-  (µ/log ::task-db :message "start system")
-  (db/config (assoc db :view view :design design)))
-
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini reference-mpd]}]
   (µ/log ::mpd-db :message "start system")
   (let [{:keys [_id Mp]} reference-mpd]
@@ -113,6 +109,13 @@
       (fn [res id] (assoc res (keyword id) (:Mp (db/get-doc id db))))
       ini id-set)
      (keyword _id) Mp)))
+
+(defmethod ig/init-key :db/task [_ {:keys [db view design]}]
+  (µ/log ::task-db :message "start system")
+  (let [db (db/config (assoc db
+                             :view view
+                             :design design))]
+    (db/task-fn db)))
 
 (defmethod ig/init-key :model/conf [_ conf] conf)
   
@@ -127,13 +130,6 @@
                               :conf conf})))
    ini mpds))
 
-(defmethod ig/init-key :model/worker [_ {:keys [images ini]}]
-  (µ/log ::worker :message "start system")
-  (reduce
-   (fn [res [id image]]
-     (assoc res id (work/up image images)))
-   ini images))
-
 (defmethod ig/init-key :model/response [_ {:keys [images ini]}]
   (µ/log ::response :message "start system")
   (reduce
@@ -141,18 +137,14 @@
      (assoc res id (resp/up image images)))
    ini images))
 
-(defmethod ig/init-key :model/task [_ {:keys [db images ini]}]
-  (µ/log ::task :message "start system")
-  (reduce
-   (fn [res [id image]]
-     (assoc res id (task/up db image)))
-   ini images))
-
-(defmethod ig/init-key :scheduler/images [_ {:keys [images ini]}]
+(defmethod ig/init-key :scheduler/images [_ {:keys [images ini db-task-fn]}]
   (µ/log ::scheduler :message "start system")
   (reduce
    (fn [res [id image]]
-     (assoc res id (sched/up image)))
+     (let [from-exch-fn (exch/from-fn (model/image->exch-agent image)) ;; call with task
+           build-task-fn (task/build-fn db-task-fn from-exch-fn) ;; call with task
+           continue-fn (work/spawn-fn build-task-fn)] ;; call with task
+       (assoc res id (sched/up images id continue-fn))))
    ini images))
 
 ;; ## System down multimethods
@@ -166,23 +158,14 @@
 
 (defmethod ig/halt-key! :model/images [_ as]
   (run! #(model/down %) as))
-
   
 (defmethod ig/halt-key! :scheduler/images [_ as]
   (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
   
-(defmethod ig/halt-key! :model/worker [_ m]
-  (µ/log ::worker :message "halt system")
-  (run! #(work/down %) m))
-
 (defmethod ig/halt-key! :model/response [_ m]
   (µ/log ::respons :message "halt system")
   (run! #(resp/down %) m))
-
-(defmethod ig/halt-key! :model/task [_ m]
-  (µ/log ::task :message "halt system")
-  (run! #(task/down %) m))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))
 

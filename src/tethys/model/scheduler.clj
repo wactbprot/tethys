@@ -71,17 +71,18 @@
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
-(defn start-next! [s-agt task-queqe {:keys [sdx pdx] :as task}]
-  (when (seq task)
-    (send task-queqe (fn [l]
-                       (send s-agt (fn [{:keys [state] :as m}]
-                                     (assoc m :state (mapv (op-fn :working sdx pdx) state))))
-                       (conj l task)))))
+(defn start-next! [s-agt {:keys [sdx pdx] :as proto-task} images continue-fn]
+  (when (seq proto-task)
+    (send s-agt (fn [{:keys [state] :as m}]
+                  (assoc m
+                         :spawn (future (continue-fn images proto-task))
+                         :state (mapv (op-fn :working sdx pdx) state))))))
 
+    
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `tq` is the
 ;; related task-queqe agent.
-(defn up-watch-fn [task-queqe]
+(defn up-watch-fn [images continue-fn]
   (fn [a]
     (add-watch a :sched (fn [_ s-agt o-state-queqe n-state-queqe]
                           (when (not= o-state-queqe n-state-queqe)
@@ -91,12 +92,13 @@
                                      (error? state))  (ctrl-error! s-agt)
                                 (all-exec? state)     (all-ready! s-agt)
                                 (or (= :run ctrl)
-                                    (= :mon ctrl))    (start-next! s-agt task-queqe (find-next state))
+                                    (= :mon ctrl))    (start-next! s-agt (find-next state) images continue-fn)
                                 :nothing-todo-here true)))))))
 
-(defn up [{:keys [conts defins task-queqe]}]
-  {:conts (mapv (up-watch-fn task-queqe) conts)
-   :defins (mapv (up-watch-fn task-queqe) defins)})
+(defn up [images id continue-fn]
+  (let [{:keys [conts defins]} (model/images->image images id)]
+    {:conts (mapv (up-watch-fn images continue-fn) conts)
+     :defins (mapv (up-watch-fn images continue-fn) defins)}))
 
 ;; The shut down function first removes the watch function and second
 ;; sets a empty map to all container agents.

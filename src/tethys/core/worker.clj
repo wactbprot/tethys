@@ -35,9 +35,9 @@
                  :genDbDoc db/gen-doc
                  :rmDbDocs db/rm-docs
                  (µ/log ::dispatch :error "no matching case" :pos-str pos-str))]
-    (model/spawn-work images task f)))
+    (future (f images task))))
   
-(defn check-spawn! [images task] 
+(defn spawn [images task] 
   (let [{:keys [run-if-delay
                 stop-if-delay]} (model/images->conf images task)
         e-agt (model/images->exch-agent images task)]    
@@ -54,25 +54,9 @@
         (µ/log ::check :message "state set by run-if")
         (sched/state-ready! images task)))))
 
-(defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex)))
-
-(defn watch-fn [images]
-  (fn [_ w-agt o-w-queqe n-w-queqe]
-    (when (not= o-w-queqe n-w-queqe)
-      (send w-agt (fn [l]
-                    (when (seq l)
-                      (check-spawn! images (first l))
-                      (-> l rest)))))))
-
-(defn up [{:keys [worker-queqe]} images]
-  (µ/log ::up :message "start up worker queqe agent")
-  (set-error-handler! worker-queqe error)
-  (add-watch worker-queqe :queqe (watch-fn images)))
-
-(defn down [[_ w-agt]]
-  (µ/log ::down :message "shut down worker queqe agent")
-  (remove-watch w-agt :queqe))
+(defn spawn-fn [build-task-fn]
+  (fn [images task]
+    (spawn images (build-task-fn task))))
 
 (comment
   ;; the futures should be kept with a hash key:
