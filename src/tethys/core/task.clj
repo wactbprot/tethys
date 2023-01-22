@@ -81,8 +81,6 @@
   (let [db-fn (db/task-fn db)]
     (fn [_ t-agt o-t-queqe n-t-queqe]
       (when (not= o-t-queqe n-t-queqe)
-        (prn ".")
-        (prn (count n-t-queqe))
         (send t-agt (fn [l]
                       (when (seq l)
                         (let [task (build exch db-fn (first l))]

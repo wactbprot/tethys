@@ -13,8 +13,8 @@
 
 (defn state! [images {:keys [sdx pdx] :as task} op]
   (let [s-agt (model/images->state-agent images task)]
-    (send s-agt (fn [{:keys [state] :as n}] 
-                  (assoc n :state (mapv (op-fn op sdx pdx) state))))
+    (send s-agt (fn [{:keys [ctrl state] :as m}] 
+                  (assoc m :state (mapv (op-fn op sdx pdx) state))))
     {:state op}))
   
 (defn state-executed! [images task] (state! images task :executed))
@@ -29,15 +29,10 @@
 ;; functions.
 
 (defn is-eq [kw] (fn [m] (= (:is m) kw))) 
-
 (defn all [kw v] (mapv (is-eq kw) v))
-
 (defn error? [v] (not (every? false? (all :error v))))
-
 (defn all-exec? [v] (every? true? (all :executed v)))
-
 (defn predec-exec? [n v] (all-exec? (filterv (fn [{s :sdx}] (< s n)) v)))
-
 (defn set-all-pos-ready [v] (mapv (fn [m] (assoc m :is :ready)) v))
 
 (defn ctrl! [a op]
@@ -46,15 +41,11 @@
 
 ;; The `:ctrl` interface of a container is set to `:error` if a task
 ;; turns to `:error`
-(defn ctrl-error! [a]
-  (µ/log ::ctrl-error! :error "state error")
-  (ctrl! a :error))
-
+(defn ctrl-error! [a] (ctrl! a :error))
 (defn ctrl-stop! [a] (ctrl! a :stop))
 (defn ctrl-suspend! [a] (ctrl! a :suspend))
 (defn ctrl-ready! [a] (ctrl! a :ready))
 (defn ctrl-run! [a] (ctrl! a :run))
-
 
 ;; If all tasks in a container are executed, the states are set back
 ;; to `:ready`.  If `ctrl`was `:run` it becomes `:ready` in order to
@@ -82,14 +73,10 @@
 ;; task `m` to the task-queqe `tq`
 (defn start-next! [s-agt task-queqe {:keys [sdx pdx] :as task}]
   (when (seq task)
-     (send task-queqe (fn [l]
-                        (send s-agt (fn [{:keys [state] :as m}]
-                                      (prn 2)
-                                      (assoc m :state (mapv (op-fn :working sdx pdx) state))))
-                        (prn 1)
-                        (conj l task)))
-     
-     ))
+    (send task-queqe (fn [l]
+                       (send s-agt (fn [{:keys [state] :as m}]
+                                     (assoc m :state (mapv (op-fn :working sdx pdx) state))))
+                       (conj l task)))))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `tq` is the

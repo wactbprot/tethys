@@ -9,10 +9,12 @@
 ;; # open portal
 
 ;; See https://github.com/djblue/portal
-(def p (p/open))
 
 (comment
-   (tap> @(c-agent :mpd-ref 0)))
+  (def p (p/open))
+  (add-tap #'p/submit)
+  (tap> @(c-agent :mpd-ref 0))
+  (p/close))
 
 ;; # cli
 ;;
@@ -37,12 +39,10 @@
 (defn start
   ([] (start nil))
   ([id-set]
-   (add-tap #'p/submit)
    (sys/init id-set)
   (mpds)))
 
 (defn stop []
-  (p/close)
   (sys/stop))
 
 (defn images [] (-> @sys/system :model/images))

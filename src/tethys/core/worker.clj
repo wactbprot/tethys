@@ -1,4 +1,4 @@
-(ns tethys.worker.core
+(ns tethys.core.worker
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
@@ -59,11 +59,11 @@
 
 (defn watch-fn [images]
   (fn [_ w-agt o-w-queqe n-w-queqe]
-    (when (and (not= o-w-queqe n-w-queqe)
-               (seq n-w-queqe))
+    (when (not= o-w-queqe n-w-queqe)
       (send w-agt (fn [l]
-                    (check-spawn! images (first l))
-                    (-> l rest))))))
+                    (when (seq l)
+                      (check-spawn! images (first l))
+                      (-> l rest)))))))
 
 (defn up [{:keys [worker-queqe]} images]
   (µ/log ::up :message "start up worker queqe agent")

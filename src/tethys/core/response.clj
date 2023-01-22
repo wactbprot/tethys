@@ -43,11 +43,11 @@
 
 (defn watch-fn [images]
   (fn [_ r-agt o-r-queqe n-r-queqe]
-    (when (and (not= o-r-queqe n-r-queqe)
-               (seq n-r-queqe))
+    (when (not= o-r-queqe n-r-queqe)
       (send r-agt (fn [l]
-                    (dispatch images (first l))
-                    (-> l rest))))))
+                    (when (seq l)
+                      (dispatch images (first l))
+                      (-> l rest)))))))
 
 (defn up [{:keys [response-queqe]} images]
   (µ/log ::up :message "start up response queqe agent")

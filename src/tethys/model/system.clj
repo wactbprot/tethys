@@ -12,7 +12,7 @@
             [tethys.core.response :as resp]
             [tethys.model.scheduler :as sched]
             [tethys.core.task :as task]
-            [tethys.worker.core :as work])
+            [tethys.core.worker :as work])
   (:gen-class))
 
 (defn config [id-set]
