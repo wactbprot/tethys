@@ -71,11 +71,11 @@
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
-(defn start-next! [s-agt {:keys [sdx pdx] :as proto-task} images continue-fn]
+(defn start-next! [s-agt {:keys [sdx pdx pos-str] :as proto-task} images continue-fn]
   (when (seq proto-task)
-    (send s-agt (fn [{:keys [state] :as m}]
-                  (assoc m
-                         :spawn (future (continue-fn images proto-task))
+    (send s-agt (fn [{:keys [state spawn] :as m}]
+                  (assoc
+                   (assoc-in m [:spawn pos-str] (future (continue-fn images proto-task)))
                          :state (mapv (op-fn :working sdx pdx) state))))))
 
     

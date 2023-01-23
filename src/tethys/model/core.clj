@@ -173,27 +173,17 @@
                           s (range)))
                   v (range))))
 
-(defn up [{:keys [id
-                  ids
-                  cont
-                  defins
-                  exch
-                  conf
-                  response-queqe
-                  worker-queqe
-                  task-queqe]}]
+(defn up [{:keys [id cont defins exch conf]}]
   {:conf conf
    :exch (agent (or exch {}))
-   :ids (agent (or ids  #{}))
-   :response-queqe (agent (or response-queqe '()))
-   :worker-queqe (agent (or worker-queqe '()))
-   :worker-futures (atom {})
-   :task-queqe (agent (or task-queqe '()))
+   :ids (agent #{})
+   :response-queqe (agent '())
    :conts (mapv (fn [{:keys [Ctrl Definition Title Element]} ndx]
                   (agent {:title Title
                           :element Element
                           :ndx ndx
                           :ctrl (or (keyword Ctrl) :ready)
+                          :spawn {}
                           :state (state-struct Definition :conts id ndx )})) 
                 cont (range))
    :defins (mapv (fn [{:keys [Ctrl Definition DefinitionClass Condition]} ndx]
@@ -201,23 +191,14 @@
                            :cond Condition
                            :ndx ndx
                            :ctrl (or (keyword Ctrl) :ready)
+                           :spawn {}
                            :state (state-struct Definition :defins id ndx)})) 
                  defins (range))})
 
 ;; The down methode sets all agents back to its initial value
-(defn down [[_ {:keys [conts
-                       defins
-                       exch
-                       worker-queqe
-                       worker-futures
-                       task-queqe
-                       response-queqe
-                       ids]}]]
+(defn down [[_ {:keys [conts defins exch response-queqe ids]}]]
   (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
   (send ids (fn [_] {}))
-  (send worker-queqe (fn [_] '()))
-  (reset! worker-futures {})
-  (send response-queqe (fn [_] '()))
-  (send task-queqe (fn [_] '())))
+  (send response-queqe (fn [_] '())))

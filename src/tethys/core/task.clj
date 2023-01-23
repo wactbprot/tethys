@@ -71,7 +71,5 @@
     (µ/log ::build :message (str "Try build task: " TaskName :pos-str pos-str))
     (let [task (merge task (db-task-fn TaskName))
           from-exchange (exch-from-fn task)]
-      (prn "t")
-      (prn task)
       (assemble (assoc task :FromExchange from-exchange)))))  
 
