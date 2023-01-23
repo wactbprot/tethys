@@ -81,13 +81,13 @@ clojure -M:docs
 clojure -M:outdated
 ```
 
-<img src="namespaces.png" alt="tethys ns" id="ns" width="900px">
-
 # generate namespace graph
 
 ```shell
 clj -X:hiera
 ```
+
+<img src="namespaces.png" alt="tethys ns" id="ns" width="800px">
 
 
 # ELS
