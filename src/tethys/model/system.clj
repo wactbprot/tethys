@@ -6,13 +6,12 @@
             [clojure.pprint :as pp]
             [clojure.java.io :as io]
             [tethys.core.db :as db]
-            [tethys.core.date-time :as dt]
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
             [tethys.core.response :as resp]
             [tethys.model.scheduler :as sched]
             [tethys.core.task :as task]
-            [tethys.core.worker :as work])
+            [tethys.worker.core :as work])
   (:gen-class))
 
 (defn config [id-set]
@@ -45,6 +44,9 @@
              :reference-mpd (ig/ref :mpd/reference)
              :id-set (ig/ref :mpd/id-set) 
              :ini {}}
+   :db/task {:db (ig/ref :db/couch)
+             :view "tasks"
+             :design "dbmp"}
    :model/conf {:stop-if-delay 500 ; ms
                 :run-if-delay 500 ; ms
                 :db (ig/ref :db/couch)
@@ -55,14 +57,9 @@
                 :dev-hub-url "http://localhost:9009"
                 :db-agent-url "http://localhost:9992"
                 :dev-proxy-url "http://localhost:8009"}
-
    :model/images {:mpds (ig/ref :db/mpds)
                   :conf (ig/ref :model/conf)
                   :ini {}}
-
-   :db/task {:db (ig/ref :db/couch)
-             :view "tasks"
-             :design "dbmp"}
    :model/exch {:images (ig/ref :model/images)}
    :model/task {:db-task (ig/ref :db/task)
                 :from-exch (ig/ref :model/exch)

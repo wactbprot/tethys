@@ -99,19 +99,18 @@
 (defn s-error [& pos] (state! pos :error))
 
 ;; ## Tasks
-;; 
-;; Occurring errors are detectaple with the `agent-error` function.
-(defn t-agent [mpd] (model/images->task-agent (images) (struct model/state mpd)))
-(defn t-queqe [mpd] @(t-agent mpd))
-(defn t-error [mpd] (agent-error (t-agent mpd)))
-(defn t-restart [mpd] (restart-agent (t-agent mpd) (t-queqe mpd)))
+(comment
+  (def task {:TaskName "Common-wait"})
+  (def build-task-fn (:mpd-ref (:model/task @sys/system))) 
+  (build-task-fn task))
 
 ;; ## Worker
-(defn w-agent [mpd] (model/images->worker-agent (images) (struct model/state mpd)))
-(defn w-future [mpd] (model/images->worker-futures (images) (struct model/state mpd)))
-(defn w-queqe [mpd] @(w-agent mpd))
-(defn w-error [mpd] (agent-error (w-agent mpd)))
-(defn w-restart [mpd] (restart-agent (w-agent mpd) (w-queqe mpd)))
+(comment
+  (def task {:TaskName "Common-wait"
+             :id :mpd-ref
+             :ndx 0 :sdx 0 :pdx 0 :group :conts})
+  (def spawn-work-fn (:mpd-ref (:model/worker @sys/system)))
+  (spawn-work-fn (images) task))
 
 
 ;; ## Exchange interface
