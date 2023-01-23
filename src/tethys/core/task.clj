@@ -68,7 +68,7 @@
 
 (defn build-fn [db-task-fn exch-from-fn]
   (fn [{:keys [TaskName pos-str] :as task}]
-    (µ/log ::build :message (str "Try build task: " TaskName :pos-str pos-str))
+    (µ/log ::build :message (str "Try build task: " TaskName) :pos-str pos-str)
     (let [task (merge task (db-task-fn TaskName))
           from-exchange (exch-from-fn task)]
       (assemble (assoc task :FromExchange from-exchange)))))  

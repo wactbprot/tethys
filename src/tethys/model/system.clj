@@ -63,11 +63,15 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   
+   :model/exch {:images (ig/ref :model/images)}
+   :model/task {:db-task (ig/ref :db/task)
+                :from-exch (ig/ref :model/exch)
+                :images (ig/ref :model/images)}
+   :model/worker {:build-task (ig/ref :model/task)
+                  :images (ig/ref :model/images)}
    :model/response {:images (ig/ref :model/images)
                     :ini {}}
-
-   :scheduler/images {:db-task-fn (ig/ref :db/task)
+   :scheduler/images {:spawn-work (ig/ref :model/worker)
                       :images (ig/ref :model/images)
                       :ini {}}})
 
@@ -84,6 +88,9 @@
 ;;
 ;; The `init-key`s methods **read a
 ;; configuration** and **return an implementation**.
+
+(defmethod ig/init-key :model/conf [_ conf] conf)
+
 (defmethod ig/init-key :log/mulog [_ opts]
   (µ/log ::logger :message "start system")
   (µ/set-global-context! (:log-context opts))
@@ -112,13 +119,13 @@
 
 (defmethod ig/init-key :db/task [_ {:keys [db view design]}]
   (µ/log ::task-db :message "start system")
-  (let [db (db/config (assoc db
-                             :view view
-                             :design design))]
-    (db/task-fn db)))
+  (db/task-fn (db/config (assoc db
+                                :view view
+                                :design design))))
 
-(defmethod ig/init-key :model/conf [_ conf] conf)
-  
+(comment
+  ((:db/task @system) "Common-wait"))
+
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
   (µ/log ::images :message "start system")
   (reduce
@@ -130,6 +137,31 @@
                               :conf conf})))
    ini mpds))
 
+(defmethod ig/init-key :model/exch [_ {:keys [images ini]}]
+  (µ/log ::scheduler :message "start system")
+  (reduce
+   (fn [res [id image]]
+     (assoc res id (exch/from-fn (model/image->exch-agent image)))) ;; call with task
+   ini images))
+
+(defmethod ig/init-key :model/task [_ {:keys [images ini db-task from-exch]}]
+  (µ/log ::scheduler :message "start system")
+  (reduce
+   (fn [res [id image]]
+     (assoc res id (task/build-fn db-task (get from-exch id)))) ;; call with task
+   ini images))
+
+(comment
+  ((:mpd-ref (:model/task @sys/system)) {:TaskName "Common-wait"}))
+
+(defmethod ig/init-key :model/worker [_ {:keys [images ini build-task]}]
+  (µ/log ::worker :message "start system")
+  (reduce
+   (fn [res [id image]]
+     (assoc res id (work/spawn-fn (get build-task id)))) ;; call with task
+   ini images))
+
+
 (defmethod ig/init-key :model/response [_ {:keys [images ini]}]
   (µ/log ::response :message "start system")
   (reduce
@@ -137,14 +169,11 @@
      (assoc res id (resp/up image images)))
    ini images))
 
-(defmethod ig/init-key :scheduler/images [_ {:keys [images ini db-task-fn]}]
+(defmethod ig/init-key :scheduler/images [_ {:keys [images ini spawn-work]}]
   (µ/log ::scheduler :message "start system")
   (reduce
    (fn [res [id image]]
-     (let [from-exch-fn (exch/from-fn (model/image->exch-agent image)) ;; call with task
-           build-task-fn (task/build-fn db-task-fn from-exch-fn) ;; call with task
-           continue-fn (work/spawn-fn build-task-fn)] ;; call with task
-       (assoc res id (sched/up images id continue-fn))))
+     (assoc res id (sched/up images id (get spawn-work id))))
    ini images))
 
 ;; ## System down multimethods

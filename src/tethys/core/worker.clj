@@ -35,7 +35,7 @@
                  :genDbDoc db/gen-doc
                  :rmDbDocs db/rm-docs
                  (µ/log ::dispatch :error "no matching case" :pos-str pos-str))]
-    (future (f images task))))
+    (f images task)))
   
 (defn spawn [images task] 
   (let [{:keys [run-if-delay
