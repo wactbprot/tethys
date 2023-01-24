@@ -64,21 +64,22 @@
 (defn is-first? [{i :sdx}] (zero? i))
 
 (defn find-next [v]
-  (let [{sdx :sdx :as m} (first (filterv (is-eq :ready) v))]
-    (when (seq m)
-      (when (or (is-first? m) (predec-exec? sdx v))
-        m))))
+  (let [{sdx :sdx :as proto-task} (first (filterv (is-eq :ready) v))]
+    (when (seq proto-task)
+      (when (or (is-first? proto-task) (predec-exec? sdx v)) proto-task))))
 
 ;; `start-next!` sets the state agent `s-agt` to working and `conj` the
 ;; task `m` to the task-queqe `tq`
 (defn start-next! [s-agt {:keys [sdx pdx pos-str] :as proto-task} images continue-fn]
   (when (seq proto-task)
-    (send s-agt (fn [{:keys [state spawn] :as m}]
+    (send s-agt (fn [{:keys [state] :as m}]
                   (assoc
-                   (assoc-in m [:spawn pos-str] (future (continue-fn images proto-task)))
+                   (assoc-in m [:spawn (keyword pos-str)] (future (continue-fn images proto-task)))
                          :state (mapv (op-fn :working sdx pdx) state))))))
 
-    
+(defn to-error? [ctrl state] (and (not= :error ctrl) (error? state)))
+(defn is-running? [ctrl] (or (= :run ctrl) (= :mon ctrl))
+
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `tq` is the
 ;; related task-queqe agent.
@@ -88,11 +89,9 @@
                           (when (not= o-state-queqe n-state-queqe)
                             (let [{:keys [ctrl state]} n-state-queqe]
                               (cond
-                                (and (not= :error ctrl)
-                                     (error? state))  (ctrl-error! s-agt)
-                                (all-exec? state)     (all-ready! s-agt)
-                                (or (= :run ctrl)
-                                    (= :mon ctrl))    (start-next! s-agt (find-next state) images continue-fn)
+                                (to-error? ctrl state) (ctrl-error! s-agt)
+                                (all-exec? state)      (all-ready! s-agt)
+                                (is-running? ctrl)     (start-next! s-agt (find-next state) images continue-fn)
                                 :nothing-todo-here true)))))))
 
 (defn up [images id continue-fn]
