@@ -43,6 +43,7 @@
       (if (only-if-not-fn task)
         (do
           (Thread/sleep system-relax)
+          (prn (-> task :pos-str))
           (dispatch images task))
         (do
           (Thread/sleep stop-if-delay)

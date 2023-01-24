@@ -44,25 +44,3 @@
 
       :default
       (sched/state-executed! images task))))
-
-(defn add [a m] (send a (fn [l] (conj l m))))
-
-(defn error [a ex]
-  (µ/log ::error-handler :error (str "error occured: " ex)))
-
-(defn watch-fn [images]
-  (fn [_ r-agt o-r-queqe n-r-queqe]
-    (when (not= o-r-queqe n-r-queqe)
-      (send r-agt (fn [l]
-                    (when (seq l)
-                      (dispatch images (first l))
-                      (-> l rest)))))))
-
-(defn up [{:keys [response-queqe]} images]
-  (µ/log ::up :message "start up response queqe agent")
-  (set-error-handler! response-queqe error)
-  (add-watch response-queqe :queqe (watch-fn images)))
-
-(defn down [[_ r-agt]]
-  (µ/log ::down :message "shut down respons queqe agent")
-  (remove-watch r-agt :queqe))

@@ -8,7 +8,6 @@
             [tethys.core.db :as db]
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
-            [tethys.core.response :as resp]
             [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
             [tethys.worker.core :as work])
@@ -47,7 +46,7 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   :model/conf {:system-relax 100 ; ms
+   :model/conf {:system-relax 200 ; ms
                 :stop-if-delay 500 ; ms
                 :run-if-delay 500 ; ms
                 :db (ig/ref :db/couch)
@@ -69,8 +68,6 @@
                   :exch-fns (ig/ref :model/exch)
                   :images (ig/ref :model/images)
                   :conf (ig/ref :model/conf)}
-   :model/response {:images (ig/ref :model/images)
-                    :ini {}}
    :scheduler/images {:spawn-work (ig/ref :model/worker)
                       :images (ig/ref :model/images)
                       :ini {}}})
@@ -168,13 +165,6 @@
        (assoc res id (work/spawn-fn build-task-fn exch-run-if-fn exch-only-if-not-fn conf)))) ;; call with task
    ini images))
 
-(defmethod ig/init-key :model/response [_ {:keys [images ini]}]
-  (µ/log ::response-model :message "start system")
-  (reduce
-   (fn [res [id image]]
-     (assoc res id (resp/up image images)))
-   ini images))
-
 (defmethod ig/init-key :scheduler/images [_ {:keys [images ini spawn-work]}]
   (µ/log ::scheduler-images :message "start system")
   (reduce
@@ -197,10 +187,6 @@
 (defmethod ig/halt-key! :scheduler/images [_ as]
   (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
-  
-(defmethod ig/halt-key! :model/response [_ m]
-  (µ/log ::respons :message "halt system")
-  (run! #(resp/down %) m))
 
 (defn init [id-set] (reset! system (ig/init (config id-set))))
 

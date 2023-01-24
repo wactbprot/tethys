@@ -31,14 +31,13 @@
 (defn req [{header :json-post-header} {:keys [Value] :as task}] (assoc header :body (json/write-str Value)))
 
 (defn devproxy [images {:keys [pos-str] :as task}]
-  (let [conf (model/images->conf images task)
-        r-agt (model/images->resp-agent images task)]
+  (let [conf (model/images->conf images task)]
     (try
       (let [{:keys [status body error]} (http/post (url conf task) (req conf task))]
         (if (or (not error)
                 (< status 400))
           (try
-            (resp/add r-agt (merge task (json/read-str body :key-fn keyword)))
+            (resp/dispatch images (merge task (json/read-str body :key-fn keyword)))
             (catch Exception e
               (µ/log ::devproxy :error (.getMessage e) :pos-str pos-str)
               (sched/state-error! images task)))

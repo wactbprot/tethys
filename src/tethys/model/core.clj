@@ -56,16 +56,6 @@
       (images->image id)
       image->resp-agent))
 
-(defn images->worker-agent [images {:keys [id]}]
-  (-> images
-      (images->image id)
-      image->worker-agent))
-
-(defn images->worker-futures [images {:keys [id]}]
-  (-> images
-      (images->image id)
-      image->worker-futures))
-
 (defn images->conf [images {:keys [id]}]
   (-> images
       (images->image id)
@@ -75,11 +65,6 @@
   (-> images
       (images->image id)
       (image->ids-agent)))
-
-(defn images->task-agent [images {:keys [id]}]
-  (-> images
-      (images->image id)
-      (image->task-agent)))
 
 ;; ## doc ids
 
@@ -121,15 +106,6 @@
                   (images->image id)
                   (image->cont-agent ndx))]
     (send s-agt (fn [m] (dissoc m :message)))))
-
-;; ## Worker
-
-(defn spawn-work [images {:keys [id pos-str] :as task} f]
-  (let [kw (keyword pos-str)
-        w-atm (-> images
-                  (images->image id)
-                  (image->worker-futures))]
-    (swap! w-atm assoc kw (future (f images task)))))
 
 ;; # Helper functions
 
@@ -174,7 +150,6 @@
   {:conf conf
    :exch (agent (or exch {}))
    :ids (agent #{})
-   :response-queqe (agent '())
    :conts (mapv (fn [{:keys [Ctrl Definition Title Element]} ndx]
                   (agent {:title Title
                           :element Element
@@ -197,5 +172,4 @@
   (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))
-  (send ids (fn [_] {}))
-  (send response-queqe (fn [_] '())))
+  (send ids (fn [_] {})))

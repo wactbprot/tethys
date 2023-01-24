@@ -14,14 +14,13 @@
 ;; ToDo: merge the result into the task in order to ensure that the
 ;; position gets not lost. Done: <*>
 (defn devhub [images task]
-  (let [conf (model/images->conf images task)
-        r-agt (model/images->resp-agent images task)]
+  (let [conf (model/images->conf images task)]
     (try
       (let [{:keys [status body error]} (http/post (url conf) (req conf task))]
         (if (or (not error)
                 (< status 400))
           (try
-            (resp/add r-agt (merge task (json/read-str body :key-fn keyword))) ; <*>
+            (resp/dispatch images (merge task (json/read-str body :key-fn keyword))) ; <*>
             (catch Exception e
               (µ/log ::devhub :error (.getMessage e))
               (sched/state-error! images task)))

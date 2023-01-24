@@ -39,11 +39,10 @@
 ;; </pre>
 
 (defn read-exchange [images {:keys [ExchangePath] :as task}]
-  (let [e-agt (model/images->exch-agent images task)
-        r-agt (model/images->resp-agent images task)]
+  (let [e-agt (model/images->exch-agent images task)]
     (if-let [value (exch/e-value e-agt ExchangePath)]
       (do
-        (resp/add r-agt (merge task {:Result [value]})))
+        (resp/dispatch images (merge task {:Result [value]})))
       (do
         (µ/log ::read :error (str "No value found at exchange path " ExchangePath))
         (sched/state-error! images task)))))

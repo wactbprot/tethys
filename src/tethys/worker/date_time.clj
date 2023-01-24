@@ -3,10 +3,8 @@
     :doc "The date and time worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [clojure.data.json :as json]
-            [tethys.model.core :as model]
             [tethys.core.date-time :as dt]
-            [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]))
+            [tethys.core.response :as resp]))
 
 ;; Example for a `getTime` and a `getDate` task:
 ;; <pre>
@@ -28,12 +26,10 @@
 ;; </pre>
 
 (defn store-time [images {:keys [Type ExchangePath] :as task}]
-  (let [r-agt (model/images->resp-agent images task)
-        m {:Value (dt/get-time) :Type Type}]
-    (resp/add r-agt (merge task {:Result [m]
+  (let [m {:Value (dt/get-time) :Type Type}]
+    (resp/dispatch images (merge task {:Result [m]
                                  :Value m}))))
 
 (defn store-date [images {:keys [Type] :as task}]
-  (let [r-agt (model/images->resp-agent images task)
-        m {:Value (dt/get-date) :Type Type}]
-    (resp/add r-agt (merge task {:Result [m]}))))
+  (let [m {:Value (dt/get-date) :Type Type}]
+    (resp/dispatch images (merge task {:Result [m]}))))
