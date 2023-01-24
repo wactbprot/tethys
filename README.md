@@ -86,6 +86,7 @@ clojure -M:outdated
 ```shell
 clj -X:hiera
 ```
+<img src="cluster.png" alt="tethys cluster" id="ns" width="400px">
 
 <img src="namespaces.png" alt="tethys ns" id="ns" width="800px">
 
