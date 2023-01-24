@@ -23,7 +23,6 @@
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
 (defn image->exch-agent [image] (-> image :exch))
 (defn image->ids-agent [image] (-> image :ids))
-(defn image->resp-agent [image] (-> image :response-queqe))
 (defn image->conf [image] (-> image :conf))
 
 (defn images->cont-agent [images {:keys [id ndx]}]
@@ -50,11 +49,6 @@
   (-> images
       (images->image id)
       image->exch-agent))
-
-(defn images->resp-agent [images {:keys [id]}]
-  (-> images
-      (images->image id)
-      image->resp-agent))
 
 (defn images->conf [images {:keys [id]}]
   (-> images

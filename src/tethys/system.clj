@@ -198,6 +198,7 @@
 
 ;; ## helper
 
+(defn mpds [] (-> @system :db/mpds))
 (defn images [] (-> @system :model/images))
 (defn exch-agent [id] (model/images->exch-agent (images) {:id id}))
 

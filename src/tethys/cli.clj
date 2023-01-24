@@ -29,29 +29,32 @@
 ;;* `d-`... documents
 ;;* `r-`... response
 
+;; The following functions are intended
+;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
+
 ;; ## Start, stop and restart system
 ;;
 ;; In order to get an overview of the active mpds use `(mpds)`.
-(defn mpds [] (-> @sys/system :db/mpds keys))
+(defn mpds [] (-> (sys/mpds) keys))
 
-;; The following functions are intended
-;; for [REPL](https://clojure.org/guides/repl/introduction) usage.
 (defn start
   ([] (start nil))
   ([id-set]
    (sys/init id-set)
   (mpds)))
 
-(defn stop []
-  (sys/stop))
-
+(defn stop [] (sys/stop))
 (defn images [] (sys/images))
-(defn image [mpd] (-> (images) mpd))
+(defn image [mpd]
+  {:pre  [(keyword? mpd)]}
+  (-> (images) mpd))
 
 ;; ## Ctrl-interface
 
 ;; Get the `agent` of a certain container by `(c-agent mpd ndx)`
 (defn c-agent [mpd ndx]
+  {:pre  [(keyword? mpd)
+          (int? ndx)]}
   (model/images->cont-agent (images) (struct model/state mpd :conts ndx)))
 
 
@@ -130,12 +133,5 @@
 (defn d-rm-all [mpd] (model/rm-all-doc-ids (images) (struct model/state mpd)))
 (defn d-refresh [mpd id-coll] (model/refresh-doc-ids (images) mpd id-coll))
 (defn d-show [mpd] (model/doc-ids (images) (struct model/state mpd)))
-
-;; ## Response queqe
-;;
-;; Get the `agent` of a mpd by `(r-agent mpd)`
-(defn r-agent [mpd] (model/images->resp-agent (images) (struct model/state mpd)))
-(defn r-queqe [mpd] @(r-agent mpd))
-(defn r-error [mpd] (agent-error (r-agent mpd)))
 
 (defn -main [] (start))
