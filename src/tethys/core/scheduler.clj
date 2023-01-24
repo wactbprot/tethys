@@ -1,4 +1,4 @@
-(ns tethys.model.scheduler
+(ns tethys.core.scheduler
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.model.core :as model]))
@@ -78,7 +78,7 @@
                          :state (mapv (op-fn :working sdx pdx) state))))))
 
 (defn to-error? [ctrl state] (and (not= :error ctrl) (error? state)))
-(defn is-running? [ctrl] (or (= :run ctrl) (= :mon ctrl))
+(defn is-running? [ctrl] (or (= :run ctrl) (= :mon ctrl)))
 
 ;; The `up` function is called with two agents: `conts` is a vector of
 ;; the container state agents `s-agt` of a certain mpd and `tq` is the

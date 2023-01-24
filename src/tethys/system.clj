@@ -1,4 +1,4 @@
-(ns tethys.model.system
+(ns tethys.system
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
             [integrant.core :as ig]
@@ -9,7 +9,7 @@
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.model.scheduler :as sched]
+            [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
             [tethys.worker.core :as work])
   (:gen-class))
@@ -62,10 +62,12 @@
                   :ini {}}
    :model/exch {:images (ig/ref :model/images)}
    :model/task {:db-task (ig/ref :db/task)
-                :from-exch (ig/ref :model/exch)
+                :exch-fns (ig/ref :model/exch)
                 :images (ig/ref :model/images)}
    :model/worker {:build-task (ig/ref :model/task)
-                  :images (ig/ref :model/images)}
+                  :exch-fns (ig/ref :model/exch)
+                  :images (ig/ref :model/images)
+                  :conf (ig/ref :model/conf)}
    :model/response {:images (ig/ref :model/images)
                     :ini {}}
    :scheduler/images {:spawn-work (ig/ref :model/worker)
@@ -138,26 +140,32 @@
   (µ/log ::scheduler :message "start system")
   (reduce
    (fn [res [id image]]
-     (assoc res id (exch/from-fn (model/image->exch-agent image)))) ;; call with task
+     (let [e-agt (model/image->exch-agent image)]
+       (assoc res id {:from-fn (exch/from-fn e-agt)
+                      :only-if-not-fn (exch/only-if-not-fn e-agt)
+                      :run-if-fn (exch/run-if-fn e-agt)}))) 
    ini images))
 
-(defmethod ig/init-key :model/task [_ {:keys [images ini db-task from-exch]}]
+(defmethod ig/init-key :model/task [_ {:keys [images ini db-task exch-fns]}]
   (µ/log ::scheduler :message "start system")
   (reduce
    (fn [res [id image]]
-     (assoc res id (task/build-fn db-task (get from-exch id)))) ;; call with task
+     (let [exch-from-fn (get-in exch-fns [id :from-fn])]
+       (assoc res id (task/build-fn db-task exch-from-fn)))) ;; call with task
    ini images))
 
 (comment
   ((:mpd-ref (:model/task @sys/system)) {:TaskName "Common-wait"}))
 
-(defmethod ig/init-key :model/worker [_ {:keys [images ini build-task]}]
+(defmethod ig/init-key :model/worker [_ {:keys [images ini build-task exch-fns conf]}]
   (µ/log ::worker :message "start system")
   (reduce
    (fn [res [id image]]
-     (assoc res id (work/spawn-fn (get build-task id)))) ;; call with task
+     (let [build-task-fn (get build-task id)
+           exch-run-if-fn (get-in exch-fns [id :run-if-fn])
+           exch-only-if-not-fn (get-in exch-fns [id :only-if-not-fn])]
+       (assoc res id (work/spawn-fn build-task-fn exch-run-if-fn exch-only-if-not-fn conf)))) ;; call with task
    ini images))
-
 
 (defmethod ig/init-key :model/response [_ {:keys [images ini]}]
   (µ/log ::response :message "start system")

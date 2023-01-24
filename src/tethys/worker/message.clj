@@ -3,7 +3,7 @@
     :doc "The wait worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.model.core :as model]
-            [tethys.model.scheduler :as sched]))
+            [tethys.core.scheduler :as sched]))
 
 ;; Example for a `message` task:
 ;; <pre>

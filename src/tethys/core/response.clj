@@ -4,7 +4,7 @@
             [tethys.core.docs :as docs]
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
-            [tethys.model.scheduler :as sched]))
+            [tethys.core.scheduler :as sched]))
 
 ;; The `id` is the mpd id comming from the task; `ids` are the doc-ids
 ;; comming from the response (devproxy).

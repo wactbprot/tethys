@@ -1,8 +1,8 @@
 (ns tethys.cli
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [tethys.model.core :as model]
-            [tethys.model.scheduler :as sched]
-            [tethys.model.system :as sys]
+            [tethys.core.scheduler :as sched]
+            [tethys.system :as sys]
             [portal.api :as p])
    (:gen-class))
 

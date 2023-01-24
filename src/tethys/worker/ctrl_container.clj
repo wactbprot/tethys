@@ -4,7 +4,7 @@
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
-            [tethys.model.scheduler :as sched]))
+            [tethys.core.scheduler :as sched]))
 
 (defn task->target [{:keys [Container Mp] :as task}]
   (struct model/state Mp :conts Container))

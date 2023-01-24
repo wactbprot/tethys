@@ -1,9 +1,7 @@
 (ns tethys.worker.core
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
-            [tethys.core.exchange :as exch]
-            [tethys.model.core :as model]
-            [tethys.model.scheduler :as sched]
+            [tethys.core.scheduler :as sched]
             [tethys.worker.ctrl-container :as ctrl-cont]
             [tethys.worker.ctrl-definition :as ctrl-defins]
             [tethys.worker.devhub :as devhub]
@@ -36,13 +34,12 @@
                  :rmDbDocs db/rm-docs
                  (µ/log ::dispatch :error "no matching case" :pos-str pos-str))]
     (f images task)))
-  
-(defn spawn [images task] 
-  (let [{:keys [run-if-delay
-                stop-if-delay]} (model/images->conf images task)
-        e-agt (model/images->exch-agent images task)]    
-    (if (exch/run-if e-agt task)
-      (if (exch/only-if-not e-agt task)
+
+(defn spawn-fn [build-task-fn run-if-fn only-if-not-fn {:keys [run-if-delay stop-if-delay] :as conf}]
+  (fn [images task]
+    (let [task (build-task-fn task)]    
+    (if (run-if-fn task)
+      (if (only-if-not-fn task)
         (do
           (dispatch images task))
         (do
@@ -52,11 +49,7 @@
       (do
         (Thread/sleep run-if-delay)
         (µ/log ::check :message "state set by run-if")
-        (sched/state-ready! images task)))))
-
-(defn spawn-fn [build-task-fn]
-  (fn [images task]
-    (spawn images (build-task-fn task))))
+        (sched/state-ready! images task))))))
 
 (comment
   ;; the futures should be kept with a hash key:

@@ -6,7 +6,7 @@
             [clj-http.client :as http]
             [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.model.scheduler :as sched]))
+            [tethys.core.scheduler :as sched]))
 
 (defn url [{u :dev-hub-url}] u)
 (defn req [{header :json-post-header} task] (assoc header :body (json/write-str task)))

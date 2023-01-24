@@ -33,6 +33,8 @@
 ;; Checks if the exchange `p`ath given with `:RunIf` evaluates to true.
 (defn run-if [e-agt {p :RunIf}] (if p (ok? e-agt p) true))
 
+(defn run-if-fn [e-agt] (fn [task] (run-if e-agt task)))
+
 ;; Runs the task `only-if-not` the exchange `p`ath given with
 ;; `:OnlyIfNot` evaluates to `true`.
 (defn only-if-not [e-agt {p :OnlyIfNot}]
@@ -42,6 +44,7 @@
     (not (ok? e-agt p)) true
     (ok? e-agt p) false))
 
+(defn only-if-not-fn [e-agt] (fn [task] (only-if-not e-agt task)))
 
 ;; ## Read from Exchange
 

@@ -5,7 +5,7 @@
             [tethys.core.exchange :as exch]
             [tethys.model.core :as model]
             [tethys.core.response :as resp]
-            [tethys.model.scheduler :as sched]))
+            [tethys.core.scheduler :as sched]))
 
 
 ;; Example for a `writeExchange`task:
