@@ -45,7 +45,7 @@
 (defn stop []
   (sys/stop))
 
-(defn images [] (-> @sys/system :model/images))
+(defn images [] (sys/images))
 (defn image [mpd] (-> (images) mpd))
 
 ;; ## Ctrl-interface

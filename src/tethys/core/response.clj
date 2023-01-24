@@ -26,15 +26,24 @@
 
 ;; Only happy path for the helper functions above.
 (defn dispatch [images {:keys [error ids DocPath ToExchange ExchangePath Result Retry] :as task}]
-  (cond->> task
+   (cond->> task
     Result (store images)
     ids (refresh images)
     ToExchange (to-exch images)
     ExchangePath (to-exch images))
-  (cond 
-    Retry (sched/state-ready! images task)
-    error (sched/state-error! images task)
-    :default (sched/state-executed! images task)))
+  (let [e-agt (model/images->exch-agent images task)]
+    (cond 
+      Retry
+      (sched/state-ready! images task)
+
+      error
+      (sched/state-error! images task)
+
+      (not (exch/stop-if e-agt task))
+      (sched/state-ready! images task)
+
+      :default
+      (sched/state-executed! images task))))
 
 (defn add [a m] (send a (fn [l] (conj l m))))
 

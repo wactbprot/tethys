@@ -21,9 +21,6 @@
 
 (defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
 (defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
-(defn image->task-agent [image] (-> image :task-queqe))
-(defn image->worker-agent [image] (-> image :worker-queqe))
-(defn image->worker-futures [image] (-> image :worker-futures))
 (defn image->exch-agent [image] (-> image :exch))
 (defn image->ids-agent [image] (-> image :ids))
 (defn image->resp-agent [image] (-> image :response-queqe))

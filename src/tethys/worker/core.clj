@@ -35,12 +35,14 @@
                  (µ/log ::dispatch :error "no matching case" :pos-str pos-str))]
     (f images task)))
 
-(defn spawn-fn [build-task-fn run-if-fn only-if-not-fn {:keys [run-if-delay stop-if-delay] :as conf}]
+(defn spawn-fn [build-task-fn run-if-fn only-if-not-fn
+                {:keys [run-if-delay stop-if-delay system-relax] :as conf}]
   (fn [images task]
     (let [task (build-task-fn task)]    
     (if (run-if-fn task)
       (if (only-if-not-fn task)
         (do
+          (Thread/sleep system-relax)
           (dispatch images task))
         (do
           (Thread/sleep stop-if-delay)

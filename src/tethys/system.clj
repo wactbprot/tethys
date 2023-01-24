@@ -47,7 +47,8 @@
    :db/task {:db (ig/ref :db/couch)
              :view "tasks"
              :design "dbmp"}
-   :model/conf {:stop-if-delay 500 ; ms
+   :model/conf {:system-relax 100 ; ms
+                :stop-if-delay 500 ; ms
                 :run-if-delay 500 ; ms
                 :db (ig/ref :db/couch)
                 :json-post-header {:content-type :json
@@ -126,7 +127,7 @@
   ((:db/task @system) "Common-wait"))
 
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
-  (µ/log ::images :message "start system")
+  (µ/log ::images-model :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
      (assoc res id (model/up {:id id
@@ -137,7 +138,7 @@
    ini mpds))
 
 (defmethod ig/init-key :model/exch [_ {:keys [images ini]}]
-  (µ/log ::scheduler :message "start system")
+  (µ/log ::exch-model :message "start system")
   (reduce
    (fn [res [id image]]
      (let [e-agt (model/image->exch-agent image)]
@@ -147,7 +148,7 @@
    ini images))
 
 (defmethod ig/init-key :model/task [_ {:keys [images ini db-task exch-fns]}]
-  (µ/log ::scheduler :message "start system")
+  (µ/log ::task-model :message "start system")
   (reduce
    (fn [res [id image]]
      (let [exch-from-fn (get-in exch-fns [id :from-fn])]
@@ -158,7 +159,7 @@
   ((:mpd-ref (:model/task @sys/system)) {:TaskName "Common-wait"}))
 
 (defmethod ig/init-key :model/worker [_ {:keys [images ini build-task exch-fns conf]}]
-  (µ/log ::worker :message "start system")
+  (µ/log ::worker-model :message "start system")
   (reduce
    (fn [res [id image]]
      (let [build-task-fn (get build-task id)
@@ -168,14 +169,14 @@
    ini images))
 
 (defmethod ig/init-key :model/response [_ {:keys [images ini]}]
-  (µ/log ::response :message "start system")
+  (µ/log ::response-model :message "start system")
   (reduce
    (fn [res [id image]]
      (assoc res id (resp/up image images)))
    ini images))
 
 (defmethod ig/init-key :scheduler/images [_ {:keys [images ini spawn-work]}]
-  (µ/log ::scheduler :message "start system")
+  (µ/log ::scheduler-images :message "start system")
   (reduce
    (fn [res [id image]]
      (assoc res id (sched/up images id (get spawn-work id))))
@@ -208,6 +209,14 @@
   (µ/log ::start :message "halt system")
   (ig/halt! @system)
   (reset! system {}))
+
+;; ## helper
+
+(defn images [] (-> @system :model/images))
+(defn exch-agent [id] (model/images->exch-agent (images) {:id id}))
+
+(comment
+  (exch/stop-if (exch-agent :mpd-se3-servo)  {:StopIf "Servo_1_Stop.Bool"}))
 
 (comment
   ;; give up
