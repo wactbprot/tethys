@@ -89,16 +89,12 @@
 
 ;; ## message
 
-(defn add-message [images {:keys [id ndx Message pos-str]}]
-  (let [s-agt (-> images
-                  (images->image id)
-                  (image->cont-agent ndx))]
+(defn add-message [images {:keys [Message] :as task}]
+  (let [s-agt (images->cont-agent images task)]
     (send s-agt (fn [m] (assoc m :message Message)))))
 
-(defn rm-message [images {:keys [id ndx]}]
-  (let [s-agt (-> images
-                  (images->image id)
-                  (image->cont-agent ndx))]
+(defn rm-message [images task]
+  (let [s-agt (images->cont-agent images task)]
     (send s-agt (fn [m] (dissoc m :message)))))
 
 ;; # Helper functions
