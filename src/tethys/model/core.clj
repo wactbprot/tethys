@@ -19,16 +19,15 @@
         ndx (Integer. ndx)]
     (-> image group-kw (nth ndx))))
 
-(defn image->cont-agent [image ndx] (image->state-agent image ndx :conts))
-(defn image->defin-agent [image ndx] (image->state-agent image ndx :defins))
-(defn image->exch-agent [image] (-> image :exch))
-(defn image->ids-agent [image] (-> image :ids))
-(defn image->conf [image] (-> image :conf))
+(defn images->state-agent [images {:keys [id ndx group]}]
+  (-> images
+      (images->image id)
+      (image->state-agent ndx group)))
 
 (defn images->cont-agent [images {:keys [id ndx]}]
   (-> images
       (images->image id)
-      (image->cont-agent ndx)))
+      (image->state-agent ndx :conts)))
 
 (defn images->conts [images {:keys [id]}]
   (-> images
@@ -40,25 +39,20 @@
       (images->image id)
       (get :defins)))
 
-(defn images->state-agent [images {:keys [id ndx group]}]
-  (-> images
-      (images->image id)
-      (image->state-agent ndx group)))
-
 (defn images->exch-agent [images {:keys [id]}]
   (-> images
       (images->image id)
-      image->exch-agent))
+      :exch))
 
 (defn images->conf [images {:keys [id]}]
   (-> images
       (images->image id)
-      image->conf))
+      :conf))
 
 (defn images->ids-agent [images {:keys [id]}]
   (-> images
       (images->image id)
-      (image->ids-agent)))
+      :ids))
 
 ;; ## doc ids
 

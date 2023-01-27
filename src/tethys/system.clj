@@ -137,8 +137,8 @@
 (defmethod ig/init-key :model/exch [_ {:keys [images ini]}]
   (µ/log ::exch-model :message "start system")
   (reduce
-   (fn [res [id image]]
-     (let [e-agt (model/image->exch-agent image)]
+   (fn [res [id _]]
+     (let [e-agt (model/images->exch-agent images {:id id})]
        (assoc res id {:from-fn (exch/from-fn e-agt)
                       :only-if-not-fn (exch/only-if-not-fn e-agt)
                       :run-if-fn (exch/run-if-fn e-agt)}))) 
@@ -149,7 +149,7 @@
   (reduce
    (fn [res [id image]]
      (let [exch-from-fn (get-in exch-fns [id :from-fn])]
-       (assoc res id (task/build-fn db-task exch-from-fn)))) ;; call with task
+       (assoc res id (task/build-fn db-task exch-from-fn))))
    ini images))
 
 (comment
@@ -162,7 +162,7 @@
      (let [build-task-fn (get build-task id)
            exch-run-if-fn (get-in exch-fns [id :run-if-fn])
            exch-only-if-not-fn (get-in exch-fns [id :only-if-not-fn])]
-       (assoc res id (work/spawn-fn build-task-fn exch-run-if-fn exch-only-if-not-fn conf)))) ;; call with task
+       (assoc res id (work/spawn-fn build-task-fn exch-run-if-fn exch-only-if-not-fn conf))))
    ini images))
 
 (defmethod ig/init-key :scheduler/images [_ {:keys [images ini spawn-work]}]
