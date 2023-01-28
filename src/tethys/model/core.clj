@@ -14,30 +14,26 @@
   (let [id (keyword id)]
     (-> images id)))
 
-(defn image->state-agent [image ndx group-kw] 
-  (let [group-kw (keyword group-kw)
-        ndx (Integer. ndx)]
-    (-> image group-kw (nth ndx))))
-
 (defn images->state-agent [images {:keys [id ndx group]}]
-  (-> images
-      (images->image id)
-      (image->state-agent ndx group)))
+  (let [group-kw (keyword group)
+        ndx (Integer. ndx)]
+    (-> images
+        (images->image id)
+        group-kw
+        (nth ndx))))
 
-(defn images->cont-agent [images {:keys [id ndx]}]
-  (-> images
-      (images->image id)
-      (image->state-agent ndx :conts)))
+(defn images->cont-agent [images task]
+  (images->state-agent images (assoc task :group :conts)))
 
 (defn images->conts [images {:keys [id]}]
   (-> images
       (images->image id)
-      (get :conts)))
+      :conts))
 
 (defn images->defins [images {:keys [id]}]
   (-> images
       (images->image id)
-      (get :defins)))
+      :defins))
 
 (defn images->exch-agent [images {:keys [id]}]
   (-> images

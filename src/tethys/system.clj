@@ -14,63 +14,98 @@
   (:gen-class))
 
 (defn config [id-set]
-  {:log/mulog {:type :multi
-               :log-context {:app-name "tethys"
-                             :facility (or (System/getenv "TETHYS_FACILITY")
-                                           (System/getenv "DEVPROXY_FACILITY")
-                                           (System/getenv "DEVHUB_FACILITY")
-                                           (System/getenv "METIS_FACILITY"))}
-               :publishers[{:type :elasticsearch
-                            :url "http://a75438:9200/"
-                            :els-version :v7.x
-                            :publish-delay 1000
-                            :data-stream "tethys_log"
-                            :name-mangling false}]}
-   :mpd/id-set {:id-set id-set
-                :id-sets {:ppc ["mpd-ppc-gas_dosing"]
-                          :se3 ["mpd-se3-calib"
-                                "mpd-se3-state"
-                                "mpd-se3-servo"
-                                "mpd-se3-valves"]}}
-   :mpd/reference {:file-name "mpd-ref.edn"}
-   :db/couch {:prot "http",
-              :host "localhost",
-              :port 5984,
-              :usr (System/getenv "CAL_USR")
-              :pwd (System/getenv "CAL_PWD")
-              :name "vl_db_work"}
-   :db/mpds {:db (ig/ref :db/couch)
-             :reference-mpd (ig/ref :mpd/reference)
-             :id-set (ig/ref :mpd/id-set) 
-             :ini {}}
-   :db/task {:db (ig/ref :db/couch)
-             :view "tasks"
-             :design "dbmp"}
-   :model/conf {:system-relax 200 ; ms
-                :stop-if-delay 500 ; ms
-                :run-if-delay 500 ; ms
-                :db (ig/ref :db/couch)
-                :json-post-header {:content-type :json
-                                   :socket-timeout 600000 ;; 10 min
-                                   :connection-timeout 600000
-                                   :accept :json}
-                :dev-hub-url "http://localhost:9009"
-                :db-agent-url "http://localhost:9992"
-                :dev-proxy-url "http://localhost:8009"}
-   :model/images {:mpds (ig/ref :db/mpds)
-                  :conf (ig/ref :model/conf)
-                  :ini {}}
-   :model/exch {:images (ig/ref :model/images)}
-   :model/task {:db-task (ig/ref :db/task)
-                :exch-fns (ig/ref :model/exch)
-                :images (ig/ref :model/images)}
-   :model/worker {:build-task (ig/ref :model/task)
-                  :exch-fns (ig/ref :model/exch)
-                  :images (ig/ref :model/images)
-                  :conf (ig/ref :model/conf)}
-   :scheduler/images {:spawn-work (ig/ref :model/worker)
-                      :images (ig/ref :model/images)
-                      :ini {}}})
+  {:log/mulog
+   ;; ~~~~~~~~~~
+   {:type :multi
+    :log-context {:app-name "tethys"
+                  :facility (or (System/getenv "TETHYS_FACILITY")
+                                (System/getenv "DEVPROXY_FACILITY")
+                                (System/getenv "DEVHUB_FACILITY")
+                                (System/getenv "METIS_FACILITY"))}
+    :publishers[{:type :elasticsearch
+                 :url "http://a75438:9200/"
+                 :els-version :v7.x
+                 :publish-delay 1000
+                 :data-stream "tethys_log"
+                 :name-mangling false}]}
+
+   :mpd/id-set
+   ;; ~~~~~~~~~~
+   {:id-set id-set
+    :id-sets {:ppc ["mpd-ppc-gas_dosing"]
+              :se3 ["mpd-se3-calib"
+                    "mpd-se3-state"
+                    "mpd-se3-servo"
+                    "mpd-se3-valves"]}}
+
+   :mpd/reference
+   ;; ~~~~~~~~~~
+   {:file-name "mpd-ref.edn"}
+
+   :db/couch
+   ;; ~~~~~~~~~~
+   {:prot "http",
+    :host "localhost",
+    :port 5984,
+    :usr (System/getenv "CAL_USR")
+    :pwd (System/getenv "CAL_PWD")
+    :name "vl_db_work"}
+
+   :db/mpds
+   ;; ~~~~~~~~~~
+   {:db (ig/ref :db/couch)
+    :reference-mpd (ig/ref :mpd/reference)
+    :id-set (ig/ref :mpd/id-set) 
+    :ini {}}
+   
+   :db/task
+   ;; ~~~~~~~~~~
+   {:db (ig/ref :db/couch)
+    :view "tasks"
+    :design "dbmp"}
+
+   :model/conf
+   ;; ~~~~~~~~~~
+   {:system-relax 200 ; ms
+    :stop-if-delay 500 
+    :run-if-delay 500 
+    :db (ig/ref :db/couch)
+    :json-post-header {:content-type :json
+                       :socket-timeout 600000
+                       :connection-timeout 600000
+                       :accept :json}
+    :dev-hub-url "http://localhost:9009"
+    :db-agent-url "http://localhost:9992"
+    :dev-proxy-url "http://localhost:8009"}
+
+   :model/images
+   ;; ~~~~~~~~~~
+   {:mpds (ig/ref :db/mpds)
+    :conf (ig/ref :model/conf)
+    :ini {}}
+
+   :model/exch
+   ;; ~~~~~~~~~~
+   {:images (ig/ref :model/images)}
+   
+   :model/task
+   ;; ~~~~~~~~~~
+   {:db-task (ig/ref :db/task)
+    :exch-fns (ig/ref :model/exch)
+    :images (ig/ref :model/images)}
+   
+   :model/worker
+   ;; ~~~~~~~~~~
+   {:build-task-fn (ig/ref :model/task)
+    :exch-fns (ig/ref :model/exch)
+    :images (ig/ref :model/images)
+    :conf (ig/ref :model/conf)}
+   
+   :scheduler/images
+   ;; ~~~~~~~~~~
+   {:spawn-work (ig/ref :model/worker)
+    :images (ig/ref :model/images)
+    :ini {}}})
 
 ;; # System
 ;;
@@ -80,7 +115,7 @@
 
 ;; The system is build **up** by the following `init-key`
 ;; multimethods.
-;;
+
 ;; ## System up multimethods
 ;;
 ;; The `init-key`s methods **read a
@@ -149,18 +184,18 @@
   (reduce
    (fn [res [id image]]
      (let [exch-from-fn (get-in exch-fns [id :from-fn])]
-       (assoc res id (task/build-fn db-task exch-from-fn))))
+       (assoc res id {:build-task-fn (task/build-fn db-task exch-from-fn)})))
    ini images))
 
 (comment
   ((:mpd-ref (:model/task @sys/system)) {:TaskName "Common-wait"}))
 
-(defmethod ig/init-key :model/worker [_ {:keys [images ini build-task exch-fns conf]}]
+(defmethod ig/init-key :model/worker [_ {:keys [images ini build-task-fn exch-fns conf]}]
   (µ/log ::worker-model :message "start system")
   (reduce
    (fn [res [id image]]
-     (let [build-task-fn (get build-task id)
-           exch-run-if-fn (get-in exch-fns [id :run-if-fn])
+     (let [build-task-fn       (get-in build-task-fn [id :build-task-fn])
+           exch-run-if-fn      (get-in exch-fns [id :run-if-fn])
            exch-only-if-not-fn (get-in exch-fns [id :only-if-not-fn])]
        (assoc res id (work/spawn-fn build-task-fn exch-run-if-fn exch-only-if-not-fn conf))))
    ini images))
