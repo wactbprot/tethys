@@ -9,9 +9,9 @@
 
 * ui 
   * https://fomantic-ui.com/
-  * var ws = new WebSocket("ws://127.0.0.1:8010/ws")
-  * [org.httpkit.server :refer [with-channel on-receive on-close  send!]]
-
+  * var ws = new WebSocket("ws://127.0.0.1:8010/ws/")
+  * https://github.com/sunng87/ring-jetty9-adapter
+  
 # development
 
 ## launch clj and compile
