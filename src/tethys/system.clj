@@ -124,24 +124,19 @@
 (defmethod ig/init-key :model/conf [_ conf] conf)
 
 (defmethod ig/init-key :log/mulog [_ opts]
-  (µ/log ::logger :message "start system")
   (µ/set-global-context! (:log-context opts))
   (µ/start-publisher! opts))
 
 (defmethod ig/init-key :db/couch [_ opts]
-  (µ/log ::couch :message "start system")
   (db/config opts))
 
 (defmethod ig/init-key :mpd/id-set [_ {:keys [id-sets id-set]}]
-  (µ/log ::id-set :message "start system")
   (get id-sets id-set))
 
 (defmethod ig/init-key :mpd/reference [_ {:keys [file-name]}]
-  (µ/log ::mpd-reference :message "start system")
   (-> (io/file file-name) slurp edn/read-string))
 
 (defmethod ig/init-key :db/mpds [_ {:keys [db id-set ini reference-mpd]}]
-  (µ/log ::mpd-db :message "start system")
   (let [{:keys [_id Mp]} reference-mpd]
     (assoc 
      (reduce
@@ -150,7 +145,6 @@
      (keyword _id) Mp)))
 
 (defmethod ig/init-key :db/task [_ {:keys [db view design]}]
-  (µ/log ::task-db :message "start system")
   (db/task-fn (db/config (assoc db
                                 :view view
                                 :design design))))
@@ -159,7 +153,6 @@
   ((:db/task @system) "Common-wait"))
 
 (defmethod ig/init-key :model/images [_ {:keys [mpds ini conf]}]
-  (µ/log ::images-model :message "start system")
   (reduce
    (fn [res [id {:keys [Container Definitions Exchange]}]]
      (assoc res id (model/up {:id id
@@ -170,7 +163,6 @@
    ini mpds))
 
 (defmethod ig/init-key :model/exch [_ {:keys [images ini]}]
-  (µ/log ::exch-model :message "start system")
   (reduce
    (fn [res [id _]]
      (let [e-agt (model/images->exch-agent images {:id id})]
@@ -180,7 +172,6 @@
    ini images))
 
 (defmethod ig/init-key :model/task [_ {:keys [images ini db-task exch-fns]}]
-  (µ/log ::task-model :message "start system")
   (reduce
    (fn [res [id image]]
      (let [exch-from-fn (get-in exch-fns [id :from-fn])]
@@ -191,7 +182,6 @@
   ((:mpd-ref (:model/task @sys/system)) {:TaskName "Common-wait"}))
 
 (defmethod ig/init-key :model/worker [_ {:keys [images ini build-task-fn exch-fns conf]}]
-  (µ/log ::worker-model :message "start system")
   (reduce
    (fn [res [id image]]
      (let [build-task-fn       (get-in build-task-fn [id :build-task-fn])
@@ -201,11 +191,14 @@
    ini images))
 
 (defmethod ig/init-key :scheduler/images [_ {:keys [images ini spawn-work]}]
-  (µ/log ::scheduler-images :message "start system")
   (reduce
    (fn [res [id image]]
      (assoc res id (sched/up images id (get spawn-work id))))
    ini images))
+
+(defn start [id-set]
+  (µ/log ::start :message "start system")
+  (reset! system (ig/init (config id-set))))
 
 ;; ## System down multimethods
 ;;
@@ -220,14 +213,11 @@
   (run! #(model/down %) as))
   
 (defmethod ig/halt-key! :scheduler/images [_ as]
-  (µ/log ::scheduler :message "halt system")
   (run! #(sched/down %) as))
 
-(defn init [id-set] (reset! system (ig/init (config id-set))))
-
 ;; Todo: difference (in meaning) between `halt` and `stop`?
-(defn stop []  
-  (µ/log ::start :message "halt system")
+(defn stop []
+  (µ/log ::stop :message "shut down system")
   (ig/halt! @system)
   (reset! system {}))
 
@@ -250,7 +240,6 @@
 
   (defn system-dump-to-fs [folder]
     (let [file-name (str folder "/" (dt/get-date) "/" (dt/get-time) ".edn")]
-      (µ/log ::images :message (str "dump to file system " folder))
       (write-edn file-name system)))  
 
   (defn list-folders [folder] (sort (.list (io/file folder))))

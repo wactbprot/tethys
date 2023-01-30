@@ -38,16 +38,15 @@
 (defn mpds [] (-> (sys/mpds) keys))
 
 (defn start
-  ([] (start nil))
+  ([]
+   (start nil))
   ([id-set]
-   (sys/init id-set)
-  (mpds)))
+   (sys/start id-set)
+   (mpds)))
 
 (defn stop [] (sys/stop))
+
 (defn images [] (sys/images))
-(defn image [mpd]
-  {:pre  [(keyword? mpd)]}
-  (-> (images) mpd))
 
 ;; ## Ctrl-interface
 
