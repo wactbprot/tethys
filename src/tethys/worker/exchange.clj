@@ -3,9 +3,7 @@
     :doc "The exchange worker writes and reads from the exchange interface."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.model.core :as model]
-            [tethys.core.response :as resp]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]))
 
 
 ;; Example for a `writeExchange`task:
@@ -20,11 +18,10 @@
 ;;  }
 ;; </pre>
 
-(defn write-exchange [images task]
+(defn write-exchange [images task continue-fn]
   (let [e-agt (model/images->exch-agent images task)]
     (exch/to e-agt task)
-    (sched/state-executed! images task)
-    {:ok true}))
+    (continue-fn images task)))
 
 ;; Example for a `readExchange`task:
 
@@ -38,12 +35,13 @@
 ;; }
 ;; </pre>
 
-(defn read-exchange [images {:keys [ExchangePath] :as task}]
+(defn read-exchange [images {:keys [ExchangePath] :as task} continue-fn]
   (let [e-agt (model/images->exch-agent images task)]
     (if-let [value (exch/e-value e-agt ExchangePath)]
       (do
-        (resp/dispatch images (merge task {:Result [value]})))
+        (continue-fn images (assoc task :Result [value])))
       (do
-        (µ/log ::read :error (str "No value found at exchange path " ExchangePath))
-        (sched/state-error! images task)))))
+        (let [error (str "No value found at exchange path " ExchangePath)]
+        (µ/log ::read :error error)
+        (continue-fn images (assoc task :error error)))))))
         

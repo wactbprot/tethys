@@ -5,8 +5,7 @@
             [tethys.core.db :as db]
             [tethys.core.docs :as docs]
             [clj-http.client :as http]
-            [tethys.model.core :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]))
 
 
 ;; Example for a `replicate` task:
@@ -21,18 +20,16 @@
 ;;  }
 ;; </pre>
 
-(defn replicate-db [images {:keys [pos-str SourceDB TargetDB] :as task}]
+(defn replicate-db [images {:keys [pos-str SourceDB TargetDB] :as task} continue-fn]
   (let [conf (model/images->conf images task)
         {error :error} (db/replicate-db {:source SourceDB :target TargetDB} (-> conf :db))]
     (if-not error
       (do
         (µ/log ::replicate :message "replication done" :pos-str pos-str)
-        (sched/state-executed! images task)
-        {:ok true})
-      (do
-        (µ/log ::replicate :error (str "from database"  error) :pos-str pos-str)
-        (sched/state-error! images task)
-        {:error true}))))
+        (continue-fn images task))
+      (let [error (str "from database"  error)]
+        (µ/log ::replicate :error error :pos-str pos-str)
+        (continue-fn images (assoc task :error error))))))
 
 
 ;; Example for a `gen-doc` task:
@@ -54,7 +51,7 @@
 ;; }
 ;; </pre>
 
-(defn gen-doc [images {:keys [Value pos-str] :as task}]
+(defn gen-doc [images {:keys [Value pos-str] :as task} continue-fn]
   (let [conf (model/images->conf images task)
         db (-> conf :db)
         id (-> Value :_id)]
@@ -62,10 +59,9 @@
       (db/put-doc Value db))
     (model/add-doc-id images task id)
     (µ/log ::gen-doc :message "document added" :pos-str pos-str)
-    (sched/state-executed! images task)
-    {:ok true}))
+    (continue-fn images task)))
 
-(defn rm-docs [images {:keys [pos-str] :as task}]
+(defn rm-docs [images {:keys [pos-str] :as task} continue-fn]
   (model/rm-all-doc-ids images task)
   (µ/log ::rm-docs :message "all document ids removed form ids interface" :pos-str pos-str)
-  (sched/state-executed! images task))
+  (continue-fn images task))

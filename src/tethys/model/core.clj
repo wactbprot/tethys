@@ -148,7 +148,7 @@
                  defins (range))})
 
 ;; The down methode sets all agents back to its initial value
-(defn down [[_ {:keys [conts defins exch response-queqe ids]}]]
+(defn down [[_ {:keys [conts defins exch ids]}]]
   (run! #(send % (fn [_] {})) conts)
   (run! #(send % (fn [_] {})) defins)
   (send exch (fn [_] {}))

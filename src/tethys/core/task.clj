@@ -1,6 +1,7 @@
 (ns tethys.core.task
   ^{:author "Thomas Bock <thomas.bock@ptb.de>"}
   (:require [com.brunobonacci.mulog :as µ]
+            [libcdb.core :as db]
             [clojure.data.json :as json]
             [clojure.string :as string]
             [tethys.core.date-time :as dt]))
@@ -73,3 +74,14 @@
           from-exchange (exch-from-fn task)]
       (assemble (assoc task :FromExchange from-exchange)))))  
 
+;; The `task` fnunction is generated during the initialisation. It
+;; encapsulates the entire `config` so that only the `task-name` has
+;; to be given.
+(defn db-fn [config]
+  (fn [task-name]
+    (when task-name
+      (-> config
+          (assoc :key task-name)
+          db/get-view
+          first 
+          :value))))

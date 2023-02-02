@@ -31,30 +31,31 @@
 (defn to-error? [o n] (and (= o :run) (= n :error)))
 (defn to-ready? [o n] (and (= o :run) (= n :ready)))
 
-(defn act-error! [agt-to-run images task]
-  (µ/log ::select :error "selected definition returns with error")
-  (sched/state-error! images task)
-  (remove-watch agt-to-run :observer))
+(defn act-error! [agt-to-run images task continue-fn]
+  (let [error "selected definition returns with error"]
+    (µ/log ::select :error error)
+    (remove-watch agt-to-run :observer)
+    (continue-fn images (assoc task :error error))))
 
-(defn act-ready! [agt-to-run images task]
+(defn act-ready! [agt-to-run images task continue-fn]
   (µ/log ::select :message "selected definition executed")
-  (sched/state-executed! images task)
-  (remove-watch agt-to-run :observer))
+  (remove-watch agt-to-run :observer)
+  (continue-fn images task))
 
-(defn watch-fn [agt-to-run images task]
+(defn watch-fn [agt-to-run images task continue-fn]
   (fn [_ _ {o :ctrl} {n :ctrl}]
     (cond
-      (to-error? o n) (act-error! agt-to-run images task)
-      (to-ready? o n) (act-ready! agt-to-run images task)
+      (to-error? o n) (act-error! agt-to-run images task continue-fn)
+      (to-ready? o n) (act-ready! agt-to-run images task continue-fn)
       :default :noop)))
   
-(defn select [images {:keys [DefinitionClass id pos-str] :as task}]
+(defn select [images {:keys [DefinitionClass id pos-str] :as task} continue-fn]
   (let [e-agt (model/images->exch-agent images task)]
     (if-let [agt-to-run (agent-match (model/images->defins images task) e-agt DefinitionClass)]
       (do
         (µ/log ::select :message (str "found definition for class:" DefinitionClass) :pos-str pos-str)
-        (add-watch agt-to-run :observer (watch-fn agt-to-run images task))
+        (add-watch agt-to-run :observer (watch-fn agt-to-run images task continue-fn))
         (sched/ctrl-run! agt-to-run))
-      (do
-        (µ/log ::select :error (str "no matching definition for class:" DefinitionClass) :pos-str pos-str)
-        (sched/state-error! images task)))))
+      (let [error (str "no matching definition for class:" DefinitionClass)]
+        (µ/log ::select :error error :pos-str pos-str)
+        (continue-fn images (assoc task :error error))))))

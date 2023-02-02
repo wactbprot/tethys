@@ -8,6 +8,7 @@
             [tethys.worker.devproxy :as devproxy]
             [tethys.worker.date-time :as dt]
             [tethys.worker.db :as db]
+            [tethys.worker.response :as resp]
             [tethys.worker.exchange :as exchange]
             [tethys.worker.message :as message]
             [tethys.worker.wait :as wait]))
@@ -33,12 +34,12 @@
                  :genDbDoc db/gen-doc
                  :rmDbDocs db/rm-docs
                  (µ/log ::dispatch :error "no matching case" :pos-str pos-str))]
-    (f images task)))
+    (f images task resp/dispatch)))
 
 (defn spawn-fn [build-task-fn run-if-fn only-if-not-fn
                 {:keys [run-if-delay stop-if-delay system-relax] :as conf}]
   (fn [images task]
-    (let [task (build-task-fn task)]    
+    (let [task (build-task-fn task)]
     (if (run-if-fn task)
       (if (only-if-not-fn task)
         (do
