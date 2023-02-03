@@ -3,9 +3,7 @@
     :doc "The select definition worker."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.model.core :as model]
-            [tethys.core.scheduler :as sched]))
-
+            [tethys.model.core :as model]))
 
 (defn is? [f l r] (f (read-string (str l)) (read-string (str r))))
 
@@ -55,7 +53,7 @@
       (do
         (µ/log ::select :message (str "found definition for class:" DefinitionClass) :pos-str pos-str)
         (add-watch agt-to-run :observer (watch-fn agt-to-run images task continue-fn))
-        (sched/ctrl-run! agt-to-run))
+        (send agt-to-run (fn [m] (assoc m :ctrl :run))))
       (let [error (str "no matching definition for class:" DefinitionClass)]
         (µ/log ::select :error error :pos-str pos-str)
         (continue-fn images (assoc task :error error))))))

@@ -3,8 +3,7 @@
     :doc "The worker for controlling mpds."}
   (:require [com.brunobonacci.mulog :as µ]
             [tethys.core.exchange :as exch]
-            [tethys.model.core :as model]
-            [tethys.core.scheduler :as sched]))
+            [tethys.model.core :as model]))
 
 (defn task->target [{:keys [Container Mp] :as task}]
   (struct model/state Mp :conts Container))
@@ -23,7 +22,7 @@
                                                  (remove-watch agt-to-run :observer)
                                                  (continue-fn images task))
                                         :noop)))
-    (sched/ctrl-run! agt-to-run)))
+    (send agt-to-run (fn [m] (assoc m :ctrl :run)))))
 
 (defn run-by-title [images {:keys [ContainerTitle Mp] :as task} continue-fn]
   (let [ndx (model/title->ndx images task ContainerTitle)]
@@ -35,14 +34,15 @@
     Container (run-by-ndx images task continue-fn)
     :not-found (let [error "Neither ContainerTitle nor Container key given"]
                  (µ/log ::run-mp :error error)
-                 (sched/state-error! images (assoc task :error error)))))
+                 (continue-fn images (assoc task :error error)))))
 
 
 (defn stop-by-ndx [images {:keys [Container Mp ndx id] :as task }continue-fn]
-  (sched/ctrl-stop! (model/images->state-agent images (task->target task)))
-  (when-not (and (= (str ndx) (str Container))
-                 (= (keyword Mp) (keyword id)))
-    (continue-fn images task)))
+  (let [agt-to-stop (model/images->state-agent images (task->target task))]
+    (send agt-to-stop (fn [m] (assoc m :ctrl :stop)))
+    (when-not (and (= (str ndx) (str Container))
+                   (= (keyword Mp) (keyword id)))
+      (continue-fn images task))))
 
 (defn stop-by-title [images {:keys [ContainerTitle Mp] :as task} continue-fn]
   (let [ndx (model/title->ndx images task ContainerTitle)]
