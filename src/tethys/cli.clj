@@ -80,13 +80,13 @@
 (defn c-mon [& pos] (ctrl! pos :mon))
 (defn c-stop [& pos] (ctrl! pos :stop))
 
-
-(defn c-title [mpd]
+(defn c-info [mpd]
   {:pre  [(keyword? mpd)]}
   (pp/print-table
-   (mapv (fn [{:keys [Title Ctrl]} i]
-           {:ndx i :title Title :ctrl Ctrl})
-         (-> (sys/mpds) mpd :Container) (range))))
+   (mapv
+    (fn [m i] (dissoc @m :state :element :spawn))
+    (-> (images)  mpd :conts) (range))))
+
 ;; ## Set container state
 
 (defn- state!
