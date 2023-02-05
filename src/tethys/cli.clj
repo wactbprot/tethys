@@ -3,6 +3,7 @@
   (:require [tethys.model.core :as model]
             [tethys.core.scheduler :as sched]
             [tethys.system :as sys]
+            [clojure.pprint :as pp]
             [portal.api :as p])
    (:gen-class))
 
@@ -46,6 +47,8 @@
 
 (defn stop [] (sys/stop))
 
+(defn restart [] (stop) (start))
+
 (defn images [] (sys/images))
 
 ;; ## Ctrl-interface
@@ -77,6 +80,13 @@
 (defn c-mon [& pos] (ctrl! pos :mon))
 (defn c-stop [& pos] (ctrl! pos :stop))
 
+
+(defn c-title [mpd]
+  {:pre  [(keyword? mpd)]}
+  (pp/print-table
+   (mapv (fn [{:keys [Title Ctrl]} i]
+           {:ndx i :title Title :ctrl Ctrl})
+         (-> (sys/mpds) mpd :Container) (range))))
 ;; ## Set container state
 
 (defn- state!

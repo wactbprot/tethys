@@ -44,7 +44,7 @@
     ;; All values are ok. The values start, stop and mon will start stop and mon.
     ;; mon ... relaunch the container if all tasks are executed
     ;; void ... just some value (as good as foo or bar), causes no action.
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "multiple wait tasks",
     ;; Element is inteded for filtering the exchange interface:
     ;; which elements should be vissible at a gui of this
@@ -69,14 +69,14 @@
      [{:TaskName "Common-wait", :Replace {"@waittime" 2000}}]]}
    {  ;; 1. container
     :Description "Container with one task only",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "container with single task",
     :Element ["Target_pressure"],
     :Definition
     [[{:TaskName "Common-wait", :Replace {"@waittime" 1000}}]]}
    ;; 2. container   
    {:Description "Show case select feature",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "choose definition, run it",
     :Element [],
     :Definition
@@ -84,7 +84,7 @@
        :Replace {"@definitionclass" "wait"}}]]}
    ;; 3. container
    {:Description "Run a mpd (first container of ref).",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "run 1st container",
     :Element ["Ref_gas"],
     :Definition
@@ -93,7 +93,7 @@
        {"@conttitle" "multiple wait tasks" "@mpdef" "mpd-ref"}}]]}
    ;; 4. container
    {:Description "Test read_exchange action.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "read exchange.",
     :Element [],
     :Definition
@@ -102,14 +102,14 @@
        {"@docpath" "Measurement.Values.Pressure", "@exchpath" "A"}}]]}
    ;; 5. container
    {:Description "Test anselm request.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "anselm.",
     :Element [],
     :Definition [[{:TaskName "Common-anselm_get_dut_max"}]]}
    ;; 6. container
    {:Description
     "Test date and time and the ability to parallel write to database docs.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "date & time",
     :Element [],
     :Definition
@@ -123,7 +123,7 @@
         "@type" "tethys-test"}}]]}
    ;; 7. container
    {:Description "Message test.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "message",
     :Element [],
     :Definition
@@ -131,15 +131,15 @@
        :Replace {"@message" "Lorem ipsum dolor sit amet."}}]]}
    ;; 8. container
    {:Description "Add a document.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "add doc.",
     :Element [],
     :Definition
     [[{:TaskName "SE3_state-gen_state_doc"}]]}
    ;; 9. container
-   {:Description "Write exchange.",
+   {:Description "Write date to exchange interface.",
     :Ctrl "ready",
-    :Title ".",
+    :Title "write exchange",
     :Element [],
     :Definition
     [[{:TaskName "Common-exchange_value",
@@ -153,7 +153,7 @@
     [[{:TaskName "Common-db_replicate"}]]}
    ;; 11. container
    {:Description "Remove documents.",
-    :Ctrl "void",
+    :Ctrl "ready",
     :Title "rm docs.",
     :Element [],
     :Definition
