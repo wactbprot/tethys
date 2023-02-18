@@ -10,7 +10,8 @@
             [tethys.model.core :as model]
             [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
-            [tethys.worker.core :as work])
+            [tethys.worker.core :as work]
+            [ring.adapter.jetty9 :refer [run-jetty]])
   (:gen-class))
 
 (defn config [id-set]
@@ -105,7 +106,17 @@
    ;; ~~~~~~~~~~
    {:spawn-work (ig/ref :model/worker)
     :images (ig/ref :model/images)
-    :ini {}}})
+    :ini {}}
+   
+   :handler/greet
+   ;; ~~~~~~~~~~
+   {:name "Alice"}
+   
+   :adapter/jetty
+   ;; ~~~~~~~~~~
+   {:images (ig/ref :model/images)
+    :opts {:port 8080}
+    :handler (ig/ref :handler/greet)}})
 
 ;; # System
 ;;
@@ -195,6 +206,13 @@
    (fn [res [id image]]
      (assoc res id (sched/up images id (get spawn-work id))))
    ini images))
+
+(defmethod ig/init-key :adapter/jetty [_ {:keys [images opts handler]}]
+
+  (jetty/run-jetty handler (-> opts (dissoc :handler) (assoc :join? false))))
+
+(defmethod ig/init-key :handler/greet [_ {:keys [name]}]
+  (fn [_] (resp/response (str "Hello " name))))
 
 (defn start [id-set]
   (µ/log ::start :message "start system")
