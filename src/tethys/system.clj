@@ -12,7 +12,7 @@
             [tethys.core.task :as task]
             [tethys.worker.core :as work]
             [tethys.server :as server]
-            [ring.adapter.jetty9 :refer [run-jetty]]
+            [org.httpkit.server :refer [run-server]]
             [compojure.handler :as handler]
             [ring.middleware.json :as middleware])
   (:gen-class))
@@ -118,7 +118,7 @@
    :server/jetty
    ;; ~~~~~~~~~~
    {:images (ig/ref :model/images)
-    :opts {:port 8080 :join? false}
+    :opts {:port 9099}
     :routes (ig/ref :server/routes)}})
 
 ;; # System
@@ -214,10 +214,10 @@
   (server/gen-routes images))
 
 (defmethod ig/init-key :server/jetty [_ {:keys [images opts routes]}]
-  (run-jetty (-> (handler/site routes)
-                 (middleware/wrap-json-body {:keywords? true})
-                 (middleware/wrap-json-response))
-             opts))
+  (run-server (-> (handler/site routes)
+                  (middleware/wrap-json-body {:keywords? true})
+                  (middleware/wrap-json-response))
+              opts))
 
 (defn start [id-set]
   (µ/log ::start :message "start system")
