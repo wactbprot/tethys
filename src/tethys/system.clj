@@ -11,7 +11,10 @@
             [tethys.core.scheduler :as sched]
             [tethys.core.task :as task]
             [tethys.worker.core :as work]
-            [ring.adapter.jetty9 :refer [run-jetty]])
+            [tethys.server :as server]
+            [ring.adapter.jetty9 :refer [run-jetty]]
+            [compojure.handler :as handler]
+            [ring.middleware.json :as middleware])
   (:gen-class))
 
 (defn config [id-set]
@@ -108,15 +111,15 @@
     :images (ig/ref :model/images)
     :ini {}}
    
-   :handler/greet
+   :server/routes
    ;; ~~~~~~~~~~
    {:name "Alice"}
    
-   :adapter/jetty
+   :server/jetty
    ;; ~~~~~~~~~~
    {:images (ig/ref :model/images)
-    :opts {:port 8080}
-    :handler (ig/ref :handler/greet)}})
+    :opts {:port 8080 :join? false}
+    :routes (ig/ref :server/routes)}})
 
 ;; # System
 ;;
@@ -207,12 +210,14 @@
      (assoc res id (sched/up images id (get spawn-work id))))
    ini images))
 
-(defmethod ig/init-key :adapter/jetty [_ {:keys [images opts handler]}]
+(defmethod ig/init-key :server/routes [_ {:keys [images]}]
+  (server/gen-routes images))
 
-  (jetty/run-jetty handler (-> opts (dissoc :handler) (assoc :join? false))))
-
-(defmethod ig/init-key :handler/greet [_ {:keys [name]}]
-  (fn [_] (resp/response (str "Hello " name))))
+(defmethod ig/init-key :server/jetty [_ {:keys [images opts routes]}]
+  (run-jetty (-> (handler/site routes)
+                 (middleware/wrap-json-body {:keywords? true})
+                 (middleware/wrap-json-response))
+             opts))
 
 (defn start [id-set]
   (µ/log ::start :message "start system")
@@ -232,6 +237,10 @@
   
 (defmethod ig/halt-key! :scheduler/images [_ as]
   (run! #(sched/down %) as))
+
+(defmethod ig/halt-key! :server/jetty [_ server]
+  (.stop server))
+
 
 ;; Todo: difference (in meaning) between `halt` and `stop`?
 (defn stop []
